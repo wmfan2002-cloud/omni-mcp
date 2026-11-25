@@ -73,6 +73,17 @@ curl http://127.0.0.1:8485/healthz
 
 ## Agent 电脑接入
 
+### 方式一：可视化本地控制台（Windows 推荐，双击即用）
+
+从 GitHub Release 下载 `omni-mcp-windows-amd64.exe` 后**直接双击**（或在命令行运行 `omni-mcp ui`），程序会在本机回环地址启动可视化控制台并自动打开浏览器：
+
+- 图形化填写 Hub 地址、设备名称，调用 Windows 原生文件夹选择器添加/管理授权目录，开关 `--allow-exec` 与自动连接；
+- 配对令牌在 Windows 上使用 **DPAPI（当前用户加密）** 持久化，免每次重新输入，接口永不回传明文令牌；
+- 实时审计流展示 AI 在本机执行的每一次读写、搜索与终端命令，并支持一键断开（急停）与退出程序；
+- 仅绑定 `127.0.0.1`，带回环 Host 校验、HttpOnly 会话 Cookie 与 CSRF 防护。
+
+### 方式二：命令行启动（适合后台脚本 / 服务器）
+
 为试用电脑从同一版本 GitHub Release 下载对应系统的 Agent。Linux x64 使用 `omni-mcp-linux-amd64`，Linux arm64 使用 `omni-mcp-linux-arm64`，macOS Apple 芯片可用 `make build-darwin` 构建，Windows 使用 `omni-mcp-windows-amd64.exe`。Windows 在标准 PowerShell 中启动：
 
 ```powershell

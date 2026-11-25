@@ -57,6 +57,10 @@ a { color:var(--accent); }
       鉴权 {{if .AuthOn}}OAuth 2.1 已启用{{else}}<span class="warn">已关闭（仅限本机调试）</span>{{end}}</p>
     <h2>已注册的 {{.ToolCount}} 个工具</h2>
     <div class="tools">{{range .Tools}}<span class="tag">{{.}}</span>{{end}}</div>
+    <p style="margin:18px 0 0;font-size:14px;">
+      <a href="/agents" style="font-weight:600;text-decoration:none;">打开设备配对与管理中心 →</a>
+      <span style="color:var(--muted);margin-left:8px;">一键批准 Windows / macOS / Linux 设备接入，无需 SSH 配置密钥</span>
+    </p>
   </div>
   <div class="card">
     <h2>在 ChatGPT 里接入</h2>

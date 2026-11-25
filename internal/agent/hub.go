@@ -3,8 +3,10 @@ package agent
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +17,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/coder/websocket"
 )
@@ -28,11 +31,14 @@ type Manager struct {
 	log      *slog.Logger
 	reserved map[string]bool
 
-	mu       sync.RWMutex
-	hosts    map[string]*host
-	changed  func([]Info)
-	closed   bool
-	closeErr error
+	mu        sync.RWMutex
+	hosts     map[string]*host
+	storePath string
+	paired    map[string]PairedDevice
+	pending   map[string]*pendingPair
+	changed   func([]Info)
+	closed    bool
+	closeErr  error
 }
 
 func NewManager(tokens map[string]string, log *slog.Logger, changed func([]Info)) *Manager {
@@ -45,7 +51,15 @@ func NewManager(tokens map[string]string, log *slog.Logger, changed func([]Info)
 			cleanTokens[name] = strings.TrimSpace(token)
 		}
 	}
-	return &Manager{tokens: cleanTokens, log: log, hosts: map[string]*host{}, reserved: map[string]bool{}, changed: changed}
+	return &Manager{
+		tokens:   cleanTokens,
+		log:      log,
+		hosts:    map[string]*host{},
+		paired:   map[string]PairedDevice{},
+		pending:  map[string]*pendingPair{},
+		reserved: map[string]bool{},
+		changed:  changed,
+	}
 }
 
 func (m *Manager) ReserveNames(names []string) {
@@ -56,9 +70,11 @@ func (m *Manager) ReserveNames(names []string) {
 	}
 }
 
-// Enabled reports whether at least one per-device Agent pairing token is configured.
+// Enabled reports whether Agent access is enabled via static env tokens or Hub dynamic pairing.
 func (m *Manager) Enabled() bool {
-	return len(m.tokens) > 0
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.tokens) > 0 || m.storePath != ""
 }
 
 func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -75,12 +91,12 @@ func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "valid X-Omni-Agent-Name header required", http.StatusBadRequest)
 		return
 	}
-	token := m.tokens[name]
-	if token == "" {
-		http.Error(w, "Agent pairing token is not configured", http.StatusServiceUnavailable)
+	configured, ok := m.authorizeRequest(name, r.Header.Get("Authorization"))
+	if !configured {
+		http.Error(w, "Agent pairing token is not configured; approve this device in Hub /agents first", http.StatusServiceUnavailable)
 		return
 	}
-	if !authorized(r.Header.Get("Authorization"), token) {
+	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -124,6 +140,7 @@ func (m *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	go m.writeLoop(ctx, current)
+	m.recordDeviceSeen(info.Name, info.OS)
 	m.log.Info("Agent 已连接", "name", info.Name, "os", info.OS, "workdir", info.Workdir, "exec_enabled", info.AllowExec)
 
 	for {
@@ -364,6 +381,50 @@ func authorized(header, token string) bool {
 		return false
 	}
 	return subtle.ConstantTimeCompare([]byte(provided), []byte(token)) == 1
+}
+
+func hashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+func (m *Manager) authorizeRequest(name, header string) (configured bool, ok bool) {
+	if staticTok := m.tokens[name]; staticTok != "" {
+		if authorized(header, staticTok) {
+			return true, true
+		}
+		configured = true
+	}
+	m.mu.RLock()
+	dev, hasPaired := m.paired[name]
+	m.mu.RUnlock()
+	if hasPaired && dev.TokenHash != "" {
+		configured = true
+		provided := strings.TrimPrefix(header, "Bearer ")
+		if provided != header && provided != "" {
+			gotHash := hashToken(provided)
+			if len(gotHash) == len(dev.TokenHash) && subtle.ConstantTimeCompare([]byte(gotHash), []byte(dev.TokenHash)) == 1 {
+				return true, true
+			}
+		}
+	}
+	return configured, false
+}
+
+func (m *Manager) recordDeviceSeen(name, goos string) {
+	m.mu.Lock()
+	dev, ok := m.paired[name]
+	if !ok {
+		m.mu.Unlock()
+		return
+	}
+	dev.LastSeenAt = time.Now()
+	if goos != "" {
+		dev.OS = goos
+	}
+	m.paired[name] = dev
+	_ = m.savePairedLocked()
+	m.mu.Unlock()
 }
 
 func randomID() string {

@@ -68,6 +68,15 @@ apply_patch(target="office-pc", patch="...")
 
 The Agent can run automatically at user sign-in through Task Scheduler on Windows or a user service on Linux/macOS. It disappears from the target list while offline and automatically re-registers on reconnect.
 
+## Visual Agent UI (Windows double-click / `omni-mcp ui`)
+
+Double-clicking `omni-mcp-windows-amd64.exe` on Windows (or running `omni-mcp ui` on any OS) starts a loopback-only local web console (`127.0.0.1:18485`) and opens your browser automatically:
+
+- Configure Hub URL, device name, native folder picker for `--allow-dir`, `--allow-exec` toggle, and auto-connect without typing CLI flags.
+- Pairing tokens are sealed with **Windows DPAPI** (current-user encryption) on Windows and are never returned to browser responses.
+- Live SSE activity feed shows every file read/write/search and shell command executed by AI, with one-click emergency disconnect and clean shutdown.
+- Hardened with loopback `Host` verification, session-scoped `HttpOnly; SameSite=Strict` cookie bootstrap, and CSRF token headers.
+
 ## Command execution
 
 Shell command execution is disabled by default. Add `--allow-exec` only when you accept granting the Agent the full permissions of the local account that started it. Windows prefers `pwsh.exe` when installed and falls back to Windows PowerShell 5.1; commands must use PowerShell 5.1-compatible syntax, including semicolons rather than `&&` or `||`. Linux and macOS Agents use Bash when installed and otherwise use `sh`:

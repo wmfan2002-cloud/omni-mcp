@@ -432,6 +432,61 @@ func (s *Server) verifyUser(username, password string) bool {
 	return false
 }
 
+// SessionSubject returns the authenticated browser user from the Hub session cookie.
+// When auth is disabled, it returns ("local-admin", true).
+func (s *Server) SessionSubject(r *http.Request) (string, bool) {
+	if !s.cfg.Auth.Enabled {
+		return "local-admin", true
+	}
+	cookie, err := r.Cookie(sessionCookie)
+	if err != nil {
+		return "", false
+	}
+	sess, ok := s.store.LookupSession(cookie.Value)
+	if !ok {
+		return "", false
+	}
+	return sess.Subject, true
+}
+
+// VerifyUser checks username and password against configured Hub users.
+func (s *Server) VerifyUser(username, password string) bool {
+	return s.verifyUser(strings.TrimSpace(username), password)
+}
+
+// IssueBrowserSession creates a Hub browser session cookie for the authenticated user.
+func (s *Server) IssueBrowserSession(w http.ResponseWriter, r *http.Request, username string) {
+	ttl := s.cfg.Auth.SessionCookieTTL
+	if ttl <= 0 {
+		ttl = 7 * 24 * time.Hour
+	}
+	raw := s.store.IssueSession(username, ttl)
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookie,
+		Value:    raw,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   strings.HasPrefix(s.base(), "https://"),
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Now().Add(ttl),
+	})
+	s.audit.Auth("portal_login_ok", username, "hub-agents-ui", "")
+}
+
+// ClearBrowserSession clears the Hub browser session cookie.
+func (s *Server) ClearBrowserSession(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookie,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   strings.HasPrefix(s.base(), "https://"),
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
+	})
+}
+
 // ---------- 令牌端点 ----------
 
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {

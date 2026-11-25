@@ -118,6 +118,9 @@ func Build(cfg *config.Config, log *slog.Logger) (*Built, error) {
 		}
 		deviceFleet.SetAgentHosts(hosts)
 	})
+	if err := agents.AttachStore(cfg.Server.DataDir); err != nil {
+		return nil, fmt.Errorf("加载已配对设备列表失败: %w", err)
+	}
 	for _, host := range deviceFleet.Hosts() {
 		agents.ReserveNames([]string{host.Name})
 	}
@@ -169,6 +172,11 @@ func Build(cfg *config.Config, log *slog.Logger) (*Built, error) {
 	// 有些客户端习惯在末尾带斜杠。
 	mux.Handle("/mcp/", authSrv.Protect(transport))
 	mux.Handle("/agent/ws", agents)
+	mux.HandleFunc("/agent/pair/start", agents.HandlePairStart(cfg.Server.BaseURL))
+	mux.HandleFunc("/agent/pair/poll", agents.HandlePairPoll())
+	agentsPortal := newAgentsPortal(cfg, authSrv, agents, log)
+	mux.Handle("/agents", agentsPortal)
+	mux.Handle("/agents/", agentsPortal)
 	if deps.Media != nil {
 		// 不挂 OAuth：拿到链接去下载的一方（客户端侧的下载工具）没有 Bearer。
 		// 保护靠 256-bit 随机 token + 短 TTL，token 不进日志（见 logPath）。

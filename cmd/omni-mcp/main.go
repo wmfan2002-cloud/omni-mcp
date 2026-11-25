@@ -18,12 +18,14 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 
 	"omni-mcp/internal/agent"
+	"omni-mcp/internal/agentui"
 	"omni-mcp/internal/app"
 	"omni-mcp/internal/config"
 	"omni-mcp/internal/idgen"
@@ -37,6 +39,8 @@ const usage = `omni-mcp —— 给 agent 用的统一多机基础工具 MCP 服�
   omni-mcp serve [-c 配置文件]      启动统一 MCP Hub（默认子命令）
   omni-mcp agent --hub URL --name NAME --allow-dir PATH
                                     将本机反向连接到 Hub
+  omni-mcp ui [--listen 127.0.0.1:18485] [--no-open]
+                                    启动 Agent 可视化本地控制台（Windows 双击默认进入）
   omni-mcp hash-password [密码]     生成 bcrypt 密码哈希，填到 auth.users
   omni-mcp gen-token                生成一个随机静态令牌，填到 auth.static_tokens
   omni-mcp check-policy '命令'      查看某条 shell 命令会被策略如何处理
@@ -57,6 +61,9 @@ func main() {
 
 func run(args []string) error {
 	cmd := "serve"
+	if len(args) == 0 && runtime.GOOS == "windows" {
+		cmd = "ui"
+	}
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		cmd, args = args[0], args[1:]
 	}
@@ -65,6 +72,8 @@ func run(args []string) error {
 		return cmdServe(args)
 	case "agent":
 		return cmdAgent(args)
+	case "ui":
+		return cmdUI(args)
 	case "hash-password":
 		return cmdHashPassword(args)
 	case "gen-token":
@@ -132,6 +141,29 @@ func cmdAgent(args []string) error {
 	} else {
 		return err
 	}
+}
+
+func cmdUI(args []string) error {
+	flags := flag.NewFlagSet("ui", flag.ContinueOnError)
+	listen := flags.String("listen", "", "local loopback listen address (default 127.0.0.1:18485)")
+	configPath := flags.String("config", "", "UI profile path (default user config directory)")
+	noOpen := flags.Bool("no-open", false, "do not automatically open the system browser")
+	if err := flags.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	ctx, stop := signal.NotifyContext(context.Background(), process.Interrupts()...)
+	defer stop()
+	return agentui.Run(ctx, agentui.Options{
+		Listen:     *listen,
+		ConfigPath: *configPath,
+		Version:    app.Version,
+		NoOpen:     *noOpen,
+		Log:        logger,
+	})
 }
 
 func cmdServe(args []string) error {

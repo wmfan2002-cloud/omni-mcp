@@ -1,0 +1,1689 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="omni-csrf" content="__OMNI_CSRF_TOKEN__" />
+  <title>Omni MCP Agent</title>
+  <style>
+    :root {
+      --font-sans: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "Cascadia Mono", "JetBrains Mono", Consolas, ui-monospace, SFMono-Regular, Menlo, monospace;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Dark theme (default — OrbStack / Linear tiered obsidian) */
+      --bg: #090b0f;
+      --sidebar: #0e1117;
+      --surface: #131720;
+      --surface-hover: #191e29;
+      --input-bg: #0b0e14;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #eef1f6;
+      --text-secondary: #9aa4b5;
+      --text-muted: #687387;
+      --accent: #5e6ad2;
+      --accent-hover: #6c78e0;
+      --accent-soft: rgba(94, 106, 210, 0.16);
+      --ok: #34d399;
+      --ok-soft: rgba(16, 185, 129, 0.14);
+      --warn: #fbbf24;
+      --warn-soft: rgba(245, 158, 11, 0.14);
+      --danger: #f87171;
+      --danger-solid: #dc2626;
+      --danger-solid-hover: #b91c1c;
+      --danger-soft: rgba(239, 68, 68, 0.14);
+      --nav-active: rgba(255, 255, 255, 0.075);
+      --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+      --toast-bg: #181d28;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f7f8fa;
+      --sidebar: #eff1f5;
+      --surface: #ffffff;
+      --surface-hover: #f3f5f8;
+      --input-bg: #ffffff;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.17);
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #4353d8;
+      --accent-hover: #3645c2;
+      --accent-soft: rgba(67, 83, 216, 0.10);
+      --ok: #059669;
+      --ok-soft: rgba(5, 150, 105, 0.10);
+      --warn: #b45309;
+      --warn-soft: rgba(180, 83, 9, 0.10);
+      --danger: #dc2626;
+      --danger-solid: #dc2626;
+      --danger-solid-hover: #b91c1c;
+      --danger-soft: rgba(220, 38, 38, 0.10);
+      --nav-active: rgba(15, 23, 42, 0.065);
+      --shadow-modal: 0 24px 56px rgba(15, 23, 42, 0.18);
+      --toast-bg: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 18px 14px 14px;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 2px 6px;
+    }
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+    }
+
+    /* Primary connection anchor card inside sidebar */
+    .conn-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .conn-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .conn-state {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .conn-state[data-state="connected"] { color: var(--ok); }
+    .conn-state[data-state="connected"] .conn-dot {
+      background: var(--ok);
+      box-shadow: 0 0 0 3px var(--ok-soft);
+    }
+    .conn-state[data-state="connecting"] { color: var(--accent); }
+    .conn-state[data-state="connecting"] .conn-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .conn-state[data-state="reconnecting"] { color: var(--warn); }
+    .conn-state[data-state="reconnecting"] .conn-dot {
+      background: var(--warn);
+      box-shadow: 0 0 0 3px var(--warn-soft);
+    }
+    .conn-state[data-state="pairing"] { color: var(--accent); }
+    .conn-state[data-state="pairing"] .conn-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .conn-target {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conn-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Sidebar Navigation */
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background 140ms var(--ease), color 140ms var(--ease);
+    }
+    .nav-btn:hover {
+      background: var(--nav-active);
+      color: var(--text);
+    }
+    .nav-btn.active {
+      background: var(--nav-active);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .nav-count {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+    }
+
+    .sidebar-foot {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .foot-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 140ms var(--ease), color 140ms var(--ease);
+      white-space: nowrap;
+    }
+    .foot-btn:hover { background: var(--nav-active); color: var(--text); }
+    .foot-btn.quit:hover { color: var(--danger); background: var(--danger-soft); }
+
+    /* Main Workspace */
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      background: var(--bg);
+    }
+    .main-header {
+      height: 56px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .header-title {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+    .header-title h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+    }
+    .header-meta {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .workspace {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 32px 48px;
+    }
+    .workspace-inner {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    .workspace-inner.wide {
+      max-width: 1040px;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 140ms var(--ease), border-color 140ms var(--ease), opacity 140ms var(--ease), transform 120ms var(--ease);
+    }
+    .btn:hover:not(:disabled) { background: var(--surface-hover); }
+    .btn:active:not(:disabled) { transform: scale(0.985); }
+    .btn:disabled { opacity: 0.48; cursor: not-allowed; }
+    .btn:focus-visible, input:focus-visible, .nav-btn:focus-visible, .foot-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .btn.primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: #ffffff;
+    }
+    .btn.primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn.danger {
+      background: var(--danger-solid);
+      border-color: transparent;
+      color: #ffffff;
+    }
+    .btn.danger:hover:not(:disabled) { background: var(--danger-solid-hover); }
+    .btn.ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--text-secondary);
+      padding: 6px 10px;
+    }
+    .btn.ghost:hover:not(:disabled) { background: var(--nav-active); color: var(--text); }
+    .btn.full { width: 100%; }
+    .btn.sm { padding: 6px 11px; font-size: 12.5px; }
+
+    /* Sections with hairline dividers (no nested cards) */
+    .section {
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:first-child { padding-top: 0; }
+    .section:last-child { border-bottom: 0; }
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      margin: 0;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .section-desc {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Telemetry Strip (unboxed hairline grid) */
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .metric-cell {
+      padding: 13px 16px;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+    }
+    .metric-cell:last-child { border-right: 0; }
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-value.mono { font-family: var(--font-mono); font-size: 12.5px; }
+    .metric-value.ok { color: var(--ok); }
+    .metric-value.warn { color: var(--warn); }
+
+    /* Error notice */
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--danger-soft);
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 13px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .alert.show { display: flex; }
+
+    /* One-click Hub pairing approval card */
+    .pair-banner {
+      display: none;
+      padding: 18px 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(59, 130, 246, 0.36);
+      background: linear-gradient(180deg, var(--accent-soft), transparent 72%), var(--surface);
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .pair-banner.show { display: flex; }
+    .pair-banner-left { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1; }
+    .pair-code-box {
+      padding: 9px 14px;
+      border-radius: 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-strong);
+      text-align: center;
+      min-width: 132px;
+      flex-shrink: 0;
+    }
+    .pair-code-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+    .pair-code-val {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .pair-banner-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .pair-banner-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+    .pair-banner-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .auth-status-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .auth-status-main { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-secondary); }
+    .auth-status-actions { display: flex; align-items: center; gap: 8px; }
+    .adv-token {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 10px 14px;
+    }
+    .adv-token summary {
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .adv-token summary::-webkit-details-marker { display: none; }
+    .adv-token[open] summary { color: var(--text-secondary); margin-bottom: 12px; }
+
+    /* Form rows */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .field-hint code {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+    input[type="text"], input[type="url"], input[type="password"] {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border-strong);
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      transition: border-color 140ms var(--ease);
+    }
+    input::placeholder { color: var(--text-muted); opacity: 0.85; }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .input-row input { flex: 1; min-width: 0; }
+
+    .token-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .token-saved { color: var(--ok); font-weight: 500; }
+
+    /* Toggle rows */
+    .setting-list {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-row:last-child { border-bottom: 0; }
+    .setting-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .setting-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .setting-desc.warn { color: var(--warn); }
+
+    .switch {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--border-strong);
+      cursor: pointer;
+      transition: background 160ms var(--ease);
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      top: 3px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform 160ms var(--ease);
+    }
+    .switch input:checked + .slider { background: var(--accent); }
+    .switch.risk input:checked + .slider { background: #d97706; }
+    .switch input:checked + .slider::before { transform: translateX(16px); }
+
+    /* Directory list */
+    .dir-table {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      overflow: hidden;
+      margin-top: 12px;
+    }
+    .dir-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      transition: background 120ms var(--ease);
+    }
+    .dir-row:last-child { border-bottom: 0; }
+    .dir-row:hover { background: var(--surface-hover); }
+    .dir-path {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      min-width: 0;
+      word-break: break-all;
+    }
+    .dir-empty {
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Activity Audit View */
+    .activity-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .segmented {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      gap: 2px;
+    }
+    .seg-btn {
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 5px 11px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 140ms var(--ease), color 140ms var(--ease);
+    }
+    .seg-btn:hover { color: var(--text); }
+    .seg-btn.active {
+      background: var(--nav-active);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .search-box {
+      width: 240px;
+      height: 34px !important;
+      font-family: var(--font-sans) !important;
+    }
+
+    .audit-table {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .audit-head, .audit-row {
+      display: grid;
+      grid-template-columns: 84px 92px minmax(0, 1fr) 72px;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 14px;
+    }
+    .audit-head {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .audit-body {
+      max-height: 430px;
+      overflow-y: auto;
+    }
+    .audit-row {
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      transition: background 120ms var(--ease);
+    }
+    .audit-row:last-child { border-bottom: 0; }
+    .audit-row:hover { background: var(--surface-hover); }
+    .audit-time, .audit-dur {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+    }
+    .audit-dur { text-align: right; }
+    .audit-type {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .audit-type.ok { color: var(--ok); }
+    .audit-type.fs { color: var(--accent); }
+    .audit-type.exec { color: var(--warn); }
+    .audit-type.err { color: var(--danger); }
+    .audit-type.sys { color: var(--text-secondary); }
+    .audit-detail {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .audit-summary {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .audit-err {
+      font-size: 12px;
+      color: var(--danger);
+      word-break: break-word;
+    }
+    .audit-empty {
+      padding: 46px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* CLI Preview block */
+    .cli-bar {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .cli-bar code {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 60;
+      background: var(--toast-bg);
+      color: #f8fafc;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      box-shadow: var(--shadow-modal);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 180ms var(--ease), transform 180ms var(--ease);
+      max-width: 420px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.err { border-color: var(--danger-solid); color: #fecaca; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      place-items: center;
+      z-index: 80;
+      padding: 20px;
+    }
+    .modal-backdrop.show { display: grid; }
+    .modal {
+      width: 100%;
+      max-width: 410px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-modal);
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 15.5px; font-weight: 600; }
+    .modal p { margin: 0 0 18px; font-size: 13.5px; color: var(--text-secondary); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+    @media (max-width: 860px) {
+      body { overflow: auto; }
+      .app { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+      .sidebar { border-right: 0; border-bottom: 1px solid var(--border); }
+      .nav { flex-direction: row; overflow-x: auto; }
+      .nav-btn { width: auto; white-space: nowrap; }
+      .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric-cell:nth-child(2) { border-right: 0; }
+      .metric-cell:nth-child(1), .metric-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
+      .form-grid { grid-template-columns: 1fr; }
+      .workspace { padding: 20px 18px 40px; }
+      .main-header { padding: 0 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="brand-name">Omni MCP</span>
+      </div>
+
+      <div class="conn-panel">
+        <div class="conn-status-row">
+          <span class="conn-state" id="connState" data-state="disconnected">
+            <span class="conn-dot"></span>
+            <span id="connStateText">未连接</span>
+          </span>
+        </div>
+        <div>
+          <div class="conn-target" id="sidebarDevice">尚未配置设备</div>
+          <div class="conn-sub" id="sidebarHub">请填写 Hub 地址后连接</div>
+        </div>
+        <button id="toggleConnBtn" class="btn primary full">连接 Hub</button>
+      </div>
+
+      <nav class="nav" aria-label="主导航">
+        <button class="nav-btn active" data-tab="connection">
+          <span class="nav-left">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            <span>连接配置</span>
+          </span>
+        </button>
+        <button class="nav-btn" data-tab="access">
+          <span class="nav-left">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>目录与权限</span>
+          </span>
+          <span class="nav-count" id="navDirCount">0</span>
+        </button>
+        <button class="nav-btn" data-tab="activity">
+          <span class="nav-left">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            <span>实时审计流</span>
+          </span>
+          <span class="nav-count" id="navEventCount">0</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <button type="button" class="foot-btn" id="themeBtn" title="切换深色 / 浅色外观">
+          <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <span id="themeLabel">浅色模式</span>
+        </button>
+        <button type="button" class="foot-btn quit" id="quitBtn" title="断开连接并退出本地程序">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>
+          </svg>
+          <span>退出</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="main-header">
+        <div class="header-title">
+          <h1 id="pageTitle">连接配置</h1>
+          <span class="header-meta" id="headerMeta">仅本机回环访问</span>
+        </div>
+        <div class="header-actions">
+          <span class="header-meta" id="dirtyHint"></span>
+          <button type="button" id="saveOnlyBtn" class="btn sm">保存</button>
+          <button type="button" id="saveConnectBtn" class="btn primary sm">保存并连接</button>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <!-- View 1: Connection -->
+        <div class="workspace-inner view active" id="view-connection">
+          <div class="metrics-strip">
+            <div class="metric-cell">
+              <div class="metric-label">本机平台</div>
+              <div class="metric-value mono" id="statOS">-</div>
+            </div>
+            <div class="metric-cell">
+              <div class="metric-label">Shell 引擎</div>
+              <div class="metric-value mono" id="statShell">-</div>
+            </div>
+            <div class="metric-cell">
+              <div class="metric-label">授权工作区</div>
+              <div class="metric-value" id="statDirs">0 个目录</div>
+            </div>
+            <div class="metric-cell">
+              <div class="metric-label">命令执行</div>
+              <div class="metric-value ok" id="statExec">仅文件沙箱</div>
+            </div>
+          </div>
+
+          <div class="alert" id="connErrBox" role="alert">
+            <span id="connErrText"></span>
+          </div>
+
+          <div class="pair-banner" id="pairingBanner" role="status">
+            <div class="pair-banner-left">
+              <div class="pair-code-box">
+                <div class="pair-code-lbl">配对验证码</div>
+                <div class="pair-code-val" id="pairCodeVal">----</div>
+              </div>
+              <div>
+                <div class="pair-banner-title" id="pairTitle">等待 Hub 浏览器批准接入…</div>
+                <div class="pair-banner-desc" id="pairDesc">请在打开的 Hub 页面核对上方验证码并点击「批准接入」，批准后本设备将自动保存独立凭证并立即上线。</div>
+              </div>
+            </div>
+            <div class="pair-banner-actions">
+              <button type="button" id="openApproveBtn" class="btn primary sm">打开 Hub 批准页</button>
+              <button type="button" id="cancelPairBtn" class="btn sm">取消配对</button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Hub 与设备身份</h2>
+                <p class="section-desc">Agent 通过标准 HTTPS (443) 主动反向连接你的 Hub，无需开放本机端口或配置公网 IP。</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label" for="hubInput">Hub 地址</label>
+                <input id="hubInput" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="nameInput">设备名称</label>
+                <input id="nameInput" type="text" placeholder="my-workstation" autocomplete="off" />
+              </div>
+            </div>
+
+            <div class="auth-status-box">
+              <div class="auth-status-main">
+                <span id="tokenStateText">无需手动填密钥：填写 Hub 地址与自定义设备名后，直接点击「连接 Hub」即可一键在 Hub 批准接入。</span>
+              </div>
+              <div class="auth-status-actions">
+                <button type="button" id="rePairBtn" class="btn sm" style="display:none">重新配对</button>
+                <button type="button" id="clearTokenBtn" class="btn ghost sm" style="display:none">清除令牌</button>
+              </div>
+            </div>
+
+            <details class="adv-token" id="advTokenBox">
+              <summary>
+                <span>高级选项：手动粘贴静态令牌（可选，通常无需填写）</span>
+                <span class="field-hint" id="tokenStorageHint"></span>
+              </summary>
+              <div class="field">
+                <label class="field-label" for="tokenInput">
+                  <span>静态配对令牌</span>
+                  <span class="field-hint">仅用于预配环境变量模式</span>
+                </label>
+                <div class="input-row">
+                  <input id="tokenInput" type="password" placeholder="留空则使用 Hub 一键审批配对" autocomplete="new-password" />
+                  <button type="button" id="toggleTokenVis" class="btn sm">显示</button>
+                </div>
+                <div class="field-hint">
+                  若 Hub 使用传统静态环境变量模式，可粘贴 <code id="envNameCode">OMNI_AGENT_TOKEN_MY_WORKSTATION</code> 对应的令牌值。
+                </div>
+              </div>
+            </details>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">启动与保存行为</h2>
+              </div>
+            </div>
+            <div class="setting-list">
+              <div class="setting-row">
+                <div>
+                  <div class="setting-title">加密保存配对令牌</div>
+                  <div class="setting-desc">开启后令牌仅存储在当前用户的本地受保护配置中，下次打开免重新输入。</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="saveTokenToggle" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div class="setting-title">启动程序时自动连接</div>
+                  <div class="setting-desc">双击打开客户端后立即发起连接，无需手动点击连接按钮。</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="autoConnectToggle" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- View 2: Access & Sandbox -->
+        <div class="workspace-inner view" id="view-access">
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">授权工作目录</h2>
+                <p class="section-desc">文件读写、搜索和补丁通过操作系统目录句柄（os.Root）强隔离，AI 无法越界访问未授权路径。</p>
+              </div>
+              <button type="button" id="pickDirBtn" class="btn primary sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                  <line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>
+                </svg>
+                <span>浏览选择文件夹</span>
+              </button>
+            </div>
+
+            <div class="input-row">
+              <input id="dirInput" type="text" placeholder="输入或粘贴本地目录路径，例如 D:\Projects\MyApp" autocomplete="off" />
+              <button type="button" id="addDirBtn" class="btn sm">添加</button>
+            </div>
+
+            <div class="dir-table" id="dirList"></div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">终端命令执行权限</h2>
+                <p class="section-desc">按最小权限原则，命令执行默认关闭；仅当你信任所连 Hub 时再开启。</p>
+              </div>
+            </div>
+            <div class="setting-list">
+              <div class="setting-row">
+                <div>
+                  <div class="setting-title">允许 AI 在本机执行终端命令（--allow-exec）</div>
+                  <div class="setting-desc" id="execDesc">当前已关闭：AI 仅能在上方授权目录内读、写、搜文件，所有 shell 命令都会被直接拒绝。</div>
+                </div>
+                <label class="switch risk">
+                  <input type="checkbox" id="allowExecToggle" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- View 3: Live Activity -->
+        <div class="workspace-inner wide view" id="view-activity">
+          <div class="activity-toolbar">
+            <div class="segmented" role="tablist" aria-label="事件筛选">
+              <button type="button" class="seg-btn active" data-filter="all">全部</button>
+              <button type="button" class="seg-btn" data-filter="fs">文件操作</button>
+              <button type="button" class="seg-btn" data-filter="exec">终端命令</button>
+              <button type="button" class="seg-btn" data-filter="error">异常与拦截</button>
+            </div>
+            <div class="input-row" style="gap:8px">
+              <input type="text" id="eventSearch" class="search-box" placeholder="筛选路径、命令或状态…" />
+              <button type="button" id="clearEventsBtn" class="btn sm">清空</button>
+            </div>
+          </div>
+
+          <div class="audit-table">
+            <div class="audit-head">
+              <span>时间</span>
+              <span>操作</span>
+              <span>详情</span>
+              <span style="text-align:right">耗时</span>
+            </div>
+            <div class="audit-body" id="eventFeed">
+              <div class="audit-empty">连接 Hub 后，AI 在本机执行的每一次文件读写与终端命令都会在此实时展示。</div>
+            </div>
+          </div>
+
+          <div class="cli-bar">
+            <span class="field-hint" style="flex-shrink:0">等效命令行</span>
+            <code id="cliPreview">-</code>
+            <button type="button" id="copyCliBtn" class="btn sm">复制</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <div class="modal-backdrop" id="quitModal">
+    <div class="modal">
+      <h3>确认退出 Omni MCP Agent？</h3>
+      <p>退出会立即断开与 Hub 的连接，并终止由本 Agent 启动的后台任务。</p>
+      <div class="modal-actions">
+        <button type="button" id="quitCancelBtn" class="btn">取消</button>
+        <button type="button" id="quitConfirmBtn" class="btn danger">确认退出</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const csrf = document.querySelector('meta[name="omni-csrf"]').content;
+    const $ = (id) => document.getElementById(id);
+
+    let state = null;
+    let formInitialized = false;
+    let formDirty = false;
+    let draftDirs = [];
+    let activeTab = 'connection';
+    let eventFilter = 'all';
+    let toastTimer = null;
+
+    // Theme persistence
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      try { localStorage.setItem('omni-agent-ui-theme', theme); } catch {}
+      $('themeLabel').textContent = theme === 'dark' ? '浅色模式' : '深色模式';
+    }
+    try {
+      const saved = localStorage.getItem('omni-agent-ui-theme');
+      if (saved === 'light' || saved === 'dark') applyTheme(saved);
+    } catch {}
+    $('themeBtn').onclick = () => {
+      const cur = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      applyTheme(cur);
+    };
+
+    // Navigation
+    const tabTitles = {
+      connection: '连接配置',
+      access: '目录与权限',
+      activity: '实时审计流'
+    };
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.onclick = () => {
+        activeTab = btn.dataset.tab;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + activeTab));
+        $('pageTitle').textContent = tabTitles[activeTab] || 'Omni MCP Agent';
+      };
+    });
+
+    // Event filters
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.onclick = () => {
+        eventFilter = btn.dataset.filter;
+        document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+        if (state) renderEvents(state.events || []);
+      };
+    });
+    $('eventSearch').oninput = () => { if (state) renderEvents(state.events || []); };
+
+    function showToast(text, isErr = false) {
+      const el = $('toast');
+      el.textContent = text;
+      el.className = 'toast show' + (isErr ? ' err' : '');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.className = 'toast'; }, 3400);
+    }
+
+    async function api(path, opts = {}) {
+      const headers = Object.assign({}, opts.headers || {});
+      if (opts.method === 'POST') {
+        headers['X-Omni-UI-Token'] = csrf;
+        if (opts.body) headers['Content-Type'] = 'application/json';
+      }
+      const res = await fetch(path, Object.assign({}, opts, { headers }));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || ('请求失败 (HTTP ' + res.status + ')'));
+      }
+      return data;
+    }
+
+    function markDirty(dirty) {
+      formDirty = dirty;
+      $('dirtyHint').textContent = dirty ? '有未保存更改' : '';
+    }
+
+    function updateEnvHint() {
+      const raw = ($('nameInput').value || 'my-workstation').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+      $('envNameCode').textContent = 'OMNI_AGENT_TOKEN_' + (raw || 'MY_WORKSTATION');
+    }
+
+    function updateExecDesc() {
+      const on = $('allowExecToggle').checked;
+      const el = $('execDesc');
+      if (on) {
+        el.className = 'setting-desc warn';
+        el.textContent = '已启用：AI 可在授权工作区以当前系统用户身份运行 PowerShell / Shell 命令，请仅连接可信 Hub。';
+      } else {
+        el.className = 'setting-desc';
+        el.textContent = '当前已关闭：AI 仅能在上方授权目录内读、写、搜文件，所有 shell 命令都会被直接拒绝。';
+      }
+    }
+
+    function renderDirs() {
+      const box = $('dirList');
+      box.innerHTML = '';
+      $('navDirCount').textContent = String(draftDirs.length);
+      if (!draftDirs.length) {
+        const empty = document.createElement('div');
+        empty.className = 'dir-empty';
+        empty.textContent = '尚未添加任何工作目录，点击右上角“浏览选择文件夹”或在上方输入路径。';
+        box.appendChild(empty);
+        return;
+      }
+      draftDirs.forEach((dir, idx) => {
+        const row = document.createElement('div');
+        row.className = 'dir-row';
+        const left = document.createElement('div');
+        left.className = 'dir-path';
+        left.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.65"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+        const txt = document.createElement('span');
+        txt.textContent = dir;
+        left.appendChild(txt);
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn ghost sm';
+        del.textContent = '移除';
+        del.onclick = () => {
+          draftDirs.splice(idx, 1);
+          markDirty(true);
+          renderDirs();
+        };
+        row.appendChild(left);
+        row.appendChild(del);
+        box.appendChild(row);
+      });
+    }
+
+    function addDir(val) {
+      const p = (val || '').trim();
+      if (!p) return;
+      if (!draftDirs.some(d => d.toLowerCase() === p.toLowerCase())) {
+        draftDirs.push(p);
+        markDirty(true);
+        renderDirs();
+      }
+      $('dirInput').value = '';
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleTimeString('zh-CN', { hour12: false });
+    }
+
+    function methodLabel(m) {
+      const map = {
+        'fs.read': '读文件',
+        'fs.read_head': '读文件头',
+        'fs.write': '写文件',
+        'fs.remove': '删文件',
+        'fs.mkdir': '建目录',
+        'fs.stat': '查属性',
+        'fs.read_dir': '列目录',
+        'fs.glob': '找文件',
+        'fs.search': '搜内容',
+        'shell.run': '执行命令',
+        'shell.start': '后台命令',
+        'shell.poll': '读输出',
+        'shell.signal': '终止进程',
+        'system.info': '状态探测'
+      };
+      return map[m] || m;
+    }
+
+    function classifyEvent(ev) {
+      if (ev.error) return { label: ev.method ? methodLabel(ev.method) : '连接异常', cls: 'err', cat: 'error' };
+      if (ev.kind === 'connected') return { label: '已连接', cls: 'ok', cat: 'sys' };
+      if (ev.kind === 'connecting') return { label: '连接中', cls: 'sys', cat: 'sys' };
+      if (ev.kind === 'disconnected') return { label: '已断开', cls: 'sys', cat: 'sys' };
+      if (ev.kind === 'system') return { label: '系统', cls: 'sys', cat: 'sys' };
+      const m = ev.method || '';
+      if (m.startsWith('shell.')) return { label: methodLabel(m), cls: 'exec', cat: 'exec' };
+      if (m.startsWith('fs.')) return { label: methodLabel(m), cls: 'fs', cat: 'fs' };
+      return { label: methodLabel(m) || '操作', cls: 'sys', cat: 'sys' };
+    }
+
+    function renderEvents(events) {
+      $('navEventCount').textContent = String(events.length);
+      const q = ($('eventSearch').value || '').trim().toLowerCase();
+      const filtered = [];
+      for (let i = events.length - 1; i >= 0; i--) {
+        const ev = events[i];
+        const meta = classifyEvent(ev);
+        if (eventFilter === 'fs' && meta.cat !== 'fs') continue;
+        if (eventFilter === 'exec' && meta.cat !== 'exec') continue;
+        if (eventFilter === 'error' && !ev.error) continue;
+        if (q) {
+          const hay = (meta.label + ' ' + (ev.summary || '') + ' ' + (ev.error || '') + ' ' + (ev.method || '')).toLowerCase();
+          if (!hay.includes(q)) continue;
+        }
+        filtered.push({ ev, meta });
+      }
+      const feed = $('eventFeed');
+      if (!filtered.length) {
+        feed.innerHTML = '<div class="audit-empty">' + (events.length ? '没有匹配当前筛选条件的记录。' : '连接 Hub 后，AI 在本机执行的每一次文件读写与终端命令都会在此实时展示。') + '</div>';
+        return;
+      }
+      feed.innerHTML = '';
+      filtered.forEach(({ ev, meta }) => {
+        const row = document.createElement('div');
+        row.className = 'audit-row';
+
+        const tm = document.createElement('span');
+        tm.className = 'audit-time';
+        tm.textContent = formatTime(ev.time);
+
+        const tp = document.createElement('span');
+        tp.className = 'audit-type ' + meta.cls;
+        tp.textContent = meta.label;
+
+        const det = document.createElement('div');
+        det.className = 'audit-detail';
+        if (ev.summary) {
+          const s = document.createElement('div');
+          s.className = 'audit-summary';
+          s.title = ev.summary;
+          s.textContent = ev.summary;
+          det.appendChild(s);
+        }
+        if (ev.error) {
+          const e = document.createElement('div');
+          e.className = 'audit-err';
+          e.textContent = ev.error;
+          det.appendChild(e);
+        }
+
+        const dur = document.createElement('span');
+        dur.className = 'audit-dur';
+        dur.textContent = ev.duration_ms > 0 ? (ev.duration_ms + ' ms') : '—';
+
+        row.appendChild(tm);
+        row.appendChild(tp);
+        row.appendChild(det);
+        row.appendChild(dur);
+        feed.appendChild(row);
+      });
+    }
+
+    function renderState(next, forceFormSync = false) {
+      state = next;
+      const st = next.state || 'disconnected';
+      $('connState').dataset.state = st;
+      const stateLabels = {
+        connected: '已连接',
+        connecting: '正在连接…',
+        pairing: '等待 Hub 审批…',
+        reconnecting: next.retry_in_sec ? ('重连中 · ' + next.retry_in_sec + 's') : '重连中…',
+        disconnected: '未连接'
+      };
+      $('connStateText').textContent = stateLabels[st] || '未连接';
+      $('sidebarDevice').textContent = next.profile.name || '尚未配置设备';
+      let hubHost = '请填写 Hub 地址后连接';
+      if (next.profile.hub) {
+        try { hubHost = new URL(next.profile.hub).host; } catch { hubHost = next.profile.hub; }
+      }
+      if (next.connected_at) {
+        hubHost += ' · ' + formatTime(next.connected_at);
+      }
+      $('sidebarHub').textContent = hubHost;
+      $('headerMeta').textContent = (next.version || 'dev') + ' · 本机回环控制台';
+
+      const isPairing = st === 'pairing';
+      const active = st === 'connected' || st === 'connecting' || st === 'reconnecting';
+      const toggleBtn = $('toggleConnBtn');
+      toggleBtn.textContent = isPairing ? '取消配对' : (active ? '立即断开' : '连接 Hub');
+      toggleBtn.className = 'btn full ' + ((active || isPairing) ? 'danger' : 'primary');
+
+      $('statOS').textContent = (next.os || '-') + ' / ' + (next.arch || '-');
+      $('statShell').textContent = (next.shell || '-').split(' ')[0];
+      $('statShell').title = next.shell || '';
+      const dirCount = next.profile.allow_dirs ? next.profile.allow_dirs.length : 0;
+      $('statDirs').textContent = dirCount + ' 个目录';
+      $('statExec').textContent = next.profile.allow_exec ? '已启用 Shell' : '仅文件沙箱';
+      $('statExec').className = 'metric-value ' + (next.profile.allow_exec ? 'warn' : 'ok');
+
+      $('tokenStorageHint').textContent = next.token_storage || '';
+      $('cliPreview').textContent = next.cli_preview || '';
+
+      if (next.profile.has_token) {
+        const pairedLabel = next.profile.paired_name ? ('设备 ' + next.profile.paired_name + ' 已完成 Hub 配对授权（本地已加密保存）') : '已保存配对凭证（更改设备名后将自动重新发起 Hub 配对）';
+        $('tokenStateText').textContent = pairedLabel;
+        $('tokenStateText').className = 'token-saved';
+        $('rePairBtn').style.display = 'inline-flex';
+        $('clearTokenBtn').style.display = 'inline-flex';
+      } else {
+        $('tokenStateText').textContent = '无需手动配置密钥：填写 Hub 地址、自定义设备名并选择工作目录后，点击「连接 Hub」即可一键在 Hub 批准接入。';
+        $('tokenStateText').className = '';
+        $('rePairBtn').style.display = 'none';
+        $('clearTokenBtn').style.display = 'none';
+      }
+
+      const pairBanner = $('pairingBanner');
+      if (isPairing && next.pairing) {
+        pairBanner.className = 'pair-banner show';
+        $('pairCodeVal').textContent = next.pairing.code || '----';
+        $('pairTitle').textContent = '正在等待 Hub 批准设备 ' + (next.pairing.device_name || next.profile.name || '') + '…';
+        updatePairingCountdown();
+      } else {
+        pairBanner.className = 'pair-banner';
+      }
+
+      const errBox = $('connErrBox');
+      if (next.last_error) {
+        errBox.className = 'alert show';
+        $('connErrText').textContent = '连接异常：' + next.last_error;
+      } else {
+        errBox.className = 'alert';
+      }
+
+      if (!formInitialized || (forceFormSync && !formDirty)) {
+        $('hubInput').value = next.profile.hub || '';
+        $('nameInput').value = next.profile.name || '';
+        $('allowExecToggle').checked = !!next.profile.allow_exec;
+        $('saveTokenToggle').checked = next.profile.save_token !== false;
+        $('autoConnectToggle').checked = !!next.profile.auto_connect;
+        draftDirs = Array.isArray(next.profile.allow_dirs) ? next.profile.allow_dirs.slice() : [];
+        renderDirs();
+        updateEnvHint();
+        updateExecDesc();
+        formInitialized = true;
+        markDirty(false);
+      }
+
+      renderEvents(Array.isArray(next.events) ? next.events : []);
+    }
+
+    function updatePairingCountdown() {
+      if (!state || state.state !== 'pairing' || !state.pairing) return;
+      const exp = new Date(state.pairing.expires_at).getTime();
+      const sec = Math.max(0, Math.ceil((exp - Date.now()) / 1000));
+      const m = Math.floor(sec / 60);
+      const r = sec % 60;
+      const rem = m > 0 ? (m + ' 分 ' + r + ' 秒') : (r + ' 秒');
+      $('pairDesc').textContent = '请在打开的 Hub 页面核对上方验证码并点击「批准接入」（有效期剩余 ' + rem + '）。批准后本机将自动加密保存独立凭证并立即上线。';
+    }
+    setInterval(updatePairingCountdown, 1000);
+
+    async function saveConfig(connectNow) {
+      const pendingDir = $('dirInput').value.trim();
+      if (pendingDir) addDir(pendingDir);
+      const payload = {
+        hub: $('hubInput').value.trim(),
+        name: $('nameInput').value.trim(),
+        allow_dirs: draftDirs,
+        allow_exec: $('allowExecToggle').checked,
+        save_token: $('saveTokenToggle').checked,
+        auto_connect: $('autoConnectToggle').checked,
+        token: $('tokenInput').value.trim(),
+        connect_now: !!connectNow
+      };
+      try {
+        const next = await api('/api/config', { method: 'POST', body: JSON.stringify(payload) });
+        $('tokenInput').value = '';
+        markDirty(false);
+        renderState(next, true);
+        showToast(connectNow ? (next.state === 'pairing' ? '已向 Hub 发起一键配对，请在浏览器批准接入' : '配置已保存，正在连接 Hub') : '配置已保存');
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    $('hubInput').oninput = () => markDirty(true);
+    $('nameInput').oninput = () => { markDirty(true); updateEnvHint(); };
+    $('tokenInput').oninput = () => markDirty(true);
+    $('allowExecToggle').onchange = () => { markDirty(true); updateExecDesc(); };
+    $('saveTokenToggle').onchange = () => markDirty(true);
+    $('autoConnectToggle').onchange = () => markDirty(true);
+    $('addDirBtn').onclick = () => addDir($('dirInput').value);
+    $('dirInput').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addDir($('dirInput').value); } };
+
+    $('toggleTokenVis').onclick = () => {
+      const inp = $('tokenInput');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      $('toggleTokenVis').textContent = show ? '隐藏' : '显示';
+    };
+
+    $('pickDirBtn').onclick = async () => {
+      const btn = $('pickDirBtn');
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.textContent = '等待选择…';
+      try {
+        const res = await api('/api/pick-dir', { method: 'POST' });
+        if (res.path) {
+          addDir(res.path);
+          showToast('已添加目录：' + res.path);
+        }
+      } catch (e) {
+        showToast(e.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }
+    };
+
+    $('saveOnlyBtn').onclick = () => saveConfig(false);
+    $('saveConnectBtn').onclick = () => saveConfig(true);
+
+    $('toggleConnBtn').onclick = async () => {
+      const isPairing = state && state.state === 'pairing';
+      const active = state && (state.state === 'connected' || state.state === 'connecting' || state.state === 'reconnecting');
+      try {
+        if (isPairing) {
+          const next = await api('/api/pair/cancel', { method: 'POST' });
+          renderState(next, false);
+          showToast('已取消配对请求');
+        } else if (active) {
+          const next = await api('/api/disconnect', { method: 'POST' });
+          renderState(next, false);
+          showToast('已断开与 Hub 的连接');
+        } else if (formDirty) {
+          await saveConfig(true);
+        } else {
+          const next = await api('/api/connect', { method: 'POST' });
+          renderState(next, false);
+          if (next.state === 'pairing') {
+            showToast('已向 Hub 发起一键配对，请在浏览器点击批准');
+          }
+        }
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    $('openApproveBtn').onclick = async () => {
+      try {
+        await api('/api/pair/open', { method: 'POST' });
+      } catch (e) {
+        if (state && state.pairing && state.pairing.approve_url) {
+          showToast('请手动在浏览器打开：' + state.pairing.approve_url);
+        } else {
+          showToast(e.message, true);
+        }
+      }
+    };
+
+    $('cancelPairBtn').onclick = async () => {
+      try {
+        const next = await api('/api/pair/cancel', { method: 'POST' });
+        renderState(next, false);
+        showToast('已取消配对请求');
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    $('rePairBtn').onclick = async () => {
+      try {
+        if (formDirty) await saveConfig(false);
+        const next = await api('/api/pair/start', { method: 'POST' });
+        renderState(next, false);
+        showToast('已向 Hub 发起重新配对，请在浏览器批准接入');
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    $('clearTokenBtn').onclick = async () => {
+      try {
+        const next = await api('/api/token/clear', { method: 'POST' });
+        renderState(next, false);
+        showToast('已清除本地保存的配对令牌');
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    $('clearEventsBtn').onclick = async () => {
+      try {
+        const next = await api('/api/events/clear', { method: 'POST' });
+        renderState(next, false);
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    $('copyCliBtn').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText($('cliPreview').textContent);
+        showToast('命令行已复制到剪贴板');
+      } catch {
+        showToast('复制失败，请手动选中复制', true);
+      }
+    };
+
+    $('quitBtn').onclick = () => $('quitModal').classList.add('show');
+    $('quitCancelBtn').onclick = () => $('quitModal').classList.remove('show');
+    $('quitConfirmBtn').onclick = async () => {
+      $('quitModal').classList.remove('show');
+      try {
+        await api('/api/shutdown', { method: 'POST' });
+        showToast('Omni MCP Agent 已停止运行，可关闭此页面');
+        ['toggleConnBtn', 'saveConnectBtn', 'saveOnlyBtn', 'quitBtn'].forEach(id => { $(id).disabled = true; });
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    function startStream() {
+      const es = new EventSource('/api/events');
+      es.addEventListener('state', (ev) => {
+        try { renderState(JSON.parse(ev.data), false); } catch {}
+      });
+    }
+
+    api('/api/state')
+      .then((data) => {
+        renderState(data, true);
+        startStream();
+      })
+      .catch((e) => showToast(e.message, true));
+  </script>
+</body>
+</html>

@@ -27,7 +27,47 @@ type ClientOptions struct {
 	Version   string
 	AllowDirs []string
 	AllowExec bool
+	NoPrompt  bool
+	OnEvent   func(Event)
 	Log       *slog.Logger
+}
+
+// Event describes an observable Agent lifecycle or tool operation event for UI/logging consumers.
+type Event struct {
+	Time       time.Time `json:"time"`
+	Kind       string    `json:"kind"` // connecting | connected | disconnected | operation
+	Method     string    `json:"method,omitempty"`
+	Summary    string    `json:"summary,omitempty"`
+	DurationMs int64     `json:"duration_ms,omitempty"`
+	Error      string    `json:"error,omitempty"`
+	RetryInSec int       `json:"retry_in_sec,omitempty"`
+}
+
+func ValidateName(name string) error {
+	name = strings.TrimSpace(name)
+	if !validAgentName.MatchString(name) || name == "local" {
+		return fmt.Errorf("agent name must use lowercase letters, numbers, and hyphens, and cannot be local")
+	}
+	return nil
+}
+
+func ValidateHubURL(raw string) error {
+	_, err := agentEndpoint(raw)
+	return err
+}
+
+func DetectedShell() string {
+	return agentShellName(runtime.GOOS)
+}
+
+func (c *Client) emit(ev Event) {
+	if c.opts.OnEvent == nil {
+		return
+	}
+	if ev.Time.IsZero() {
+		ev.Time = time.Now()
+	}
+	c.opts.OnEvent(ev)
 }
 
 type Client struct {
@@ -52,7 +92,7 @@ func NewClient(options ClientOptions) (*Client, error) {
 	if options.Token == "" {
 		options.Token = strings.TrimSpace(os.Getenv(options.TokenEnv))
 	}
-	if options.Token == "" && term.IsTerminal(int(os.Stdin.Fd())) {
+	if options.Token == "" && !options.NoPrompt && term.IsTerminal(int(os.Stdin.Fd())) {
 		fmt.Fprintf(os.Stderr, "Omni MCP Hub 配对令牌（输入不回显）: ")
 		secret, err := term.ReadPassword(int(os.Stdin.Fd()))
 		fmt.Fprintln(os.Stderr)
@@ -128,8 +168,10 @@ func (c *Client) Run(ctx context.Context) error {
 		delay = retryDelayAfterSession(delay, time.Since(sessionStart))
 		if err != nil && !errors.Is(err, context.Canceled) {
 			c.log.Warn("Hub 连接中断，将自动重连", "name", c.opts.Name, "err", err, "retry_in", delay)
+			c.emit(Event{Kind: "disconnected", Error: err.Error(), RetryInSec: int(delay / time.Second)})
 		}
 		if ctx.Err() != nil {
+			c.emit(Event{Kind: "disconnected"})
 			return ctx.Err()
 		}
 		timer := time.NewTimer(delay)
@@ -162,6 +204,7 @@ func nextRetryDelay(delay time.Duration) time.Duration {
 }
 
 func (c *Client) runSession(ctx context.Context) error {
+	c.emit(Event{Kind: "connecting", Summary: c.opts.Hub})
 	header := http.Header{}
 	header.Set("Authorization", "Bearer "+c.opts.Token)
 	header.Set("X-Omni-Agent-Name", c.opts.Name)
@@ -195,6 +238,7 @@ func (c *Client) runSession(ctx context.Context) error {
 		return fmt.Errorf("Hub rejected Agent registration")
 	}
 	c.log.Info("已连接 Omni MCP Hub", "name", c.opts.Name, "allowed_dirs", len(c.roots), "exec_enabled", c.opts.AllowExec)
+	c.emit(Event{Kind: "connected", Summary: root})
 	var writes sync.Mutex
 	semaphore := make(chan struct{}, 4)
 	var inflight sync.Map

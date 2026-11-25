@@ -50,10 +50,18 @@ type agentProcess struct {
 }
 
 func (c *Client) handle(ctx context.Context, request message) message {
+	start := time.Now()
 	response := message{Type: "response", ID: request.ID}
 	result, err := c.dispatch(ctx, request.Method, request.Params)
 	if err != nil {
 		response.Error = err.Error()
+		c.emit(Event{
+			Kind:       "operation",
+			Method:     request.Method,
+			Summary:    summarizeOperation(request.Method, request.Params),
+			DurationMs: time.Since(start).Milliseconds(),
+			Error:      err.Error(),
+		})
 		return response
 	}
 	if result != nil {
@@ -62,7 +70,52 @@ func (c *Client) handle(ctx context.Context, request message) message {
 			response.Error = fmt.Sprintf("encode Agent result: %v", err)
 		}
 	}
+	c.emit(Event{
+		Kind:       "operation",
+		Method:     request.Method,
+		Summary:    summarizeOperation(request.Method, request.Params),
+		DurationMs: time.Since(start).Milliseconds(),
+		Error:      response.Error,
+	})
 	return response
+}
+
+func summarizeOperation(method string, raw json.RawMessage) string {
+	var fields struct {
+		Path    string `json:"path"`
+		Dir     string `json:"dir"`
+		Pattern string `json:"pattern"`
+		Command string `json:"command"`
+		ID      string `json:"id"`
+		Signal  string `json:"signal"`
+	}
+	_ = json.Unmarshal(raw, &fields)
+	var summary string
+	switch method {
+	case "shell.run", "shell.start":
+		summary = strings.TrimSpace(fields.Command)
+	case "shell.poll":
+		summary = fields.ID
+	case "shell.signal":
+		summary = strings.TrimSpace(fields.Signal + " " + fields.ID)
+	case "fs.glob", "fs.search":
+		if fields.Pattern != "" && fields.Dir != "" {
+			summary = fields.Pattern + " @ " + fields.Dir
+		} else if fields.Pattern != "" {
+			summary = fields.Pattern
+		} else {
+			summary = fields.Dir
+		}
+	case "system.info":
+		summary = "health probe"
+	default:
+		summary = fields.Path
+	}
+	runes := []rune(strings.ReplaceAll(strings.ReplaceAll(summary, "\r", " "), "\n", " "))
+	if len(runes) > 120 {
+		return string(runes[:120]) + "…"
+	}
+	return string(runes)
 }
 
 func (c *Client) dispatch(ctx context.Context, method string, raw json.RawMessage) (any, error) {
