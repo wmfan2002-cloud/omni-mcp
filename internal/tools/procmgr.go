@@ -1,0 +1,169 @@
+package tools
+
+import (
+	"fmt"
+	"sort"
+	"sync"
+	"time"
+
+	"omni-mcp/internal/fleet"
+	"omni-mcp/internal/idgen"
+)
+
+// Proc 是一个后台运行的 shell 进程。
+//
+// HTTP 请求有超时，长任务（编译、迁移、压测）不能占着一次工具调用不放，
+// 所以 shell 支持丢到后台，再用 shell_output / shell_kill 观察和收尾。
+type Proc struct {
+	ID      string
+	Target  string
+	Label   string
+	Command string
+	Workdir string
+	Started time.Time
+
+	proc fleet.Process
+	out  *capWriter
+	done chan struct{}
+
+	mu       sync.Mutex
+	cursor   int // shell_output 已读到的绝对字节偏移，受 mu 保护
+	finished bool
+	ended    time.Time
+	exitCode int
+	runErr   error
+}
+
+// ProcManager 管理后台进程集合。
+type ProcManager struct {
+	max int
+
+	mu    sync.Mutex
+	procs map[string]*Proc
+}
+
+func NewProcManager(max int) *ProcManager {
+	if max <= 0 {
+		max = 16
+	}
+	return &ProcManager{max: max, procs: map[string]*Proc{}}
+}
+
+// Add 登记一个新进程；超过上限时先清理已结束的，仍超限则报错。
+func (m *ProcManager) Add(p *Proc) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if len(m.procs) >= m.max {
+		m.reapLocked()
+	}
+	if len(m.procs) >= m.max {
+		return fmt.Errorf("后台进程已达上限 %d，请先用 shell_kill 结束一些，或等它们跑完", m.max)
+	}
+	m.procs[p.ID] = p
+	return nil
+}
+
+// reapLocked 清掉结束超过 30 分钟的记录，避免无限堆积。
+func (m *ProcManager) reapLocked() {
+	cutoff := time.Now().Add(-30 * time.Minute)
+	for id, p := range m.procs {
+		p.mu.Lock()
+		stale := p.finished && p.ended.Before(cutoff)
+		p.mu.Unlock()
+		if stale {
+			delete(m.procs, id)
+		}
+	}
+}
+
+func (m *ProcManager) Get(id string) (*Proc, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	p, ok := m.procs[id]
+	return p, ok
+}
+
+// List 返回按启动时间倒序排列的进程。
+func (m *ProcManager) List() []*Proc {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]*Proc, 0, len(m.procs))
+	for _, p := range m.procs {
+		out = append(out, p)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Started.After(out[j].Started) })
+	return out
+}
+
+func (m *ProcManager) Remove(id string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.procs, id)
+}
+
+// KillAll 在服务退出时结束所有后台进程。
+func (m *ProcManager) KillAll() {
+	for _, p := range m.List() {
+		_ = p.Signal(fleet.SignalTERM)
+	}
+}
+
+func newProcID() string { return idgen.New("proc") }
+
+// Running 报告进程是否仍在运行。
+func (p *Proc) Running() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return !p.finished
+}
+
+// Status 返回状态快照。
+func (p *Proc) Status() (running bool, exitCode int, runErr error, ended time.Time) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return !p.finished, p.exitCode, p.runErr, p.ended
+}
+
+// markDone 记录退出状态。
+func (p *Proc) markDone(exitCode int, err error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.finished = true
+	p.ended = time.Now()
+	p.exitCode = exitCode
+	p.runErr = err
+	close(p.done)
+}
+
+// Output 返回全部已捕获输出。
+func (p *Proc) Output() string { return p.out.String() }
+
+// TakeNew 返回自上次 TakeNew 以来新增的输出，并推进游标。
+// 游标是 capWriter 的绝对写入偏移，不是快照字符串的下标：输出被截断后，
+// 省略标记和 tail 的位置都会变化，字符串下标会指向错误的字节，导致漏输出。
+// 快照与游标必须在同一把锁内：否则并发时旧快照会让游标回退，重复交付输出。
+func (p *Proc) TakeNew() string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	out, _, next := p.out.Since(p.cursor)
+	p.cursor = next
+	return out
+}
+
+// Signal 给整个进程组发信号：后台任务常常自己再拉子进程，只杀父进程会留孤儿。
+func (p *Proc) Signal(sig fleet.Signal) error {
+	if p.proc == nil {
+		return fmt.Errorf("进程尚未启动")
+	}
+	return p.proc.Signal(sig)
+}
+
+// Wait 等待进程结束或超时。
+func (p *Proc) Wait(timeout time.Duration) bool {
+	select {
+	case <-p.done:
+		return true
+	case <-time.After(timeout):
+		return false
+	}
+}

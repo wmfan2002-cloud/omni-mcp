@@ -1,0 +1,112 @@
+# Omni MCP Hub 的 Docker 部署。
+#
+#   cd deploy
+#   cp .env.example .env && $EDITOR .env          # 至少填 OMNI_BASE_URL
+#   cp ../configs/config.example.yaml config.yaml && $EDITOR config.yaml
+#   docker compose up -d --build
+#
+# .env 与 config.yaml 都不入库（含域名、密码哈希、令牌）。
+
+name: omni-mcp
+
+services:
+  mcp:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        VERSION: ${VERSION:-0.1.0}
+        AGENT_UID: ${AGENT_UID:-10001}
+        AGENT_GID: ${AGENT_GID:-10001}
+        SUDO_NOPASSWD: ${SUDO_NOPASSWD:-true}
+    image: omni-mcp:${VERSION:-0.1.0}
+    container_name: omni-mcp
+    hostname: mcp
+    restart: unless-stopped
+
+    # 默认只映射到回环：HTTPS 与公网入口由 Cloudflare Tunnel / 反代提供。
+    # 想让别的机器直连再把 BIND_ADDR 改成 0.0.0.0，但那样是明文 HTTP，
+    # OAuth 口令和令牌会裸奔。
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${HOST_PORT:-8485}:8484"
+
+    environment:
+      # 必填。必须与 ChatGPT 里填的连接器地址逐字一致（scheme + 主机名，无尾斜杠），
+      # OAuth 元数据、回调校验、资源标识全以它为准，写错了整条授权链路都不通。
+      OMNI_BASE_URL: ${OMNI_BASE_URL:?请在 deploy/.env 里填 OMNI_BASE_URL，例如 https://omni-mcp.example.com}
+      OMNI_LOG_LEVEL: ${OMNI_LOG_LEVEL:-info}
+      OMNI_LOG_FORMAT: ${OMNI_LOG_FORMAT:-json}
+      TZ: ${TZ:-Asia/Shanghai}
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./config.yaml:/etc/omni-mcp/config.yaml:ro
+      # OAuth 客户端注册表、令牌库、审计日志。别用 bind mount 挂到工作区里面，
+      # 那等于把令牌库放在 agent 自己能写的地方。
+      - mcp-data:/var/lib/omni-mcp
+      # agent 的工作区。想让它管别的目录就在这里继续挂，例如：
+      #   - /srv/notes:/srv/notes
+      - ./workspace:/workspace
+
+    networks:
+      # 业务网络（compose 自建），留给以后可能的 sidecar。
+      - default
+      # 入站网络：由反代/隧道那边提供，本服务挂进去让它能按容器名访问。
+      # 入口不该反过来加入业务网络——它是共享的前门，服务挂上来才对。
+      - ingress
+
+    # 单核机器上不设硬性 cpu 上限（会拖慢正常的编译/测试），
+    # 改用相对权重：只在争抢时让它退让给同机的其它服务。
+    cpu_shares: 512
+    # 这台机器没有 swap，超限就是 OOM kill，留足余量。
+    mem_limit: ${MEM_LIMIT:-2g}
+    memswap_limit: ${MEM_LIMIT:-2g}
+    pids_limit: 4096
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 65535
+
+    # 刻意没有 security_opt: no-new-privileges —— 它会让镜像里的免密 sudo 失效。
+    # 如果构建时传了 SUDO_NOPASSWD=false，可以把下面两行打开：
+    # security_opt:
+    #   - no-new-privileges:true
+
+    stop_grace_period: 20s
+    # agent 的命令输出可能很大，别让日志把磁盘吃光。
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # 可选：把隧道也交给这个 compose 管（适合"这条隧道只服务本项目"的场景）。
+  # 已经有一个公用 cloudflared 在跑就别开，按下面 networks 的说明把本服务挂进它的网络即可。
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: omni-mcp-cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN:?}
+  #   networks: [ingress]
+  #   depends_on: [mcp]
+
+volumes:
+  mcp-data:
+
+networks:
+  # 业务网络。名字刻意与 Hub 容器区分开，便于查看 Docker 资源。
+  default:
+    name: omni-mcp-internal
+
+  # 入站网络，由隧道/反代那侧持有，本项目只是挂进去，所以声明为 external。
+  # 首次部署前先建好，并把入口容器接进来：
+  #   docker network create cloudflared
+  #   docker network connect cloudflared <cloudflared 容器名>
+  # 然后隧道的 Public hostname → Service 填 http://omni-mcp:8484
+  # （不能填 127.0.0.1:8484 —— 那是 cloudflared 容器自己的回环，必然 502）。
+  # 不用隧道/反代的话，把这里和 services.mcp.networks 里的 ingress 一起删掉。
+  ingress:
+    external: true
+    name: ${INGRESS_NETWORK:-cloudflared}

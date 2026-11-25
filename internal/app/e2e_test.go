@@ -1,0 +1,1235 @@
+package app_test
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
+	"syscall"
+	"testing"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"omni-mcp/internal/app"
+	"omni-mcp/internal/config"
+)
+
+const testPassword = "correct-horse-battery"
+
+// harness 起一个完整的服务实例：真实的 OAuth 授权服务器 + MCP 端点。
+type harness struct {
+	t         *testing.T
+	srv       *httptest.Server
+	base      string
+	workdir   string
+	token     string
+	sessionID string
+	auditPath string
+	reqID     int
+	logs      *lockedBuffer
+}
+
+// lockedBuffer 收集服务日志；handler 在别的 goroutine 里写，读写都要加锁。
+type lockedBuffer struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (l *lockedBuffer) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.b.Write(p)
+}
+
+func (l *lockedBuffer) String() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.b.String()
+}
+
+func newHarness(t *testing.T) *harness { return newHarnessWith(t, nil) }
+
+// newHarnessWith 在装配前留一次改配置的机会，用来钉住开关型行为。
+func newHarnessWith(t *testing.T, tweak func(*config.Config)) *harness {
+	t.Helper()
+	hash, err := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.MinCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	workdir := t.TempDir()
+
+	// 先拿到监听地址，再据此设置 base_url —— OAuth 元数据里的地址必须和实际访问地址一致。
+	srv := httptest.NewUnstartedServer(nil)
+	base := "http://" + srv.Listener.Addr().String()
+
+	cfg := config.Default()
+	cfg.Server.BaseURL = base
+	cfg.Server.DataDir = filepath.Join(t.TempDir(), "data")
+	cfg.Server.AllowedOrigins = []string{"*"}
+	cfg.Auth.Users = []config.User{{Username: "tester", PasswordHash: string(hash)}}
+	cfg.Tools.Shell.DefaultWorkdir = workdir
+	cfg.Audit.File = filepath.Join(cfg.Server.DataDir, "audit.jsonl")
+	if tweak != nil {
+		tweak(cfg)
+	}
+
+	logs := &lockedBuffer{}
+	built, err := app.Build(cfg, slog.New(slog.NewTextHandler(logs, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	if err != nil {
+		t.Fatalf("装配服务失败: %v", err)
+	}
+	srv.Config.Handler = built.Handler
+	srv.Start()
+	t.Cleanup(func() {
+		srv.Close()
+		built.Close()
+	})
+	return &harness{t: t, srv: srv, base: base, workdir: workdir, auditPath: cfg.Audit.File, logs: logs}
+}
+
+func (h *harness) get(path string) (*http.Response, []byte) {
+	h.t.Helper()
+	resp, err := h.srv.Client().Get(h.base + path)
+	if err != nil {
+		h.t.Fatalf("GET %s: %v", path, err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	return resp, body
+}
+
+// authorize 走完整的 注册 → 授权 → 登录 → 换令牌 流程。
+func (h *harness) authorize() {
+	h.t.Helper()
+	client := &http.Client{
+		// 授权码回调指向一个不存在的地址，所以要拦住重定向自己解析 code。
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}
+
+	// 1. 动态客户端注册（ChatGPT 就是这么自助接入的）
+	regBody, _ := json.Marshal(map[string]any{
+		"client_name":                "测试客户端",
+		"redirect_uris":              []string{"https://example.invalid/callback"},
+		"token_endpoint_auth_method": "client_secret_post",
+	})
+	resp, err := client.Post(h.base+"/oauth/register", "application/json", strings.NewReader(string(regBody)))
+	if err != nil {
+		h.t.Fatalf("注册失败: %v", err)
+	}
+	var reg struct {
+		ClientID     string `json:"client_id"`
+		ClientSecret string `json:"client_secret"`
+	}
+	decodeBody(h.t, resp, &reg)
+	if reg.ClientID == "" || reg.ClientSecret == "" {
+		h.t.Fatal("动态注册没有返回 client_id/client_secret")
+	}
+
+	// 2. 发起授权，取登录页里的 req_id
+	verifier := "verifier-0123456789-0123456789-0123456789"
+	sum := sha256.Sum256([]byte(verifier))
+	challenge := base64.RawURLEncoding.EncodeToString(sum[:])
+	authURL := fmt.Sprintf("%s/oauth/authorize?response_type=code&client_id=%s&redirect_uri=%s"+
+		"&code_challenge=%s&code_challenge_method=S256&state=xyz&resource=%s",
+		h.base, reg.ClientID, url.QueryEscape("https://example.invalid/callback"),
+		challenge, url.QueryEscape(h.base+"/mcp"))
+	resp, err = client.Get(authURL)
+	if err != nil {
+		h.t.Fatalf("授权请求失败: %v", err)
+	}
+	page := readBody(h.t, resp)
+	if resp.StatusCode != http.StatusOK {
+		h.t.Fatalf("授权页状态 %d: %s", resp.StatusCode, page)
+	}
+	if csp := resp.Header.Get("Content-Security-Policy"); !strings.Contains(csp, "form-action 'self' https:") {
+		h.t.Errorf("登录页 CSP form-action 应允许 https 回调，实际: %q", csp)
+	}
+	m := regexp.MustCompile(`name="req_id" value="([^"]+)"`).FindStringSubmatch(page)
+	if m == nil {
+		h.t.Fatalf("登录页里找不到 req_id:\n%s", page)
+	}
+
+	// 3. 提交登录，从 302 的 Location 里取授权码
+	form := url.Values{"req_id": {m[1]}, "username": {"tester"}, "password": {testPassword}}
+	resp, err = client.PostForm(h.base+"/oauth/login", form)
+	if err != nil {
+		h.t.Fatalf("登录失败: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusFound {
+		h.t.Fatalf("登录后应 302，实际 %d: %s", resp.StatusCode, readBody(h.t, resp))
+	}
+	loc, err := url.Parse(resp.Header.Get("Location"))
+	if err != nil {
+		h.t.Fatal(err)
+	}
+	code := loc.Query().Get("code")
+	if code == "" {
+		h.t.Fatalf("回调地址里没有 code: %s", loc.String())
+	}
+	if got := loc.Query().Get("state"); got != "xyz" {
+		h.t.Errorf("state 应原样回传，得到 %q", got)
+	}
+
+	// 4. 用授权码 + code_verifier 换访问令牌
+	resp, err = client.PostForm(h.base+"/oauth/token", url.Values{
+		"grant_type":    {"authorization_code"},
+		"code":          {code},
+		"redirect_uri":  {"https://example.invalid/callback"},
+		"client_id":     {reg.ClientID},
+		"client_secret": {reg.ClientSecret},
+		"code_verifier": {verifier},
+	})
+	if err != nil {
+		h.t.Fatalf("换令牌失败: %v", err)
+	}
+	var tok struct {
+		AccessToken  string `json:"access_token"`
+		TokenType    string `json:"token_type"`
+		ExpiresIn    int    `json:"expires_in"`
+		RefreshToken string `json:"refresh_token"`
+	}
+	decodeBody(h.t, resp, &tok)
+	if tok.AccessToken == "" || tok.TokenType != "Bearer" || tok.ExpiresIn <= 0 {
+		h.t.Fatalf("令牌响应不完整: %+v", tok)
+	}
+	if tok.RefreshToken == "" {
+		h.t.Error("应当同时下发 refresh_token")
+	}
+	h.token = tok.AccessToken
+
+	// 授权码不可重放
+	resp, _ = client.PostForm(h.base+"/oauth/token", url.Values{
+		"grant_type": {"authorization_code"}, "code": {code},
+		"client_id": {reg.ClientID}, "client_secret": {reg.ClientSecret},
+		"code_verifier": {verifier},
+	})
+	if resp.StatusCode == http.StatusOK {
+		h.t.Error("同一个授权码被兑换了两次")
+	}
+	resp.Body.Close()
+}
+
+// rpc 发一条 JSON-RPC 请求到 /mcp。
+func (h *harness) rpc(method string, params any) map[string]any {
+	h.t.Helper()
+	h.reqID++
+	payload := map[string]any{"jsonrpc": "2.0", "id": h.reqID, "method": method}
+	if params != nil {
+		payload["params"] = params
+	}
+	body, _ := json.Marshal(payload)
+	req, _ := http.NewRequest(http.MethodPost, h.base+"/mcp", strings.NewReader(string(body)))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json, text/event-stream")
+	if h.token != "" {
+		req.Header.Set("Authorization", "Bearer "+h.token)
+	}
+	if h.sessionID != "" {
+		req.Header.Set("Mcp-Session-Id", h.sessionID)
+	}
+	resp, err := h.srv.Client().Do(req)
+	if err != nil {
+		h.t.Fatalf("%s 请求失败: %v", method, err)
+	}
+	defer resp.Body.Close()
+	if sid := resp.Header.Get("Mcp-Session-Id"); sid != "" {
+		h.sessionID = sid
+	}
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		h.t.Fatalf("%s 返回 %d: %s", method, resp.StatusCode, raw)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		h.t.Fatalf("%s 响应不是 JSON: %v (%s)", method, err, raw)
+	}
+	if e, ok := out["error"]; ok {
+		h.t.Fatalf("%s 返回 JSON-RPC 错误: %v", method, e)
+	}
+	result, _ := out["result"].(map[string]any)
+	return result
+}
+
+// callTool 调一个工具，返回文本内容与 isError。
+func (h *harness) callTool(name string, args map[string]any) (string, bool) {
+	h.t.Helper()
+	res := h.rpc("tools/call", map[string]any{"name": name, "arguments": args})
+	isErr, _ := res["isError"].(bool)
+	var sb strings.Builder
+	for _, c := range res["content"].([]any) {
+		block := c.(map[string]any)
+		if txt, ok := block["text"].(string); ok {
+			sb.WriteString(txt)
+		}
+	}
+	return sb.String(), isErr
+}
+
+func decodeBody(t *testing.T, resp *http.Response, v any) {
+	t.Helper()
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if err := json.Unmarshal(raw, v); err != nil {
+		t.Fatalf("响应不是 JSON（状态 %d）: %v\n%s", resp.StatusCode, err, raw)
+	}
+}
+
+func readBody(t *testing.T, resp *http.Response) string {
+	t.Helper()
+	raw, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	return string(raw)
+}
+
+// TestDiscoveryMetadata 校验 MCP 客户端依赖的两份发现文档。
+func TestDiscoveryMetadata(t *testing.T) {
+	h := newHarness(t)
+
+	resp, body := h.get("/.well-known/oauth-protected-resource")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("受保护资源元数据状态 %d", resp.StatusCode)
+	}
+	var prm struct {
+		Resource   string   `json:"resource"`
+		AuthServer []string `json:"authorization_servers"`
+	}
+	if err := json.Unmarshal(body, &prm); err != nil {
+		t.Fatal(err)
+	}
+	if prm.Resource != h.base+"/mcp" {
+		t.Errorf("resource 应为 %s，得到 %s", h.base+"/mcp", prm.Resource)
+	}
+	if len(prm.AuthServer) != 1 || prm.AuthServer[0] != h.base {
+		t.Errorf("authorization_servers 不对: %v", prm.AuthServer)
+	}
+
+	resp, body = h.get("/.well-known/oauth-authorization-server")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("授权服务器元数据状态 %d", resp.StatusCode)
+	}
+	var asm struct {
+		Issuer     string   `json:"issuer"`
+		AuthEP     string   `json:"authorization_endpoint"`
+		TokenEP    string   `json:"token_endpoint"`
+		RegEP      string   `json:"registration_endpoint"`
+		Challenges []string `json:"code_challenge_methods_supported"`
+	}
+	if err := json.Unmarshal(body, &asm); err != nil {
+		t.Fatal(err)
+	}
+	if asm.Issuer != h.base || asm.AuthEP == "" || asm.TokenEP == "" || asm.RegEP == "" {
+		t.Errorf("授权服务器元数据不完整: %+v", asm)
+	}
+	if len(asm.Challenges) != 1 || asm.Challenges[0] != "S256" {
+		t.Errorf("应只支持 S256，得到 %v", asm.Challenges)
+	}
+}
+
+// TestUnauthorizedChallenge 校验 401 带回可发现授权服务器的头，
+// 这是 ChatGPT 能自动弹出授权流程的前提。
+func TestUnauthorizedChallenge(t *testing.T) {
+	h := newHarness(t)
+	req, _ := http.NewRequest(http.MethodPost, h.base+"/mcp", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/list"}`))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := h.srv.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("无令牌访问应返回 401，实际 %d", resp.StatusCode)
+	}
+	wa := resp.Header.Get("WWW-Authenticate")
+	if !strings.Contains(wa, "resource_metadata=") {
+		t.Errorf("WWW-Authenticate 必须包含 resource_metadata，实际: %q", wa)
+	}
+
+	// 伪造令牌同样应被拒绝（重新构造请求：上一个 body 已被读空）
+	req2, _ := http.NewRequest(http.MethodPost, h.base+"/mcp",
+		strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/list"}`))
+	req2.Header.Set("Content-Type", "application/json")
+	req2.Header.Set("Authorization", "Bearer 假的令牌")
+	resp2, err := h.srv.Client().Do(req2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp2.Body.Close()
+	if resp2.StatusCode != http.StatusUnauthorized {
+		t.Errorf("伪造令牌应返回 401，实际 %d", resp2.StatusCode)
+	}
+}
+
+// TestUnauthenticatedInitialize 钉住 auth.allow_unauthenticated_initialize 的边界。
+//
+// 打开后只有握手能匿名通过，其余方法必须照旧 401 —— 一旦这条松掉，
+// 等于把整台机器的 shell 敞开给任何能访问到 URL 的人。
+func TestUnauthenticatedInitialize(t *testing.T) {
+	const initBody = `{"jsonrpc":"2.0","id":0,"method":"initialize","params":` +
+		`{"protocolVersion":"2025-06-18","capabilities":{},` +
+		`"clientInfo":{"name":"probe","version":"0"}}}`
+
+	post := func(h *harness, body string) *http.Response {
+		t.Helper()
+		req, _ := http.NewRequest(http.MethodPost, h.base+"/mcp", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		resp, err := h.srv.Client().Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return resp
+	}
+
+	on := newHarnessWith(t, func(cfg *config.Config) {
+		cfg.Auth.AllowUnauthenticatedInitialize = true
+	})
+
+	resp := post(on, initBody)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("开关打开时匿名 initialize 应为 200，实际 %d", resp.StatusCode)
+	}
+
+	resp2 := post(on, `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
+	defer resp2.Body.Close()
+	if resp2.StatusCode != http.StatusUnauthorized {
+		t.Errorf("匿名 tools/list 必须 401，实际 %d", resp2.StatusCode)
+	}
+
+	// 默认必须是关的：同一个握手包在默认配置下照样 401。
+	off := newHarness(t)
+	resp3 := post(off, initBody)
+	defer resp3.Body.Close()
+	if resp3.StatusCode != http.StatusUnauthorized {
+		t.Errorf("开关默认关时匿名 initialize 必须 401，实际 %d", resp3.StatusCode)
+	}
+}
+
+// TestPreflightNotBehindAuth 钉住一条容易回归的规则：CORS 预检必须绕过鉴权。
+// 浏览器不允许预检携带 Authorization，所以在鉴权中间件里 401 掉它，
+// 浏览器侧的 MCP 客户端只会显示一个没有下文的连接错误。
+func TestPreflightNotBehindAuth(t *testing.T) {
+	h := newHarness(t)
+
+	req, _ := http.NewRequest(http.MethodOptions, h.base+"/mcp", nil)
+	req.Header.Set("Origin", "https://chatgpt.com")
+	req.Header.Set("Access-Control-Request-Method", "POST")
+	req.Header.Set("Access-Control-Request-Headers", "content-type,authorization")
+	resp, err := h.srv.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("OPTIONS /mcp 预检应返回 204，实际 %d（鉴权把预检拦了？）", resp.StatusCode)
+	}
+	if got := resp.Header.Get("Access-Control-Allow-Origin"); got == "" {
+		t.Error("预检响应缺少 Access-Control-Allow-Origin")
+	}
+	if got := resp.Header.Get("Access-Control-Allow-Headers"); !strings.Contains(strings.ToLower(got), "authorization") {
+		t.Errorf("预检必须允许 Authorization 头，实际: %q", got)
+	}
+
+	// 公开的 OAuth 端点也要能跨源读：浏览器里的客户端靠它做发现。
+	for _, path := range []string{
+		"/.well-known/oauth-protected-resource",
+		"/.well-known/oauth-authorization-server",
+	} {
+		r, _ := http.NewRequest(http.MethodGet, h.base+path, nil)
+		r.Header.Set("Origin", "https://chatgpt.com")
+		got, err := h.srv.Client().Do(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got.Body.Close()
+		if got.Header.Get("Access-Control-Allow-Origin") != "*" {
+			t.Errorf("%s 缺少通配 CORS 头，实际: %q", path, got.Header.Get("Access-Control-Allow-Origin"))
+		}
+	}
+}
+
+// TestFullFlow 走通"授权 → initialize → 列工具 → 用工具"的完整链路。
+func TestFullFlow(t *testing.T) {
+	h := newHarness(t)
+	h.authorize()
+
+	init := h.rpc("initialize", map[string]any{
+		"protocolVersion": "2025-06-18",
+		"capabilities":    map[string]any{},
+		"clientInfo":      map[string]any{"name": "test-client", "version": "1.0"},
+	})
+	if init["protocolVersion"] != "2025-06-18" {
+		t.Errorf("协议版本协商结果不对: %v", init["protocolVersion"])
+	}
+	if h.sessionID == "" {
+		t.Error("initialize 响应应带 Mcp-Session-Id")
+	}
+	if _, ok := init["instructions"].(string); !ok {
+		t.Error("initialize 应返回 instructions 指导模型如何使用工具")
+	}
+
+	list := h.rpc("tools/list", nil)
+	names := map[string]bool{}
+	for _, tl := range list["tools"].([]any) {
+		td := tl.(map[string]any)
+		names[td["name"].(string)] = true
+		if td["description"] == "" || td["inputSchema"] == nil {
+			t.Errorf("工具 %v 缺少描述或 schema", td["name"])
+		}
+	}
+	for _, want := range []string{"shell", "read", "apply_patch", "search", "glob", "shell_output", "shell_kill"} {
+		if !names[want] {
+			t.Errorf("工具列表里缺少 %s（实际: %v）", want, names)
+		}
+	}
+
+	// shell 正常执行
+	out, isErr := h.callTool("shell", map[string]any{"command": "echo hello && pwd"})
+	if isErr {
+		t.Errorf("echo 不该失败: %s", out)
+	}
+	if !strings.Contains(out, "hello") || !strings.Contains(out, h.workdir) {
+		t.Errorf("输出里应有 hello 和工作目录:\n%s", out)
+	}
+
+	// 非零退出码要如实反映
+	out, isErr = h.callTool("shell", map[string]any{"command": "exit 3"})
+	if !isErr || !strings.Contains(out, "exit_code: 3") {
+		t.Errorf("退出码 3 应被标记为错误并如实展示:\n%s", out)
+	}
+}
+
+// TestShellPolicyOverMCP 验证拦截与二次确认在真实调用链上生效。
+func TestShellPolicyOverMCP(t *testing.T) {
+	h := newHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	// deny：不给令牌，直接拒绝
+	out, isErr := h.callTool("shell", map[string]any{"command": "rm -rf /"})
+	if !isErr {
+		t.Fatal("rm -rf / 必须被拒绝")
+	}
+	if strings.Contains(out, "confirm_token =") {
+		t.Error("deny 级命令不应下发确认令牌")
+	}
+
+	// confirm：先拿令牌，再带令牌执行
+	if err := os.WriteFile(filepath.Join(h.workdir, "victim.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sub := filepath.Join(h.workdir, "sub")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	out, isErr = h.callTool("shell", map[string]any{"command": "rm -rf *"})
+	if !isErr {
+		t.Fatal("rm -rf * 应先要求确认")
+	}
+	m := regexp.MustCompile(`confirm_token = (\S+)`).FindStringSubmatch(out)
+	if m == nil {
+		t.Fatalf("没有下发 confirm_token:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(h.workdir, "victim.txt")); err != nil {
+		t.Fatal("被拦下的命令绝不能已经执行")
+	}
+
+	// 令牌不能挪用给另一条命令
+	_, isErr = h.callTool("shell", map[string]any{
+		"command": "rm -rf ./sub", "confirm_token": m[1]})
+	if !isErr {
+		t.Error("令牌被挪用到别的命令上时应当失败")
+	}
+
+	// 重新取令牌并对同一条命令使用
+	out, _ = h.callTool("shell", map[string]any{"command": "rm -rf *"})
+	m = regexp.MustCompile(`confirm_token = (\S+)`).FindStringSubmatch(out)
+	if m == nil {
+		t.Fatalf("第二次没有下发 confirm_token:\n%s", out)
+	}
+	out, isErr = h.callTool("shell", map[string]any{"command": "rm -rf *", "confirm_token": m[1]})
+	if isErr {
+		t.Fatalf("带正确令牌应当执行成功:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(h.workdir, "victim.txt")); !os.IsNotExist(err) {
+		t.Error("确认后命令应真正执行")
+	}
+
+	// 令牌一次性
+	_, isErr = h.callTool("shell", map[string]any{"command": "rm -rf *", "confirm_token": m[1]})
+	if !isErr {
+		t.Error("同一个令牌不应能用第二次")
+	}
+}
+
+// TestSensitivePathBlocked 验证文件工具的凭据路径黑名单。
+func TestSensitivePathBlocked(t *testing.T) {
+	h := newHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	out, isErr := h.callTool("read", map[string]any{"path": "/etc/shadow"})
+	if !isErr || !strings.Contains(out, "敏感路径") {
+		t.Errorf("/etc/shadow 应被策略拒绝:\n%s", out)
+	}
+	// write 工具默认不暴露，用 apply_patch 覆盖同一条写路径守卫。
+	out, isErr = h.callTool("apply_patch", map[string]any{
+		"patch": "*** Begin Patch\n*** Add File: /proc/sysrq-trigger\n+c\n*** End Patch",
+	})
+	if !isErr || !strings.Contains(out, "敏感路径") {
+		t.Errorf("写 /proc 应被策略拒绝:\n%s", out)
+	}
+}
+
+// TestSessionTermination 验证 DELETE 能结束会话。
+func TestSessionTermination(t *testing.T) {
+	h := newHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	req, _ := http.NewRequest(http.MethodDelete, h.base+"/mcp", nil)
+	req.Header.Set("Authorization", "Bearer "+h.token)
+	req.Header.Set("Mcp-Session-Id", h.sessionID)
+	resp, err := h.srv.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("DELETE 应返回 204，实际 %d", resp.StatusCode)
+	}
+}
+
+// fleetHarness 配两台假机器：web1 直连，nas 需审批。ssh_command 指向桩脚本，
+// 桩脚本把远端命令放在本机执行，所以 inode 这类语义和真远端一致。
+func fleetHarness(t *testing.T) *harness {
+	t.Helper()
+	stub := filepath.Join(t.TempDir(), "stub-ssh")
+	script := "#!/bin/sh\nfor last; do :; done\nexec sh -c \"$last\"\n"
+	if err := os.WriteFile(stub, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return newHarnessWith(t, func(cfg *config.Config) {
+		cfg.Fleet = config.Fleet{
+			SSHCommand:   []string{stub},
+			ProbeTimeout: 3 * time.Second,
+			Hosts: []config.FleetHost{
+				{Name: "web1", Desc: "测试机", SSH: "web1"},
+				{Name: "nas", Desc: "存储", Approval: true},
+			},
+		}
+	})
+}
+
+func toolDef(t *testing.T, list map[string]any, name string) map[string]any {
+	t.Helper()
+	for _, tl := range list["tools"].([]any) {
+		td := tl.(map[string]any)
+		if td["name"] == name {
+			return td
+		}
+	}
+	t.Fatalf("工具列表里没有 %s", name)
+	return nil
+}
+
+// TestFleetOverMCP 走真实 HTTP 链路验证 target 参数、远端文件与 servers。
+func TestFleetOverMCP(t *testing.T) {
+	h := fleetHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	list := h.rpc("tools/list", nil)
+	shell := toolDef(t, list, "shell")
+	props := shell["inputSchema"].(map[string]any)["properties"].(map[string]any)
+	tp, ok := props["target"].(map[string]any)
+	if !ok {
+		t.Fatal("配置机群后 shell 应带 target 参数")
+	}
+	if _, bad := tp["anyOf"]; bad {
+		t.Error("target 不能用 anyOf")
+	}
+	if _, bad := tp["oneOf"]; bad {
+		t.Error("target 不能用 oneOf")
+	}
+	enum := tp["enum"].([]any)
+	if len(enum) != 3 || enum[0] != "local" || enum[1] != "web1" || enum[2] != "nas" {
+		t.Errorf("target enum 不对: %v", enum)
+	}
+
+	out, isErr := h.callTool("shell", map[string]any{"target": "web1", "command": "echo remote-ok"})
+	if isErr || !strings.Contains(out, "[web1] exit=0") || !strings.Contains(out, "remote-ok") {
+		t.Fatalf("远端 shell 失败: %s", out)
+	}
+
+	remoteFile := filepath.Join(h.workdir, "remote.txt")
+	if err := os.WriteFile(remoteFile, []byte("hello\nworld\n"), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	out, isErr = h.callTool("read", map[string]any{"target": "web1", "path": remoteFile})
+	if isErr || !strings.Contains(out, "[web1]") || !strings.Contains(out, "hello") {
+		t.Fatalf("远端 read 失败: %s", out)
+	}
+
+	before, err := os.Stat(remoteFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inoBefore := before.Sys().(*syscall.Stat_t).Ino
+	patch := "*** Begin Patch\n*** Update File: " + remoteFile + "\n@@\n-world\n+世界\n*** End Patch"
+	out, isErr = h.callTool("apply_patch", map[string]any{"target": "web1", "patch": patch})
+	if isErr {
+		t.Fatalf("远端 apply_patch 失败: %s", out)
+	}
+	after, err := os.Stat(remoteFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ino := after.Sys().(*syscall.Stat_t).Ino; ino != inoBefore {
+		t.Errorf("远端写回后 inode 变了：%d -> %d", inoBefore, ino)
+	}
+	data, err := os.ReadFile(remoteFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "世界") {
+		t.Errorf("补丁没生效: %q", data)
+	}
+
+	out, isErr = h.callTool("servers", nil)
+	if isErr {
+		t.Fatalf("servers 失败: %s", out)
+	}
+	if !strings.Contains(out, "[web1] 在线") || !strings.Contains(out, "[nas] 需审批") {
+		t.Errorf("总览状态不对: %s", out)
+	}
+	out, isErr = h.callTool("servers", map[string]any{"target": "web1"})
+	if isErr || !strings.Contains(out, "## 内存") {
+		t.Errorf("单台详情不对: %s", out)
+	}
+}
+
+// TestFleetConfirmTokenCrossTarget 锁住"本机令牌不能拿到别的机器上用"。
+func TestFleetConfirmTokenCrossTarget(t *testing.T) {
+	h := fleetHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	victim := filepath.Join(h.workdir, "victim.txt")
+	if err := os.WriteFile(victim, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, isErr := h.callTool("shell", map[string]any{"target": "local", "command": "rm -rf *"})
+	if !isErr {
+		t.Fatalf("应先要求确认: %s", out)
+	}
+	m := regexp.MustCompile(`confirm_token = (\S+)`).FindStringSubmatch(out)
+	if m == nil {
+		t.Fatalf("没有下发令牌: %s", out)
+	}
+	out, isErr = h.callTool("shell", map[string]any{
+		"target": "web1", "command": "rm -rf *", "confirm_token": m[1],
+	})
+	if !isErr || !strings.Contains(out, "不匹配") {
+		t.Errorf("本机令牌用到 web1 上应失败: %s", out)
+	}
+	if _, err := os.Stat(victim); err != nil {
+		t.Error("被拦下的命令绝不能执行")
+	}
+}
+
+// TestReadOnlyAnnotationsOverMCP 钉住只读工具的 annotations。
+func TestReadOnlyAnnotationsOverMCP(t *testing.T) {
+	h := fleetHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+	list := h.rpc("tools/list", nil)
+	for _, name := range []string{"read", "search", "glob", "servers"} {
+		td := toolDef(t, list, name)
+		ann, ok := td["annotations"].(map[string]any)
+		if !ok {
+			t.Errorf("%s 缺少 annotations", name)
+			continue
+		}
+		if ann["readOnlyHint"] != true || ann["idempotentHint"] != true || ann["destructiveHint"] != false {
+			t.Errorf("%s 的 annotations 不对: %v", name, ann)
+		}
+	}
+}
+
+// TestAllowedTargetsE2E 验证静态令牌与 OAuth 客户端的 allowed_targets 白名单：
+// tools/list 仅暴露允许的 target，servers 仅探测允许的机器，越权调用被服务端强拒绝。
+func TestAllowedTargetsE2E(t *testing.T) {
+	stub := filepath.Join(t.TempDir(), "stub-ssh")
+	script := "#!/bin/sh\nfor last; do :; done\nexec sh -c \"$last\"\n"
+	if err := os.WriteFile(stub, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	h := newHarnessWith(t, func(cfg *config.Config) {
+		cfg.Fleet = config.Fleet{
+			SSHCommand:   []string{stub},
+			ProbeTimeout: 3 * time.Second,
+			Hosts: []config.FleetHost{
+				{Name: "web1", Desc: "测试机", SSH: "web1"},
+				{Name: "nas", Desc: "存储", Approval: true},
+			},
+		}
+		cfg.Auth.StaticTokens = append(cfg.Auth.StaticTokens, config.StaticToken{
+			Name:           "web-agent",
+			Token:          "tok-web1-only",
+			AllowedTargets: []string{"web1"},
+		})
+		cfg.Auth.ClientPolicies = append(cfg.Auth.ClientPolicies, config.ClientPolicy{
+			ClientName:     "测试客户端",
+			AllowedTargets: []string{"web1"},
+		})
+	})
+
+	checkRestricted := func(label string) {
+		t.Helper()
+		h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+			"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+		list := h.rpc("tools/list", nil)
+		shell := toolDef(t, list, "shell")
+		tp := shell["inputSchema"].(map[string]any)["properties"].(map[string]any)["target"].(map[string]any)
+		enum := tp["enum"].([]any)
+		if len(enum) != 1 || enum[0] != "web1" {
+			t.Fatalf("[%s] shell target enum 应仅含 web1，实际 %v", label, enum)
+		}
+		servers := toolDef(t, list, "servers")
+		sDesc := servers["inputSchema"].(map[string]any)["properties"].(map[string]any)["target"].(map[string]any)["description"].(string)
+		if !strings.Contains(sDesc, "web1：测试机") || strings.Contains(sDesc, "nas：") || strings.Contains(sDesc, "local：") {
+			t.Fatalf("[%s] servers target 描述应仅暴露 web1，实际:\n%s", label, sDesc)
+		}
+
+		out, isErr := h.callTool("servers", nil)
+		if isErr || !strings.Contains(out, "[web1]") || strings.Contains(out, "[nas]") || strings.Contains(out, "[local]") {
+			t.Fatalf("[%s] servers 总览应仅含 web1，实际: %s", label, out)
+		}
+
+		out, isErr = h.callTool("shell", map[string]any{"target": "web1", "command": "echo ok-web1"})
+		if isErr || !strings.Contains(out, "ok-web1") {
+			t.Fatalf("[%s] 允许的 target web1 应成功: %s", label, out)
+		}
+
+		for _, badTarget := range []string{"nas", "local", ""} {
+			out, isErr = h.callTool("shell", map[string]any{"target": badTarget, "command": "echo nope"})
+			if !isErr || !strings.Contains(out, "无权访问") {
+				t.Errorf("[%s] 越权 target=%q 应被拒绝，实际 isErr=%v out=%s", label, badTarget, isErr, out)
+			}
+		}
+	}
+
+	// 1. 静态令牌限制
+	h.token = "tok-web1-only"
+	checkRestricted("static-token")
+
+	// 2. OAuth 客户端策略限制（e2e-test-client 来自 h.authorize()）
+	h.sessionID = ""
+	h.authorize()
+	checkRestricted("oauth-client")
+}
+
+// upstreamStub 是一个供 e2e 使用的假 MCP 上游，校验令牌与会话头，
+// 并在 tools/call 里返回一个 Omni MCP 不认识的内容块与额外字段。
+type upstreamStub struct {
+	srv      *httptest.Server
+	token    string
+	mu       sync.Mutex
+	received []stubCall
+}
+
+type stubCall struct {
+	Name string
+	Args json.RawMessage
+	Auth string
+}
+
+func newUpstreamStub(t *testing.T, token string) *upstreamStub {
+	t.Helper()
+	s := &upstreamStub{token: token}
+	s.srv = httptest.NewServer(http.HandlerFunc(s.serve))
+	t.Cleanup(s.srv.Close)
+	return s
+}
+
+func (s *upstreamStub) serve(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "Bearer "+s.token {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	body, _ := io.ReadAll(r.Body)
+	var req struct {
+		ID     *int64          `json:"id"`
+		Method string          `json:"method"`
+		Params json.RawMessage `json:"params"`
+	}
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, "bad json", http.StatusBadRequest)
+		return
+	}
+	var id any
+	if req.ID != nil {
+		id = *req.ID
+	}
+	write := func(result any) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"jsonrpc": "2.0", "id": id, "result": result})
+	}
+	writeErr := func(code int, msg string) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonrpc": "2.0", "id": id,
+			"error": map[string]any{"code": code, "message": msg},
+		})
+	}
+
+	switch req.Method {
+	case "initialize":
+		w.Header().Set("Mcp-Session-Id", "stub-session")
+		write(map[string]any{
+			"protocolVersion": "2025-06-18",
+			"capabilities":    map[string]any{"tools": map[string]any{}},
+			"serverInfo":      map[string]any{"name": "stub", "version": "1"},
+		})
+	case "notifications/initialized":
+		w.WriteHeader(http.StatusAccepted)
+	case "tools/list":
+		if r.Header.Get("Mcp-Session-Id") != "stub-session" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		write(map[string]any{"tools": []any{
+			map[string]any{
+				"name": "echo", "title": "回显", "description": "上游回显工具",
+				"inputSchema": map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"msg": map[string]any{"type": "string"},
+					},
+					"required": []string{"msg"},
+				},
+			},
+			map[string]any{"name": "secret", "description": "未列入白名单", "inputSchema": map[string]any{"type": "object"}},
+		}})
+	case "tools/call":
+		if r.Header.Get("Mcp-Session-Id") != "stub-session" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		var p struct {
+			Name      string          `json:"name"`
+			Arguments json.RawMessage `json:"arguments"`
+		}
+		_ = json.Unmarshal(req.Params, &p)
+		s.mu.Lock()
+		s.received = append(s.received, stubCall{Name: p.Name, Args: p.Arguments, Auth: r.Header.Get("Authorization")})
+		s.mu.Unlock()
+		if p.Name != "echo" {
+			writeErr(-32602, "unknown tool "+p.Name)
+			return
+		}
+		write(map[string]any{
+			"content": []any{
+				map[string]any{"type": "text", "text": "upstream:" + string(p.Arguments)},
+				map[string]any{"type": "resource", "resource": map[string]any{"uri": "file:///demo", "text": "raw-block"}},
+			},
+			"custom": map[string]any{"kept": true},
+		})
+	default:
+		writeErr(-32601, "method not found")
+	}
+}
+
+func (s *upstreamStub) calls() []stubCall {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]stubCall(nil), s.received...)
+}
+
+func findTool(list map[string]any, name string) map[string]any {
+	for _, tl := range list["tools"].([]any) {
+		td := tl.(map[string]any)
+		if td["name"] == name {
+			return td
+		}
+	}
+	return nil
+}
+
+// TestUpstreamOverMCP 验证上游工具出现在 tools/list、调用被转发、结果原样返回，
+// 且白名单外的工具不会暴露。
+func TestUpstreamOverMCP(t *testing.T) {
+	stub := newUpstreamStub(t, "upstream-token")
+	t.Setenv("RB_TEST_UPSTREAM_TOKEN", "upstream-token")
+
+	h := newHarnessWith(t, func(cfg *config.Config) {
+		cfg.Upstreams = []config.Upstream{{
+			Name: "stub", URL: stub.srv.URL, TokenEnv: "RB_TEST_UPSTREAM_TOKEN",
+			Prefix: "up", Tools: []string{"echo"},
+			Timeout: 5 * time.Second, RefreshInterval: time.Hour,
+		}}
+	})
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	// 工具定义是后台异步拉取的，轮询到上游描述出现为止。
+	var def map[string]any
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		def = findTool(h.rpc("tools/list", nil), "up_echo")
+		if def != nil && def["description"] == "上游回显工具" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("tools/list 里没有拿到上游定义: %+v", def)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if def["title"] != "回显" {
+		t.Errorf("title 应透传上游: %v", def["title"])
+	}
+	schema := def["inputSchema"].(map[string]any)
+	if _, ok := schema["properties"].(map[string]any)["msg"]; !ok {
+		t.Errorf("inputSchema 应来自上游: %v", schema)
+	}
+
+	list := h.rpc("tools/list", nil)
+	if findTool(list, "up_secret") != nil {
+		t.Error("白名单外的上游工具不应出现在 tools/list")
+	}
+
+	res := h.rpc("tools/call", map[string]any{
+		"name": "up_echo", "arguments": map[string]any{"msg": "hi"},
+	})
+	if isErr, _ := res["isError"].(bool); isErr {
+		t.Fatalf("上游调用失败: %v", res)
+	}
+	if _, ok := res["custom"]; !ok {
+		t.Errorf("结果应原样保留上游字段: %v", res)
+	}
+	blocks := res["content"].([]any)
+	if len(blocks) != 2 {
+		t.Fatalf("内容块应原样返回，实际 %d 块", len(blocks))
+	}
+	if blocks[0].(map[string]any)["text"] != `upstream:{"msg":"hi"}` {
+		t.Errorf("参数没有原样转发: %v", blocks[0])
+	}
+	if blocks[1].(map[string]any)["type"] != "resource" {
+		t.Errorf("未知内容块应保留: %v", blocks[1])
+	}
+
+	calls := stub.calls()
+	if len(calls) != 1 || calls[0].Name != "echo" || calls[0].Auth != "Bearer upstream-token" {
+		t.Fatalf("上游没有收到正确的调用: %+v", calls)
+	}
+
+	// 透传调用与普通工具一样进审计日志。
+	raw, err := os.ReadFile(h.auditPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), `"tool":"up_echo"`) || !strings.Contains(string(raw), `"msg":"hi"`) {
+		t.Errorf("审计日志里没有透传调用记录:\n%s", raw)
+	}
+}
+
+// TestUpstreamUnreachableOverMCP 验证上游不可达时只影响对应工具。
+func TestUpstreamUnreachableOverMCP(t *testing.T) {
+	h := newHarnessWith(t, func(cfg *config.Config) {
+		cfg.Upstreams = []config.Upstream{{
+			Name: "dead", URL: "http://127.0.0.1:1/mcp", Prefix: "dead", Tools: []string{"echo"},
+			Timeout: 300 * time.Millisecond, RefreshInterval: time.Hour,
+		}}
+	})
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	def := findTool(h.rpc("tools/list", nil), "dead_echo")
+	if def == nil {
+		t.Fatal("上游不可达时白名单工具仍应出现在 tools/list")
+	}
+	if desc, _ := def["description"].(string); !strings.Contains(desc, "尚未取到") {
+		t.Errorf("不可达时应使用占位定义: %v", def)
+	}
+
+	out, isErr := h.callTool("dead_echo", map[string]any{"msg": "x"})
+	if !isErr || !strings.Contains(out, "上游 dead") {
+		t.Errorf("调用不可达的上游应返回工具错误: isErr=%v %s", isErr, out)
+	}
+
+	out, isErr = h.callTool("shell", map[string]any{"command": "echo still-alive"})
+	if isErr || !strings.Contains(out, "still-alive") {
+		t.Errorf("上游故障不应影响 Omni MCP 自身工具: %s", out)
+	}
+}
+
+// ---------- 按需临时图片链接 ----------
+
+func writeTestPNG(t *testing.T, path string, w, h int) []byte {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, w, h))
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			img.Set(x, y, color.RGBA{R: uint8(x * 7), G: uint8(y * 5), B: 90, A: 255})
+		}
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+func hasImageContent(res map[string]any) bool {
+	for _, c := range res["content"].([]any) {
+		if c.(map[string]any)["type"] == "image" {
+			return true
+		}
+	}
+	return false
+}
+
+// TestImageURLDisabledByDefault 钉住默认行为：read 不暴露 image_url，/media/ 不存在。
+func TestImageURLDisabledByDefault(t *testing.T) {
+	h := newHarness(t)
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+	props := toolDef(t, h.rpc("tools/list", nil), "read")["inputSchema"].(map[string]any)["properties"].(map[string]any)
+	if _, ok := props["image_url"]; ok {
+		t.Error("未启用时 read 不应暴露 image_url")
+	}
+	path := filepath.Join(h.workdir, "shot.png")
+	writeTestPNG(t, path, 16, 16)
+	res := h.rpc("tools/call", map[string]any{"name": "read", "arguments": map[string]any{"path": path}})
+	if !hasImageContent(res) {
+		t.Error("默认应返回原生 image 块")
+	}
+	if resp, _ := h.get("/media/whatever"); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("未启用时 /media/ 应 404，实际 %d", resp.StatusCode)
+	}
+}
+
+// TestImageURLOverMCP 跑通：tools/list → 普通读图带提示 → image_url=true 拿链接 →
+// 不带令牌下载 → 方法/过期 token 校验 → 日志里看不到 token。
+func TestImageURLOverMCP(t *testing.T) {
+	h := newHarnessWith(t, func(c *config.Config) { c.Tools.FS.ImageURL.Enabled = true })
+	h.authorize()
+	h.rpc("initialize", map[string]any{"protocolVersion": "2025-06-18",
+		"clientInfo": map[string]any{"name": "t", "version": "1"}})
+
+	read := toolDef(t, h.rpc("tools/list", nil), "read")
+	props := read["inputSchema"].(map[string]any)["properties"].(map[string]any)
+	if _, ok := props["image_url"]; !ok {
+		t.Fatal("启用后 read 应暴露 image_url")
+	}
+
+	path := filepath.Join(h.workdir, "shot.png")
+	original := writeTestPNG(t, path, 32, 24)
+
+	// 不传 image_url：仍是原生 image 块，外加切换提示。
+	out, isErr := h.callTool("read", map[string]any{"path": path})
+	if isErr || !strings.Contains(out, "image_url=true") {
+		t.Errorf("普通读图应附切换提示:\n%s", out)
+	}
+	if !hasImageContent(h.rpc("tools/call", map[string]any{"name": "read", "arguments": map[string]any{"path": path}})) {
+		t.Error("不传 image_url 时应照常返回 image 块")
+	}
+
+	// image_url=true：只有文本 + structuredContent.url。
+	res := h.rpc("tools/call", map[string]any{"name": "read",
+		"arguments": map[string]any{"path": path, "image_url": true}})
+	if hasImageContent(res) {
+		t.Error("image_url=true 时不应返回 image 块")
+	}
+	sc := res["structuredContent"].(map[string]any)
+	link, _ := sc["url"].(string)
+	if !strings.HasPrefix(link, h.base+"/media/") || sc["url_expires_at"] == nil {
+		t.Fatalf("structuredContent 应带 url 与 url_expires_at: %v", sc)
+	}
+	token := strings.TrimPrefix(link, h.base+"/media/")
+
+	// 下载端点不需要 Bearer。
+	resp, err := http.Get(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := readBody(t, resp)
+	if resp.StatusCode != http.StatusOK || body != string(original) {
+		t.Fatalf("下载应返回原图字节，状态 %d，%d 字节", resp.StatusCode, len(body))
+	}
+	for k, want := range map[string]string{
+		"Content-Type": "image/png", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+		"Content-Length": fmt.Sprint(len(original)),
+	} {
+		if got := resp.Header.Get(k); got != want {
+			t.Errorf("%s 应为 %q，实际 %q", k, want, got)
+		}
+	}
+
+	resp, err = http.Post(link, "text/plain", strings.NewReader("x"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("POST 应返回 405，实际 %d", resp.StatusCode)
+	}
+	if resp, _ := h.get("/media/not-a-real-token"); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("未知 token 应 404，实际 %d", resp.StatusCode)
+	}
+
+	// 请求日志在 handler 返回后才写，稍等一下。
+	deadline := time.Now().Add(2 * time.Second)
+	for !strings.Contains(h.logs.String(), "/media/[redacted]") && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	logs := h.logs.String()
+	if !strings.Contains(logs, "/media/[redacted]") {
+		t.Errorf("请求日志应把 /media/ 路径脱敏:\n%s", logs)
+	}
+	if strings.Contains(logs, token) {
+		t.Error("日志里不应出现下载 token")
+	}
+}
+
+// TestImageURLRequiresBaseURLAtBuild 确认装配时也走配置校验。
+func TestImageURLRequiresBaseURLAtBuild(t *testing.T) {
+	cfg := config.Default()
+	cfg.Server.BaseURL = ""
+	cfg.Auth.Enabled = false
+	cfg.Tools.FS.ImageURL.Enabled = true
+	if _, err := app.Build(cfg, slog.New(slog.NewTextHandler(io.Discard, nil))); err == nil ||
+		!strings.Contains(err.Error(), "image_url") {
+		t.Errorf("启用 image_url 但 base_url 为空时 Build 应报错，实际 %v", err)
+	}
+}

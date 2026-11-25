@@ -1,0 +1,9 @@
+omni-mcp
+
+omni-mcp incorporates and modifies the runabout source code, Copyright (C)
+2026 noir017. The original source and this combined work are licensed under
+GNU AGPL version 3 or later; see LICENSE. Cross-platform Agent and Hub transport code
+is maintained as part of omni-mcp.
+
+Network-service deployments must provide users with access to the modified
+source code as required by section 13 of the GNU AGPL.
