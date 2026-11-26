@@ -293,89 +293,96 @@ type portalLoginData struct {
 }
 
 var portalLoginTmpl = template.Must(template.New("portal_login").Parse(`<!doctype html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>登录 · Omni MCP Hub 设备管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
 <script>
 try {
-  var t = localStorage.getItem('omni-theme');
+  var t = localStorage.getItem('omni-steep-theme');
   if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
 } catch (e) {}
 </script>
 <style>
-:root, [data-theme="dark"] {
-  --bg: #090b0f; --surface: #11151d; --surface-2: #161b26;
-  --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.16);
-  --text: #eef1f6; --text-muted: #8b95a5;
-  --accent: #3b82f6; --accent-hover: #2563eb; --accent-soft: rgba(59,130,246,0.14);
-  --danger: #ef4444; --danger-soft: rgba(239,68,68,0.12);
-  --shadow: 0 24px 64px rgba(0,0,0,0.5);
+:root, [data-theme="light"] {
+  --bg: #ffffff; --surface: #fafafb; --input-bg: #ffffff;
+  --border: #e7e8ea; --ink: #17191c; --text: #17191c; --text-muted: #777b86;
+  --btn-bg: #17191c; --btn-fg: #ffffff; --btn-hover: #2d3036;
+  --code-bg: linear-gradient(135deg, rgba(211,227,252,0.55), rgba(251,225,209,0.45));
+  --glow: radial-gradient(65% 65% at 24% 12%, rgba(211,227,252,0.6), transparent 65%),
+          radial-gradient(55% 65% at 80% 18%, rgba(251,225,209,0.65), transparent 65%);
+  --danger: #b42318; --danger-bg: rgba(180,35,24,0.08); --danger-border: rgba(180,35,24,0.22);
 }
-[data-theme="light"] {
-  --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f1f3f6;
-  --border: rgba(15,23,42,0.09); --border-strong: rgba(15,23,42,0.16);
-  --text: #0f172a; --text-muted: #64748b;
-  --accent: #2563eb; --accent-hover: #1d4ed8; --accent-soft: rgba(37,99,235,0.1);
-  --danger: #dc2626; --danger-soft: rgba(220,38,38,0.09);
-  --shadow: 0 18px 48px rgba(15,23,42,0.08);
+[data-theme="dark"] {
+  --bg: #121212; --surface: #1a1a1a; --input-bg: #121212;
+  --border: #252525; --ink: #ffffff; --text: #e7e7e7; --text-muted: #898989;
+  --btn-bg: #ffffff; --btn-fg: #000000; --btn-hover: #e7e7e7;
+  --code-bg: linear-gradient(135deg, rgba(77,47,135,0.28), rgba(21,16,30,0.55));
+  --glow: radial-gradient(60% 60% at 50% 0%, rgba(77,47,135,0.34), rgba(21,16,30,0.4) 48%, transparent 78%);
+  --danger: #f87171; --danger-bg: rgba(248,113,113,0.1); --danger-border: rgba(248,113,113,0.26);
 }
 * { box-sizing: border-box; }
 body {
   margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: 24px; background: var(--bg); color: var(--text);
-  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  padding: 24px; background: var(--glow), var(--bg); color: var(--text);
+  font: 14px/1.55 "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 .card {
-  width: 100%; max-width: 400px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 14px; padding: 28px;
-  box-shadow: var(--shadow);
+  width: 100%; max-width: 420px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 22px; padding: 32px;
 }
-.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
 .mark {
-  width: 32px; height: 32px; border-radius: 8px; background: var(--accent);
-  color: #fff; display: grid; place-items: center; font-weight: 700;
+  width: 28px; height: 28px; border-radius: 50%; background: var(--ink);
+  color: var(--bg); display: grid; place-items: center;
 }
-.brand-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.brand-title { font-size: 14.5px; font-weight: 500; color: var(--ink); letter-spacing: -0.015em; }
 .brand-sub { font-size: 12px; color: var(--text-muted); }
-h1 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
-.desc { margin: 0 0 18px; font-size: 13px; color: var(--text-muted); }
+h1 {
+  margin: 0 0 6px; font-family: "Newsreader", "Songti SC", "STSong", Georgia, serif;
+  font-size: 30px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.15; color: var(--ink);
+}
+.desc { margin: 0 0 22px; font-size: 13.5px; color: var(--text-muted); }
 .code-banner {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; margin-bottom: 18px; border-radius: 10px;
-  background: var(--accent-soft); border: 1px solid rgba(59,130,246,0.28);
+  padding: 14px 18px; margin-bottom: 20px; border-radius: 14px;
+  background: var(--code-bg); border: 1px solid var(--border);
 }
-.code-label { font-size: 12px; color: var(--text-muted); }
-.code-val { font: 700 18px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.08em; }
+.code-label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 3px; }
+.code-val { font: 500 20px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.1em; color: var(--ink); }
 .error {
-  padding: 10px 12px; margin-bottom: 16px; border-radius: 8px; font-size: 13px;
-  background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(239,68,68,0.25);
+  padding: 11px 14px; margin-bottom: 18px; border-radius: 12px; font-size: 13px;
+  background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border);
 }
-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+label { display: block; font-size: 12.5px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
 .field { margin-bottom: 14px; }
 input[type=text], input[type=password] {
-  width: 100%; height: 38px; padding: 0 12px; border-radius: 8px;
-  border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text);
-  font: inherit; outline: none; transition: border-color 0.15s;
+  width: 100%; height: 42px; padding: 0 14px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--input-bg); color: var(--ink);
+  font: inherit; outline: none; transition: border-color 150ms ease;
 }
-input:focus { border-color: var(--accent); }
+input:focus { border-color: var(--ink); }
 button {
-  width: 100%; height: 40px; margin-top: 6px; border: 0; border-radius: 8px;
-  background: var(--accent); color: #fff; font: 600 14px/1 inherit; cursor: pointer;
-  transition: background 0.15s;
+  width: 100%; height: 44px; margin-top: 6px; border: 0; border-radius: 999px;
+  background: var(--btn-bg); color: var(--btn-fg); font: 500 14px/1 inherit; cursor: pointer;
+  transition: background-color 150ms ease;
 }
-button:hover { background: var(--accent-hover); }
+button:hover { background: var(--btn-hover); }
 .foot { margin-top: 16px; display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
 .foot a { color: var(--text-muted); text-decoration: none; }
-.foot a:hover { color: var(--text); }
+.foot a:hover { color: var(--ink); }
 </style>
 </head>
 <body>
   <div class="card">
     <div class="brand">
       <div class="mark">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 19h18L12 3z"/></svg>
       </div>
       <div>
         <div class="brand-title">Omni MCP Hub</div>
