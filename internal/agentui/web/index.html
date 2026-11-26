@@ -1653,7 +1653,7 @@
               <div id="panel-ngrok" class="gw-provider-panel">
                 <div class="form-grid">
                   <div class="field">
-                    <label for="gwNgrokTokenInput" data-i18n="ngrokTokenLabel">ngrok Authtoken（加密保存至本机密钥库）</label>
+                    <label for="gwNgrokTokenInput" data-i18n="ngrokTokenLabel">ngrok Authtoken（保存在本机凭据存储）</label>
                     <div style="display:flex;gap:8px">
                       <input id="gwNgrokTokenInput" class="input input-mono" type="password" placeholder="粘贴 ngrok Authtoken…" autocomplete="off" />
                       <button type="button" id="gwClearNgrokBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
@@ -1676,7 +1676,7 @@
                     <span class="field-help" data-i18n="cfNamedUrlHelp">在 Cloudflare Zero Trust → Tunnels 里将此域名指向本机端口（如 http://127.0.0.1:8485）</span>
                   </div>
                   <div class="field">
-                    <label for="gwCfTokenInput" data-i18n="cfNamedTokenLabel">Cloudflare Tunnel Token（加密保存）</label>
+                    <label for="gwCfTokenInput" data-i18n="cfNamedTokenLabel">Cloudflare Tunnel Token（保存在本机凭据存储）</label>
                     <div style="display:flex;gap:8px">
                       <input id="gwCfTokenInput" class="input input-mono" type="password" placeholder="粘贴 eyJ... Tunnel Token" autocomplete="off" />
                       <button type="button" id="gwClearCfBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
@@ -2007,12 +2007,12 @@
         gwPortLabel: '本机监听端口（127.0.0.1）',
         gwPortHelp: '默认 8485；填 0 自动分配可用端口',
         cfQuickPanelInfo: '启动时将自动检测本机 cloudflared，未安装时从 GitHub 官方发布页自动下载至用户缓存目录。',
-        ngrokTokenLabel: 'ngrok Authtoken（加密保存至本机密钥库）',
+        ngrokTokenLabel: 'ngrok Authtoken（保存在本机凭据存储）',
         ngrokDomainLabel: 'ngrok 固定域名（可选，推荐填写免费静态域名）',
         ngrokDomainHelp: '留空则由 ngrok 每次分配随机域名；在 ngrok 后台 Domains 可免费领取 1 个永久域名。',
         cfNamedUrlLabel: '公网 HTTPS 根地址',
         cfNamedUrlHelp: '在 Cloudflare Zero Trust → Tunnels 里将此域名指向本机端口（如 http://127.0.0.1:8485）',
-        cfNamedTokenLabel: 'Cloudflare Tunnel Token（加密保存）',
+        cfNamedTokenLabel: 'Cloudflare Tunnel Token（保存在本机凭据存储）',
         localPanelInfo: '仅在本机回环地址监听，不会连接任何外部隧道，适合本机运行的 Cursor、Claude Desktop、Windsurf 或自建本地代理。',
         gwAutoStartTitle: '启动控制台时自动开启本机网关',
         gwAutoStartDesc: '下次打开桌面控制台时自动恢复本机网关与隧道在线。',
@@ -2154,12 +2154,12 @@
         gwPortLabel: 'Local Port (127.0.0.1)',
         gwPortHelp: 'Default 8485; set 0 for an automatic free port',
         cfQuickPanelInfo: 'Uses installed cloudflared if present, or auto-downloads the official binary into your cache directory on first start.',
-        ngrokTokenLabel: 'ngrok Authtoken (sealed in OS vault)',
+        ngrokTokenLabel: 'ngrok Authtoken (stored locally)',
         ngrokDomainLabel: 'ngrok Static Domain (optional, free static domain recommended)',
         ngrokDomainHelp: 'Leave blank for an ephemeral URL, or claim 1 free permanent domain in dashboard.ngrok.com.',
         cfNamedUrlLabel: 'Public HTTPS Origin',
         cfNamedUrlHelp: 'Point this hostname in Cloudflare Zero Trust Tunnels to http://127.0.0.1:8485',
-        cfNamedTokenLabel: 'Cloudflare Tunnel Token (sealed in OS vault)',
+        cfNamedTokenLabel: 'Cloudflare Tunnel Token (stored locally)',
         localPanelInfo: 'Loopback-only listener with zero internet exposure. Ideal for Cursor, Claude Desktop, and local MCP clients.',
         gwAutoStartTitle: 'Auto-start local gateway when console opens',
         gwAutoStartDesc: 'Automatically bring up your local gateway and tunnel on app launch.',
@@ -2326,6 +2326,7 @@
     function renderTopAndGateway(next) {
       const prof = next.profile || {};
       const gw = next.gateway || { state: 'stopped', tunnel: prof.gateway_tunnel || 'cloudflare_quick' };
+      const credentialStorage = next.token_storage || (lang === 'zh' ? '本机存储' : 'local storage');
       const gwActive = gw.state === 'running' || gw.state === 'starting' || gw.state === 'downloading';
 
       // Gateway KPIs & live card
@@ -2347,11 +2348,11 @@
         ? (lang === 'zh' ? 'cloudflared 已就绪' : 'cloudflared ready')
         : (lang === 'zh' ? '首次启动自动下载' : 'Auto-download on start');
       $('gwNgrokTokenHint').textContent = prof.has_ngrok_token
-        ? (lang === 'zh' ? '已加密保存 ngrok Authtoken（留空保持不变，或输入新值覆盖）。' : 'ngrok Authtoken is saved in vault (leave blank to keep).')
+        ? (lang === 'zh' ? `ngrok Authtoken 已保存到${credentialStorage}（留空保持不变，或输入新值覆盖）。` : `ngrok Authtoken is saved using ${credentialStorage} (leave blank to keep).`)
         : (lang === 'zh' ? '免费注册 dashboard.ngrok.com → Your Authtoken 获取。' : 'Get a free Authtoken at dashboard.ngrok.com.');
       $('gwClearNgrokBtn').disabled = !prof.has_ngrok_token;
       $('gwCfTokenHint').textContent = prof.has_cf_token
-        ? (lang === 'zh' ? '已加密保存 Cloudflare Tunnel Token（留空保持不变）。' : 'Cloudflare Tunnel Token is saved in vault (leave blank to keep).')
+        ? (lang === 'zh' ? `Cloudflare Tunnel Token 已保存到${credentialStorage}（留空保持不变）。` : `Cloudflare Tunnel Token is saved using ${credentialStorage} (leave blank to keep).`)
         : (lang === 'zh' ? '仅通过环境变量传给 cloudflared 子进程，不暴露在命令行参数中。' : 'Passed strictly via env var to cloudflared, never in argv.');
       $('gwClearCfBtn').disabled = !prof.has_cf_token;
 

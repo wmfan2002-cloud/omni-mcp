@@ -34,6 +34,41 @@ type Profile struct {
 	GatewayBearerSealed     string `json:"gateway_bearer_sealed,omitempty"`
 }
 
+func removedSealedTokens(before, after Profile) []string {
+	active := make(map[string]struct{})
+	for _, value := range after.sealedTokens() {
+		if value != "" {
+			active[value] = struct{}{}
+		}
+	}
+	seen := make(map[string]struct{})
+	var removed []string
+	for _, value := range before.sealedTokens() {
+		if value == "" {
+			continue
+		}
+		if _, ok := active[value]; ok {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		removed = append(removed, value)
+	}
+	return removed
+}
+
+func (p Profile) sealedTokens() []string {
+	return []string{
+		p.TokenSealed,
+		p.GatewayNgrokTokenSealed,
+		p.GatewayCFTokenSealed,
+		p.GatewayPasswordSealed,
+		p.GatewayBearerSealed,
+	}
+}
+
 // PublicProfile is the sanitized view safe to send to the browser UI.
 type PublicProfile struct {
 	Hub         string   `json:"hub"`

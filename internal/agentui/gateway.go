@@ -81,39 +81,71 @@ type gatewayRuntime struct {
 
 	mu        sync.Mutex
 	closeOnce sync.Once
+	closed    bool
 }
 
-func (g *gatewayRuntime) setBuilt(b *app.Built) {
+func (g *gatewayRuntime) setBuilt(b *app.Built) bool {
 	g.mu.Lock()
+	if g.closed {
+		g.mu.Unlock()
+		if b != nil && b.Close != nil {
+			b.Close()
+		}
+		return false
+	}
 	g.built = b
 	g.mu.Unlock()
+	return true
 }
 
-func (g *gatewayRuntime) setTunnel(t activeTunnel) {
+func (g *gatewayRuntime) setTunnel(t activeTunnel) bool {
 	g.mu.Lock()
+	if g.closed {
+		g.mu.Unlock()
+		if t != nil {
+			_ = t.Close()
+		}
+		return false
+	}
 	g.tunnel = t
 	g.mu.Unlock()
+	return true
 }
 
-func (g *gatewayRuntime) setPublicSrv(s *http.Server) {
+func (g *gatewayRuntime) setPublicSrv(s *http.Server) bool {
 	g.mu.Lock()
+	if g.closed {
+		g.mu.Unlock()
+		if s != nil {
+			_ = s.Close()
+		}
+		return false
+	}
 	g.publicSrv = s
 	g.mu.Unlock()
+	return true
 }
 
-func (g *gatewayRuntime) setAgent(c *agent.Client, done chan struct{}) {
+func (g *gatewayRuntime) setAgent(c *agent.Client, done chan struct{}) bool {
 	g.mu.Lock()
+	if g.closed {
+		g.mu.Unlock()
+		if c != nil {
+			c.Close()
+		}
+		return false
+	}
 	g.agentClient = c
 	g.agentDone = done
 	g.mu.Unlock()
+	return true
 }
 
 func (g *gatewayRuntime) Close() {
 	g.closeOnce.Do(func() {
-		if g.cancel != nil {
-			g.cancel()
-		}
 		g.mu.Lock()
+		g.closed = true
+		cancel := g.cancel
 		pubSrv := g.publicSrv
 		locSrv := g.localSrv
 		tun := g.tunnel
@@ -122,6 +154,9 @@ func (g *gatewayRuntime) Close() {
 		agClient := g.agentClient
 		built := g.built
 		g.mu.Unlock()
+		if cancel != nil {
+			cancel()
+		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
@@ -276,6 +311,7 @@ func (c *Controller) RevealGatewayCredentials() (GatewayCredentials, error) {
 // RotateGatewayCredentials generates fresh OAuth password & static Bearer token and restarts gateway if running.
 func (c *Controller) RotateGatewayCredentials() (GatewayCredentials, error) {
 	c.mu.Lock()
+	oldProfile := c.profile
 	pw := generateGatewayPassword()
 	bt := generateGatewayBearer()
 	sealedPW, err := sealToken(pw)
@@ -288,7 +324,7 @@ func (c *Controller) RotateGatewayCredentials() (GatewayCredentials, error) {
 		c.mu.Unlock()
 		return GatewayCredentials{}, fmt.Errorf("加密保存新令牌失败: %w", err)
 	}
-	next := c.profile
+	next := oldProfile
 	next.GatewayPasswordSealed = sealedPW
 	next.GatewayBearerSealed = sealedBT
 	if err := saveProfile(c.configPath, next); err != nil {
@@ -302,6 +338,9 @@ func (c *Controller) RotateGatewayCredentials() (GatewayCredentials, error) {
 	c.appendEventLocked(UIEvent{Kind: "system", Summary: "已重置本机网关 OAuth 密码与 Bearer 令牌"})
 	c.notifyLocked()
 	c.mu.Unlock()
+	if err := c.cleanupSealedTokens(removedSealedTokens(oldProfile, next)); err != nil {
+		c.log.Warn("已轮换网关凭据，但旧凭据清理未完成", "err", err)
+	}
 
 	if wasRunning {
 		if err := c.StartGateway(); err != nil {
@@ -318,7 +357,8 @@ func (c *Controller) RotateGatewayCredentials() (GatewayCredentials, error) {
 // ClearTunnelToken removes a saved ngrok or Cloudflare Named Tunnel token.
 func (c *Controller) ClearTunnelToken(provider string) error {
 	c.mu.Lock()
-	next := c.profile
+	oldProfile := c.profile
+	next := oldProfile
 	label := ""
 	switch normalizeTunnelProvider(provider) {
 	case TunnelNgrok:
@@ -341,6 +381,9 @@ func (c *Controller) ClearTunnelToken(provider string) error {
 	c.appendEventLocked(UIEvent{Kind: "system", Summary: "已清除本地保存的 " + label})
 	c.notifyLocked()
 	c.mu.Unlock()
+	if err := c.cleanupSealedTokens(removedSealedTokens(oldProfile, next)); err != nil {
+		return fmt.Errorf("令牌已从配置中移除，但系统密钥清理失败: %w", err)
+	}
 	return nil
 }
 
@@ -504,7 +547,9 @@ func (c *Controller) bootGatewayAsync(
 			fail(err)
 			return
 		}
-		rt.setTunnel(tun)
+		if !rt.setTunnel(tun) {
+			return
+		}
 		publicBaseURL = tun.PublicURL()
 	case TunnelCloudflareNamed:
 		tun, err = startCloudflareNamedTunnel(ctx, prof.GatewayCFPublicURL, cfTok, updateStatus)
@@ -512,7 +557,9 @@ func (c *Controller) bootGatewayAsync(
 			fail(err)
 			return
 		}
-		rt.setTunnel(tun)
+		if !rt.setTunnel(tun) {
+			return
+		}
 		publicBaseURL = tun.PublicURL()
 	case TunnelNgrok:
 		tun, err = startNgrokTunnel(ctx, ngrokTok, prof.GatewayNgrokDomain, c.log, updateStatus)
@@ -520,7 +567,9 @@ func (c *Controller) bootGatewayAsync(
 			fail(err)
 			return
 		}
-		rt.setTunnel(tun)
+		if !rt.setTunnel(tun) {
+			return
+		}
 		publicBaseURL = tun.PublicURL()
 	}
 
@@ -570,7 +619,9 @@ func (c *Controller) bootGatewayAsync(
 		fail(fmt.Errorf("初始化内置 MCP Hub 失败: %w", err))
 		return
 	}
-	rt.setBuilt(built)
+	if !rt.setBuilt(built) {
+		return
+	}
 	swappable.Set(built.Handler)
 
 	if tun != nil && tun.Listener() != nil {
@@ -579,7 +630,9 @@ func (c *Controller) bootGatewayAsync(
 			ReadHeaderTimeout: 15 * time.Second,
 			IdleTimeout:       10 * time.Minute,
 		}
-		rt.setPublicSrv(pubSrv)
+		if !rt.setPublicSrv(pubSrv) {
+			return
+		}
 		go func() {
 			_ = pubSrv.Serve(tun.Listener())
 		}()
@@ -611,7 +664,9 @@ func (c *Controller) bootGatewayAsync(
 	}
 
 	agentDone := make(chan struct{})
-	rt.setAgent(agentClient, agentDone)
+	if !rt.setAgent(agentClient, agentDone) {
+		return
+	}
 	go func() {
 		defer close(agentDone)
 		defer agentClient.Close()

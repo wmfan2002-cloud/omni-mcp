@@ -2,8 +2,11 @@ package agentui
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,7 +16,59 @@ import (
 	"time"
 
 	"omni-mcp/internal/agent"
+	"omni-mcp/internal/app"
 )
+
+type closeCountingTunnel struct {
+	closeCount int
+}
+
+func (*closeCountingTunnel) PublicURL() string      { return "https://example.trycloudflare.com" }
+func (*closeCountingTunnel) Listener() net.Listener { return nil }
+func (*closeCountingTunnel) Done() <-chan struct{}  { return make(chan struct{}) }
+func (*closeCountingTunnel) Err() error             { return nil }
+func (t *closeCountingTunnel) Close() error {
+	t.closeCount++
+	return nil
+}
+
+func TestGatewayRuntimeClosesLateResources(t *testing.T) {
+	runtime := &gatewayRuntime{}
+	runtime.Close()
+
+	tunnel := &closeCountingTunnel{}
+	if runtime.setTunnel(tunnel) {
+		t.Fatal("setTunnel accepted a tunnel after runtime shutdown")
+	}
+	if tunnel.closeCount != 1 {
+		t.Fatalf("late tunnel closed %d times, want 1", tunnel.closeCount)
+	}
+
+	builtCloseCount := 0
+	if runtime.setBuilt(&app.Built{Close: func() { builtCloseCount++ }}) {
+		t.Fatal("setBuilt accepted a service after runtime shutdown")
+	}
+	if builtCloseCount != 1 {
+		t.Fatalf("late service closed %d times, want 1", builtCloseCount)
+	}
+}
+
+func TestRemovedSealedTokensPreservesReferencesStillInUse(t *testing.T) {
+	before := Profile{
+		TokenSealed:             "old-hub-token",
+		GatewayNgrokTokenSealed: "shared-reference",
+		GatewayCFTokenSealed:    "shared-reference",
+		GatewayPasswordSealed:   "old-password",
+	}
+	after := before
+	after.TokenSealed = ""
+	after.GatewayNgrokTokenSealed = "new-ngrok-token"
+	after.GatewayPasswordSealed = "new-password"
+	removed := removedSealedTokens(before, after)
+	if len(removed) != 2 || removed[0] != "old-hub-token" || removed[1] != "old-password" {
+		t.Fatalf("removed sealed tokens = %#v", removed)
+	}
+}
 
 func TestGatewayHelpers(t *testing.T) {
 	if err := agent.ValidateName(defaultDeviceName()); err != nil {
@@ -34,6 +89,14 @@ func TestGatewayHelpers(t *testing.T) {
 	}
 	if _, err := validatePublicHTTPSURL("http://mcp.example.com"); err == nil {
 		t.Fatal("expected error for non-https public URL")
+	}
+	ready := make(chan struct{})
+	close(ready)
+	if err := waitForTunnelReady(context.Background(), ready, nil, time.Second); err != nil {
+		t.Fatalf("ready tunnel returned error: %v", err)
+	}
+	if err := waitForTunnelReady(context.Background(), nil, nil, time.Millisecond); !errors.Is(err, errTunnelStartupTimeout) {
+		t.Fatalf("unready tunnel timeout = %v", err)
 	}
 
 	for _, tc := range []struct {

@@ -33,6 +33,26 @@ const (
 
 var tryCloudflareURLRE = regexp.MustCompile(`https://[a-zA-Z0-9-]+\.trycloudflare\.com`)
 
+var (
+	errTunnelStartupTimeout = errors.New("等待 Cloudflare Named Tunnel 注册连接超时")
+	errTunnelExitedEarly    = errors.New("Cloudflare Named Tunnel 在注册连接前退出")
+)
+
+func waitForTunnelReady(ctx context.Context, ready, done <-chan struct{}, timeout time.Duration) error {
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-ready:
+		return nil
+	case <-done:
+		return errTunnelExitedEarly
+	case <-timer.C:
+		return errTunnelStartupTimeout
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
 func normalizeTunnelProvider(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case TunnelLocal:
@@ -436,23 +456,19 @@ func startCloudflareNamedTunnel(parentCtx context.Context, publicURL, token stri
 		close(tun.done)
 	}()
 
-	// Wait for tunnel registration confirmation or quick-fail detection.
-	timer := time.NewTimer(6 * time.Second)
-	defer timer.Stop()
-	select {
-	case <-readyCh:
-		return tun, nil
-	case <-timer.C:
-		return tun, nil
-	case <-tun.done:
-		if err := tun.Err(); err != nil {
-			return nil, err
-		}
-		return nil, errors.New("cloudflared Named Tunnel 启动后立即退出，请检查 Token 是否正确")
-	case <-parentCtx.Done():
+	if err := waitForTunnelReady(parentCtx, readyCh, tun.done, 30*time.Second); err != nil {
+		detail := getTail()
+		tunnelErr := tun.Err()
 		_ = tun.Close()
-		return nil, parentCtx.Err()
+		if errors.Is(err, errTunnelStartupTimeout) && detail != "" {
+			return nil, fmt.Errorf("%w（%s）", err, detail)
+		}
+		if errors.Is(err, errTunnelExitedEarly) && tunnelErr != nil {
+			return nil, fmt.Errorf("Cloudflare Named Tunnel 启动失败: %w", tunnelErr)
+		}
+		return nil, err
 	}
+	return tun, nil
 }
 
 type ngrokActiveTunnel struct {

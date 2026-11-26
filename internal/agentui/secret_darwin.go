@@ -72,3 +72,24 @@ func unsealToken(sealed string) (string, error) {
 	}
 	return "", errors.New("unsupported stored token format on macOS")
 }
+
+func deleteToken(sealed string) error {
+	sealed = strings.TrimSpace(sealed)
+	if !strings.HasPrefix(sealed, keychainPrefix) {
+		return nil
+	}
+	acct := strings.TrimSpace(strings.TrimPrefix(sealed, keychainPrefix))
+	if acct == "" {
+		return errors.New("empty macOS Keychain token reference")
+	}
+	cmd := exec.Command("/usr/bin/security", "delete-generic-password", "-s", keychainService, "-a", acct)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		message := strings.ToLower(string(out))
+		if strings.Contains(message, "could not be found") || strings.Contains(message, "item not found") {
+			return nil
+		}
+		return fmt.Errorf("delete macOS Keychain token: %w", err)
+	}
+	return nil
+}

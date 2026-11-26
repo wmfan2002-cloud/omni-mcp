@@ -92,3 +92,5 @@ func unsealToken(sealed string) (string, error) {
 	buf := unsafe.Slice(out.pbData, out.cbData)
 	return strings.TrimSpace(string(buf)), nil
 }
+
+func deleteToken(string) error { return nil }

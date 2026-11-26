@@ -37,3 +37,5 @@ func unsealToken(sealed string) (string, error) {
 	}
 	return strings.TrimSpace(string(raw)), nil
 }
+
+func deleteToken(string) error { return nil }

@@ -125,6 +125,17 @@ type Controller struct {
 	gwStartedAt            *time.Time
 }
 
+func (c *Controller) cleanupSealedTokens(values []string) error {
+	var failures []error
+	for _, value := range values {
+		if err := deleteToken(value); err != nil {
+			c.log.Warn("清理旧的本机凭据失败", "err", err)
+			failures = append(failures, err)
+		}
+	}
+	return errors.Join(failures...)
+}
+
 func NewController(configPath, version string, log *slog.Logger) (*Controller, error) {
 	if configPath == "" {
 		p, err := DefaultConfigPath()
@@ -337,7 +348,8 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 	}
 
 	c.mu.Lock()
-	next := c.profile
+	oldProfile := c.profile
+	next := oldProfile
 	nameChanged := c.profile.Name != "" && c.profile.Name != name
 	next.Mode = mode
 	next.Hub = hub
@@ -452,6 +464,7 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 		c.mu.Unlock()
 		return err
 	}
+	obsoleteTokens := removedSealedTokens(oldProfile, next)
 	wasRunning := c.cancelRun != nil
 	wasGatewayRunning := c.gwRuntime != nil
 	c.profile = next
@@ -464,6 +477,7 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 	})
 	c.notifyLocked()
 	c.mu.Unlock()
+	_ = c.cleanupSealedTokens(obsoleteTokens)
 
 	if mode == ModeGateway {
 		if wasRunning {
@@ -485,7 +499,8 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 
 func (c *Controller) ClearToken() error {
 	c.mu.Lock()
-	next := c.profile
+	oldProfile := c.profile
+	next := oldProfile
 	next.TokenSealed = ""
 	next.TokenDeviceName = ""
 	if err := saveProfile(c.configPath, next); err != nil {
@@ -497,7 +512,7 @@ func (c *Controller) ClearToken() error {
 	c.appendEventLocked(UIEvent{Kind: "system", Summary: "已清除本地保存的配对令牌"})
 	c.notifyLocked()
 	c.mu.Unlock()
-	return nil
+	return c.cleanupSealedTokens(removedSealedTokens(oldProfile, next))
 }
 
 func (c *Controller) ClearEvents() {
