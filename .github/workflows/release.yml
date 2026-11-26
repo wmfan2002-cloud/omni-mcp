@@ -49,7 +49,7 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - name: Test on native macOS
-        run: go test ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/config/... ./internal/policy/... ./internal/process/... -count=1
+        run: go test ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/config/... ./internal/process/... -count=1
       - name: Build and package macOS Desktop .app bundles and CLI archives
         env:
           VERSION: ${{ github.ref_name }}

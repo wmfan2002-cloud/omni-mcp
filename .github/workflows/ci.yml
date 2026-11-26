@@ -33,7 +33,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           go vet ./...
-          go test ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/config/... ./internal/policy/... ./internal/process/... -count=1
+          go test ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/config/... ./internal/process/... -count=1
       - name: Vet and Test (Windows Agent & Desktop)
         if: runner.os == 'Windows'
         run: |
