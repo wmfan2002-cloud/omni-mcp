@@ -8,11 +8,67 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"unicode/utf16"
 )
+
+func desktopProfileDir() string {
+	base, err := os.UserConfigDir()
+	if err != nil || base == "" {
+		base = os.TempDir()
+	}
+	dir := filepath.Join(base, "omni-mcp", "desktop-profile")
+	_ = os.MkdirAll(dir, 0o700)
+	return dir
+}
+
+func findWindowsAppBrowser() string {
+	candidates := []string{}
+	for _, env := range []string{"ProgramFiles(x86)", "ProgramFiles", "LocalAppData"} {
+		root := strings.TrimSpace(os.Getenv(env))
+		if root == "" {
+			continue
+		}
+		candidates = append(candidates,
+			filepath.Join(root, "Microsoft", "Edge", "Application", "msedge.exe"),
+			filepath.Join(root, "Google", "Chrome", "Application", "chrome.exe"),
+			filepath.Join(root, "BraveSoftware", "Brave-Browser", "Application", "brave.exe"),
+		)
+	}
+	for _, c := range candidates {
+		if info, err := os.Stat(c); err == nil && !info.IsDir() {
+			return c
+		}
+	}
+	for _, bin := range []string{"msedge.exe", "chrome.exe"} {
+		if resolved, err := exec.LookPath(bin); err == nil {
+			return resolved
+		}
+	}
+	return ""
+}
+
+func openDesktopWindow(targetURL string) error {
+	if browser := findWindowsAppBrowser(); browser != "" {
+		args := []string{
+			"--app=" + targetURL,
+			"--window-size=1180,780",
+			"--user-data-dir=" + desktopProfileDir(),
+			"--no-first-run",
+			"--no-default-browser-check",
+		}
+		cmd := exec.Command(browser, args...)
+		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+		if err := cmd.Start(); err == nil {
+			return nil
+		}
+	}
+	return openBrowser(targetURL)
+}
 
 func openBrowser(targetURL string) error {
 	cmd := exec.Command("rundll32", "url.dll,FileProtocolHandler", targetURL)

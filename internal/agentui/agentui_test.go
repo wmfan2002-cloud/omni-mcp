@@ -37,6 +37,16 @@ func TestServerSecurityAndCSRF(t *testing.T) {
 		t.Fatalf("expected 403 for non-loopback Host, got %d", rec.Code)
 	}
 
+	// 1b. Brand assets served on loopback for desktop app icon/titlebar
+	for _, asset := range []string{"/logo.svg", "/favicon.ico"} {
+		req = httptest.NewRequest(http.MethodGet, "http://127.0.0.1:18485"+asset, nil)
+		rec = httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK || rec.Body.Len() == 0 {
+			t.Fatalf("expected 200 non-empty body for %s, got %d (%d bytes)", asset, rec.Code, rec.Body.Len())
+		}
+	}
+
 	// 2. Unauthenticated API call rejected
 	req = httptest.NewRequest(http.MethodGet, "http://127.0.0.1:18485/api/state", nil)
 	rec = httptest.NewRecorder()

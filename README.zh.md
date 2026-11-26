@@ -73,14 +73,17 @@ curl http://127.0.0.1:8485/healthz
 
 ## Agent 电脑接入
 
-### 方式一：可视化本地控制台（Windows 推荐，双击即用）
+### 方式一：桌面端应用（Windows & macOS 推荐，双击即用）
 
-从 GitHub Release 下载 `omni-mcp-windows-amd64.exe` 后**直接双击**（或在命令行运行 `omni-mcp ui`），程序会在本机回环地址启动可视化控制台并自动打开浏览器：
+- **Windows 桌面版**：从 GitHub Release 下载 `omni-mcp-desktop-windows-amd64.exe` 直接双击（无黑框闪烁，自动以独立桌面窗口启动 `omni-mcp Console`）。
+- **macOS 桌面版**：从 GitHub Release 下载 `OmniMCP-Desktop-macos-arm64.zip`（Apple Silicon）或 `OmniMCP-Desktop-macos-amd64.zip`（Intel），解压后把 `Omni MCP.app` 拖入「应用程序」双击即可。
+  > 开源软件未做 Apple 商业公证，macOS 首次打开若提示无法验证开发者，执行一次 `xattr -cr "/Applications/Omni MCP.app"` 后双击即可正常运行。
 
-- 图形化填写 Hub 地址、设备名称，调用 Windows 原生文件夹选择器添加/管理授权目录，开关 `--allow-exec` 与自动连接；
-- 配对令牌在 Windows 上使用 **DPAPI（当前用户加密）** 持久化，免每次重新输入，接口永不回传明文令牌；
-- 实时审计流展示 AI 在本机执行的每一次读写、搜索与终端命令，并支持一键断开（急停）与退出程序；
-- 仅绑定 `127.0.0.1`，带回环 Host 校验、HttpOnly 会话 Cookie 与 CSRF 防护。
+桌面控制台核心特性：
+- **全新 `omni-mcp Console` 界面**：支持中英双语与深浅主题切换、系统原生目录选择弹窗（Windows FolderBrowser / macOS Finder）、一键 Hub 配对向导、开关 `--allow-exec` 与自动连接；
+- **系统级加密存储**：Windows 使用 **DPAPI 当前用户加密**，macOS 使用 **Keychain 钥匙串**，网页接口永不回传明文令牌；
+- **实时 SSE 操作审计**：实时展示 AI 在本机执行的每一次读写、搜索与终端命令，并支持一键断开（急停）与退出程序；
+- **安全加固**：仅绑定 `127.0.0.1`，带回环 Host 校验、HttpOnly SameSite=Strict 会话 Cookie 与 CSRF 防护。
 
 ### 方式二：命令行启动（适合后台脚本 / 服务器）
 

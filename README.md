@@ -68,13 +68,16 @@ apply_patch(target="office-pc", patch="...")
 
 The Agent can run automatically at user sign-in through Task Scheduler on Windows or a user service on Linux/macOS. It disappears from the target list while offline and automatically re-registers on reconnect.
 
-## Visual Agent UI (Windows double-click / `omni-mcp ui`)
+## Desktop App (Windows & macOS double-click / `omni-mcp ui`)
 
-Double-clicking `omni-mcp-windows-amd64.exe` on Windows (or running `omni-mcp ui` on any OS) starts a loopback-only local web console (`127.0.0.1:18485`) and opens your browser automatically:
+- **Windows Desktop**: Download `omni-mcp-desktop-windows-amd64.exe` from GitHub Releases and double-click it (console-less GUI build, launches `omni-mcp Console` in a standalone app window).
+- **macOS Desktop**: Download `OmniMCP-Desktop-macos-arm64.zip` (Apple Silicon) or `OmniMCP-Desktop-macos-amd64.zip` (Intel), unzip `Omni MCP.app` into `/Applications`, and double-click it.
+  > For unsigned open-source macOS builds, clear the quarantine attribute once if Gatekeeper blocks first launch: `xattr -cr "/Applications/Omni MCP.app"`.
 
-- Configure Hub URL, device name, native folder picker for `--allow-dir`, `--allow-exec` toggle, and auto-connect without typing CLI flags.
-- Pairing tokens are sealed with **Windows DPAPI** (current-user encryption) on Windows and are never returned to browser responses.
-- Live SSE activity feed shows every file read/write/search and shell command executed by AI, with one-click emergency disconnect and clean shutdown.
+Desktop Console highlights:
+- Light-first `omni-mcp Console` UI with Dark mode & bilingual ZH/EN switcher, native OS folder pickers (Windows FolderBrowser / macOS Finder), one-click Hub pairing stepper, `--allow-exec` safety guardrails, and auto-connect.
+- Native OS secret storage: **Windows DPAPI** on Windows and **macOS Keychain** on macOS; plaintext tokens are never returned to the browser.
+- Live SSE audit feed showing every file read/write/search and command execution with instant emergency disconnect and clean shutdown.
 - Hardened with loopback `Host` verification, session-scoped `HttpOnly; SameSite=Strict` cookie bootstrap, and CSRF token headers.
 
 ## Command execution

@@ -3,561 +3,730 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Omni MCP Agent</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>omni-mcp Console</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link rel="shortcut icon" href="/favicon.ico" />
   <script>
     (function () {
       try {
-        var saved = localStorage.getItem('omni-steep-theme');
-        if (saved === 'dark' || saved === 'light') {
-          document.documentElement.setAttribute('data-theme', saved);
+        var t = localStorage.getItem('omni-console-theme');
+        if (t === 'dark' || t === 'light') {
+          document.documentElement.setAttribute('data-theme', t);
         }
       } catch (e) {}
     })();
   </script>
   <style>
-    :root, [data-theme="light"] {
+    :root {
       --bg: #ffffff;
-      --surface: #fafafb;
-      --surface-band: #f7f7f8;
-      --surface-deep: #f2f2f3;
-      --header-bg: rgba(255, 255, 255, 0.82);
-      --input-bg: #ffffff;
-      --border: #e7e8ea;
-      --border-strong: #d4d6dc;
-      --ink: #17191c;
-      --text: #17191c;
-      --text-secondary: #5e626d;
-      --text-muted: #777b86;
-      --text-faint: #a3a6af;
-      --btn-primary-bg: #17191c;
-      --btn-primary-fg: #ffffff;
-      --btn-primary-hover: #2d3036;
-      --btn-ghost-bg: rgba(23, 25, 28, 0.045);
-      --btn-ghost-hover: rgba(23, 25, 28, 0.085);
-      --peach-bg: #fbe1d1;
-      --peach-ink: #5d2a1a;
-      --peach-border: rgba(93, 42, 26, 0.14);
-      --blue-bg: #d3e3fc;
-      --blue-soft: rgba(211, 227, 252, 0.52);
-      --cream-bg: #f8f5e2;
-      --cream-ink: #4b4328;
-      --ok: #1f7a4d;
-      --ok-dot: #1f9d60;
-      --warn: #8c4a1c;
-      --danger: #b42318;
-      --danger-bg: rgba(180, 35, 24, 0.08);
-      --danger-border: rgba(180, 35, 24, 0.22);
-      --hero-glow: radial-gradient(68% 95% at 22% 10%, rgba(211, 227, 252, 0.65) 0%, rgba(211, 227, 252, 0) 64%),
-                   radial-gradient(58% 90% at 84% 18%, rgba(251, 225, 209, 0.72) 0%, rgba(251, 225, 209, 0) 62%);
-      --pair-glow: linear-gradient(135deg, rgba(211, 227, 252, 0.55) 0%, rgba(251, 225, 209, 0.42) 100%);
-      --modal-backdrop: rgba(23, 25, 28, 0.36);
-      --font-serif: "Newsreader", "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", "Segoe UI", sans-serif;
-      --font-mono: ui-monospace, "Cascadia Mono", SFMono-Regular, Menlo, Consolas, monospace;
+      --bg-chrome: #fafafa;
+      --bg-subtle: #f4f4f6;
+      --bg-card: #ffffff;
+      --bg-hover: #f0f0f3;
+      --border: #e7e7e7;
+      --border-strong: #d4d4d8;
+      --ink: #0d0d0d;
+      --charcoal: #3d3d3d;
+      --muted: #6b7280;
+      --plum: #6a0085;
+      --plum-hover: #530068;
+      --plum-soft: #f8eeff;
+      --plum-border: #e5c4f5;
+      --plum-ink: #6a0085;
+      --mint-bg: #e6f7ee;
+      --mint-border: #b5e9ca;
+      --mint-ink: #004232;
+      --mint-dot: #10b981;
+      --amber-bg: #fef7e6;
+      --amber-border: #f4d38c;
+      --amber-ink: #7a4100;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --danger-ink: #991b1b;
+      --code-bg: #0f1115;
+      --code-ink: #e5e7eb;
+      --shadow-sm: 0 1px 2px rgba(13, 13, 13, 0.04);
+      --shadow-md: 0 8px 24px rgba(13, 13, 13, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", "Consolas", ui-monospace, monospace;
     }
 
     [data-theme="dark"] {
-      --bg: #121212;
-      --surface: #1a1a1a;
-      --surface-band: #1e1e1e;
-      --surface-deep: #161616;
-      --header-bg: rgba(34, 34, 34, 0.78);
-      --input-bg: #121212;
-      --border: #252525;
-      --border-strong: #343434;
-      --ink: #ffffff;
-      --text: #e7e7e7;
-      --text-secondary: #a0a0a0;
-      --text-muted: #898989;
-      --text-faint: #6c6c6c;
-      --btn-primary-bg: #ffffff;
-      --btn-primary-fg: #000000;
-      --btn-primary-hover: #e7e7e7;
-      --btn-ghost-bg: rgba(255, 255, 255, 0.05);
-      --btn-ghost-hover: rgba(255, 255, 255, 0.1);
-      --peach-bg: rgba(251, 225, 209, 0.1);
-      --peach-ink: #f6c9ad;
-      --peach-border: rgba(251, 225, 209, 0.18);
-      --blue-bg: rgba(77, 47, 135, 0.28);
-      --blue-soft: rgba(77, 47, 135, 0.22);
-      --cream-bg: rgba(248, 245, 226, 0.06);
-      --cream-ink: #e5dec2;
-      --ok: #5cd69a;
-      --ok-dot: #34d399;
-      --warn: #f6c9ad;
-      --danger: #f87171;
-      --danger-bg: rgba(248, 113, 113, 0.1);
-      --danger-border: rgba(248, 113, 113, 0.26);
-      --hero-glow: radial-gradient(64% 92% at 50% -10%, rgba(77, 47, 135, 0.34) 0%, rgba(21, 16, 30, 0.45) 48%, rgba(18, 18, 18, 0) 78%);
-      --pair-glow: linear-gradient(135deg, rgba(77, 47, 135, 0.24) 0%, rgba(21, 16, 30, 0.55) 100%);
-      --modal-backdrop: rgba(0, 0, 0, 0.68);
+      --bg: #111114;
+      --bg-chrome: #16161a;
+      --bg-subtle: #1e1e24;
+      --bg-card: #18181d;
+      --bg-hover: #24242b;
+      --border: #2a2a33;
+      --border-strong: #3a3a46;
+      --ink: #f5f5f7;
+      --charcoal: #d1d5db;
+      --muted: #9ca3af;
+      --plum: #a855f7;
+      --plum-hover: #9333ea;
+      --plum-soft: rgba(168, 85, 247, 0.14);
+      --plum-border: rgba(168, 85, 247, 0.36);
+      --plum-ink: #e9d5ff;
+      --mint-bg: rgba(16, 185, 129, 0.14);
+      --mint-border: rgba(16, 185, 129, 0.34);
+      --mint-ink: #6ee7b7;
+      --mint-dot: #34d399;
+      --amber-bg: rgba(245, 158, 11, 0.14);
+      --amber-border: rgba(245, 158, 11, 0.34);
+      --amber-ink: #fcd34d;
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-border: rgba(239, 68, 68, 0.34);
+      --danger-ink: #fca5a5;
+      --code-bg: #0a0a0d;
+      --code-ink: #e5e7eb;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
     }
 
     * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
+
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background: var(--bg);
-      color: var(--text);
+      color: var(--ink);
       font-family: var(--font-sans);
       font-size: 14px;
-      font-weight: 400;
-      line-height: 1.55;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      transition: background-color 180ms ease, color 180ms ease;
     }
 
-    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-    .serif { font-family: var(--font-serif); font-weight: 400; }
+    button, input {
+      font: inherit;
+      color: inherit;
+    }
 
-    /* Frosted Steep Header */
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--plum);
+      outline-offset: 2px;
+    }
+
+    /* Desktop App Shell */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Chrome Bar */
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      height: 60px;
-      background: var(--header-bg);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      height: 56px;
+      flex: 0 0 56px;
+      background: var(--bg-chrome);
       border-bottom: 1px solid var(--border);
-    }
-    .topbar-inner {
-      max-width: 1040px;
-      height: 100%;
-      margin: 0 auto;
-      padding: 0 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 16px;
+      padding: 0 18px;
     }
-    .brand {
+
+    .brand-group {
       display: flex;
       align-items: center;
       gap: 10px;
-      min-width: 140px;
-    }
-    .brand-mark {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: var(--ink);
-      color: var(--bg);
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-    }
-    .brand-name {
-      font-size: 14.5px;
-      font-weight: 500;
-      letter-spacing: -0.015em;
-      color: var(--ink);
+      min-width: 0;
     }
 
-    /* Center Nav */
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 4px;
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      display: block;
     }
-    .nav-btn {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      color: var(--text-muted);
-      font: 450 13.5px/1 var(--font-sans);
-      height: 32px;
-      padding: 0 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: color 150ms ease, background-color 150ms ease;
+
+    .brand-title {
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
     }
-    .nav-btn:hover { color: var(--ink); background: var(--btn-ghost-bg); }
-    .nav-btn.active {
-      color: var(--ink);
-      background: var(--btn-ghost-hover);
-      font-weight: 500;
-    }
-    .nav-count {
+
+    .brand-meta {
       font-family: var(--font-mono);
       font-size: 11px;
-      color: var(--text-muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Right compact 32px Steep capsules */
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      justify-content: flex-end;
-      min-width: 140px;
-    }
-
-    /* Full Capsule Controls (Steep Guideline: 44px primary, 32px nav/compact) */
-    .btn {
-      appearance: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      border-radius: 999px;
+      color: var(--muted);
+      background: var(--bg-subtle);
       border: 1px solid var(--border);
-      background: var(--btn-ghost-bg);
-      color: var(--text);
-      font-family: var(--font-sans);
-      font-weight: 450;
-      cursor: pointer;
+      padding: 2px 7px;
+      border-radius: 6px;
       white-space: nowrap;
-      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 120ms ease;
-    }
-    .btn:hover { background: var(--btn-ghost-hover); border-color: var(--border-strong); }
-    .btn:active { transform: translateY(0.5px); }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .btn-lg { height: 42px; padding: 0 22px; font-size: 14px; }
-    .btn-sm { height: 32px; padding: 0 14px; font-size: 13px; }
-    .btn-icon { width: 32px; height: 32px; padding: 0; }
-    .btn-primary {
-      background: var(--btn-primary-bg);
-      border-color: var(--btn-primary-bg);
-      color: var(--btn-primary-fg);
-      font-weight: 500;
-    }
-    .btn-primary:hover {
-      background: var(--btn-primary-hover);
-      border-color: var(--btn-primary-hover);
-    }
-    .btn-danger {
-      background: var(--danger-bg);
-      border-color: var(--danger-border);
-      color: var(--danger);
-    }
-    .btn-danger:hover {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #ffffff;
-    }
-    .btn-ghost {
-      border-color: transparent;
-      background: transparent;
-      color: var(--text-muted);
-    }
-    .btn-ghost:hover {
-      background: var(--btn-ghost-bg);
-      border-color: transparent;
-      color: var(--ink);
     }
 
-    /* Atmospheric Opening Stage */
-    .atmosphere {
-      background: var(--hero-glow);
-      border-bottom: 1px solid var(--border);
-    }
-    .stage-head {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 36px 28px 28px;
-    }
-    .hero-row {
+    .route-bar {
       display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 28px;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 0;
+      overflow: hidden;
+      max-width: 480px;
     }
-    .hero-eyebrow {
-      display: inline-flex;
+
+    .route-node {
+      color: var(--ink);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .route-mono {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    .topbar-actions {
+      display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 12.5px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
+      flex: 0 0 auto;
     }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
     .status-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--text-faint);
-      flex-shrink: 0;
-    }
-    .conn-state[data-state="connected"] { color: var(--ok); }
-    .conn-state[data-state="connected"] .status-dot {
-      background: var(--ok-dot);
-      box-shadow: 0 0 0 4px rgba(31, 157, 96, 0.16);
-    }
-    .conn-state[data-state="connecting"] .status-dot,
-    .conn-state[data-state="pairing"] .status-dot {
-      background: var(--ink);
-      animation: pulse 1.4s ease-in-out infinite;
-    }
-    .conn-state[data-state="reconnecting"] { color: var(--warn); }
-    .conn-state[data-state="reconnecting"] .status-dot { background: var(--warn); }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.35; transform: scale(0.85); }
+      background: var(--muted);
+      flex: 0 0 7px;
     }
 
-    .hero-title {
-      margin: 0;
-      font-family: var(--font-serif);
-      font-size: 38px;
-      font-weight: 400;
-      line-height: 1.14;
-      letter-spacing: -0.025em;
+    .status-chip.is-connected {
+      background: var(--mint-bg);
+      border-color: var(--mint-border);
+      color: var(--mint-ink);
+    }
+    .status-chip.is-connected .status-dot { background: var(--mint-dot); }
+
+    .status-chip.is-pairing,
+    .status-chip.is-connecting,
+    .status-chip.is-reconnecting {
+      background: var(--amber-bg);
+      border-color: var(--amber-border);
+      color: var(--amber-ink);
+    }
+    .status-chip.is-pairing .status-dot,
+    .status-chip.is-connecting .status-dot,
+    .status-chip.is-reconnecting .status-dot {
+      background: #f59e0b;
+      animation: pulse 1.3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    .icon-btn {
+      height: 32px;
+      min-width: 32px;
+      padding: 0 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--charcoal);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.14s ease, border-color 0.14s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
+    }
+
+    .btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
       color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      white-space: nowrap;
+      transition: background 0.14s ease, border-color 0.14s ease, opacity 0.14s ease;
     }
-    .hero-sub {
-      margin: 8px 0 0;
-      font-size: 14.5px;
-      color: var(--text-secondary);
-      max-width: 560px;
+
+    .btn:hover:not(:disabled) {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
     }
-    .hero-cta {
+
+    .btn:disabled {
+      opacity: 0.52;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--bg);
+    }
+    .btn-primary:hover:not(:disabled) {
+      opacity: 0.88;
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .btn-plum {
+      background: var(--plum);
+      border-color: var(--plum);
+      color: #ffffff;
+    }
+    .btn-plum:hover:not(:disabled) {
+      background: var(--plum-hover);
+      border-color: var(--plum-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger-ink);
+    }
+    .btn-danger:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .btn-sm {
+      height: 29px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    /* Main Workspace Grid */
+    .workspace {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: 236px 1fr;
+      min-height: 0;
+    }
+
+    /* CC-Switch style Left Sidebar */
+    .sidebar {
+      background: var(--bg-chrome);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 12px;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 4px 10px 6px;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .nav-item {
+      width: 100%;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 10px;
+      padding: 9px 10px;
+      border-radius: 9px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--charcoal);
+      font-size: 13.5px;
+      font-weight: 500;
+      text-align: left;
+      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+    }
+
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .nav-item svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      opacity: 0.72;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--ink);
+    }
+
+    .nav-item.active {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-item.active svg {
+      color: var(--plum-ink);
+      opacity: 1;
+    }
+
+    .nav-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--bg-subtle);
+      color: var(--muted);
+    }
+
+    .nav-item.active .nav-badge {
+      background: var(--plum-soft);
+      color: var(--plum-ink);
+    }
+
+    .sidebar-device-card {
+      margin-top: 14px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .device-card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .device-card-label {
+      color: var(--muted);
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .device-card-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+      min-width: 0;
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dirty-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--plum-soft);
+      border: 1px solid var(--plum-border);
+      color: var(--plum-ink);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .dirty-banner.show { display: flex; }
+
+    /* Main Content Canvas */
+    .main-canvas {
+      overflow-y: auto;
+      padding: 22px 26px 32px;
+      background: var(--bg);
+    }
+
+    .view-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .view-pane { display: none; flex-direction: column; gap: 16px; }
+    .view-pane.active { display: flex; }
+
+    /* Page Header inside View */
+    .view-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
       flex-wrap: wrap;
     }
 
-    /* Hairline Editorial Metrics (No heavy boxes) */
-    .metrics-row {
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
+    .view-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .view-sub {
+      margin: 3px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Alerts */
+    .alert {
+      display: none;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--danger-border);
+      background: var(--danger-bg);
+      color: var(--danger-ink);
+      font-size: 13px;
+    }
+    .alert.show { display: flex; }
+    .alert.is-pairing-banner {
+      border-color: var(--plum-border);
+      background: var(--plum-soft);
+      color: var(--plum-ink);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 14.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .card-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Overview KPI Strip */
+    .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 24px;
+      gap: 12px;
     }
-    .metric-label {
-      font-size: 12px;
-      color: var(--text-faint);
+
+    .stat-card {
+      background: var(--bg-chrome);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+    }
+
+    .stat-label {
+      font-size: 11.5px;
+      color: var(--muted);
       margin-bottom: 4px;
     }
-    .metric-val {
-      font-size: 14px;
-      font-weight: 500;
+
+    .stat-value {
+      font-size: 15px;
+      font-weight: 600;
       color: var(--ink);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .metric-val.ok { color: var(--ok); }
-    .metric-val.warn { color: var(--warn); }
 
-    /* Main Workspace Canvas */
-    .canvas {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 32px 28px 64px;
-    }
-    .view { display: none; }
-    .view.active { display: block; animation: fadeIn 180ms ease; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Error notice */
-    .alert {
-      display: none;
-      padding: 13px 18px;
-      border-radius: 14px;
-      background: var(--danger-bg);
-      border: 1px solid var(--danger-border);
-      color: var(--danger);
-      font-size: 13.5px;
-      margin-bottom: 24px;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .alert.show { display: flex; }
-
-    /* Steep Atmospheric Pairing Callout */
-    .pair-card {
-      display: none;
-      padding: 24px 28px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--pair-glow), var(--surface);
-      margin-bottom: 28px;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-    .pair-card.show { display: flex; }
-    .pair-left { display: flex; align-items: center; gap: 22px; flex: 1; min-width: 280px; }
-    .pair-code-box {
-      padding: 12px 18px;
-      border-radius: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      text-align: center;
-      min-width: 148px;
-      flex-shrink: 0;
-    }
-    .pair-code-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-    .pair-code-val {
+    .stat-value.mono {
       font-family: var(--font-mono);
-      font-size: 20px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      color: var(--ink);
-    }
-    .pair-title {
-      font-family: var(--font-serif);
-      font-size: 22px;
-      line-height: 1.25;
-      color: var(--ink);
-      margin-bottom: 4px;
-    }
-    .pair-desc { font-size: 13px; color: var(--text-secondary); }
-    .pair-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-
-    /* Editorial Sections (Steep: tonal panel, not boxed clutter) */
-    .section { margin-bottom: 36px; }
-    .section-head {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    .section-title {
-      margin: 0;
-      font-family: var(--font-serif);
-      font-size: 24px;
-      font-weight: 400;
-      letter-spacing: -0.02em;
-      color: var(--ink);
-      line-height: 1.2;
-    }
-    .section-desc {
-      margin: 5px 0 0;
       font-size: 13.5px;
-      color: var(--text-muted);
     }
 
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 26px 28px;
-    }
-
+    /* Forms */
     .form-grid {
       display: grid;
-      grid-template-columns: 1.35fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    .field { display: flex; flex-direction: column; gap: 7px; }
-    .field-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-    }
-    .field-hint { font-size: 12px; color: var(--text-muted); }
-    .field-hint code { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-secondary); }
-
-    input[type="text"], input[type="url"], input[type="password"] {
-      width: 100%;
-      height: 42px;
-      padding: 0 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--input-bg);
-      color: var(--ink);
-      font-family: var(--font-mono);
-      font-size: 13.5px;
-      outline: none;
-      transition: border-color 150ms ease;
-    }
-    input:focus { border-color: var(--ink); }
-    input::placeholder { color: var(--text-faint); }
-
-    .input-row { display: flex; gap: 10px; align-items: center; }
-    .input-row input { flex: 1; min-width: 0; }
-
-    /* Calm status band inside Connection panel */
-    .auth-note {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
-      padding: 13px 16px;
-      border-radius: 14px;
-      background: var(--surface-band);
-      border: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-secondary);
-      flex-wrap: wrap;
     }
-    .auth-note.paired {
-      background: var(--cream-bg);
-      color: var(--cream-ink);
-    }
-    .auth-note-actions { display: flex; align-items: center; gap: 8px; }
 
-    .adv-token {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid var(--border);
-    }
-    .adv-token summary {
-      cursor: pointer;
-      list-style: none;
+    .field {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
       font-size: 12.5px;
-      color: var(--text-muted);
-      user-select: none;
+      font-weight: 500;
+      color: var(--charcoal);
     }
-    .adv-token summary::-webkit-details-marker { display: none; }
-    .adv-token[open] summary { color: var(--ink); margin-bottom: 14px; }
 
-    /* Unboxed Hairline Setting Rows (Steep rule: avoid boxing every row) */
-    .setting-list { border-top: 1px solid var(--border); }
-    .setting-row {
+    .input {
+      height: 36px;
+      padding: 0 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 13.5px;
+      width: 100%;
+      transition: border-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--plum);
+      box-shadow: 0 0 0 3px var(--plum-soft);
+    }
+
+    .input-mono {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+    }
+
+    .field-help {
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .input-row .input { flex: 1 1 auto; }
+
+    /* Switch Row */
+    .toggle-card {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
-      padding: 18px 0;
-      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      padding: 13px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-chrome);
     }
-    .setting-title { font-size: 14.5px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
-    .setting-desc { font-size: 13px; color: var(--text-muted); }
 
-    /* Minimal Monochrome Switch */
+    .toggle-card.is-armed {
+      background: var(--amber-bg);
+      border-color: var(--amber-border);
+    }
+
+    .toggle-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .toggle-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .toggle-card.is-armed .toggle-desc {
+      color: var(--amber-ink);
+    }
+
     .switch {
       position: relative;
       display: inline-block;
-      width: 44px;
+      width: 42px;
       height: 24px;
-      flex-shrink: 0;
+      flex: 0 0 42px;
     }
-    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
     .slider {
       position: absolute;
       inset: 0;
-      border-radius: 999px;
       background: var(--border-strong);
+      border-radius: 999px;
+      transition: background 0.18s ease;
       cursor: pointer;
-      transition: background-color 160ms ease;
     }
+
     .slider::before {
       content: "";
       position: absolute;
@@ -566,497 +735,949 @@
       left: 3px;
       top: 3px;
       border-radius: 50%;
-      background: var(--bg);
-      transition: transform 160ms ease;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform 0.18s ease;
     }
-    .switch input:checked + .slider { background: var(--ink); }
-    .switch input:checked + .slider::before { transform: translateX(20px); }
 
-    /* Directories View */
-    .dir-list {
-      margin-top: 18px;
-      border-top: 1px solid var(--border);
+    .switch input:checked + .slider {
+      background: var(--plum);
     }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(18px);
+    }
+
+    /* Guardrail confirmation box for --allow-exec */
+    .exec-guard {
+      display: none;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      color: var(--amber-ink);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .exec-guard.show { display: block; }
+
+    /* Folder list */
+    .dir-list {
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .dir-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      padding: 14px 4px;
-      border-bottom: 1px solid var(--border);
-    }
-    .dir-path {
-      display: flex;
-      align-items: center;
       gap: 10px;
-      font-family: var(--font-mono);
-      font-size: 13.5px;
-      color: var(--ink);
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .dir-empty {
-      padding: 36px 20px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 13.5px;
-    }
-
-    /* Steep Signature Peach Card for Elevated Shell Permission */
-    .exec-card {
-      padding: 24px 28px;
-      border-radius: 20px;
+      padding: 9px 12px;
+      border-radius: 9px;
       border: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      transition: background-color 200ms ease, border-color 200ms ease;
+      background: var(--bg-chrome);
     }
-    .exec-card.elevated {
-      background: var(--peach-bg);
-      border-color: var(--peach-border);
-    }
-    .exec-card.elevated .setting-title,
-    .exec-card.elevated .setting-desc { color: var(--peach-ink); }
-    .exec-card.elevated .setting-desc { opacity: 0.86; }
 
-    /* Audit Stream */
-    .audit-bar {
+    .dir-path {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      word-break: break-all;
+      color: var(--ink);
+    }
+
+    .empty-box {
+      padding: 20px 14px;
+      border-radius: 10px;
+      border: 1px dashed var(--border-strong);
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* One-Click Pairing Stepper (matches showcase omni-mcp Console) */
+    .stepper-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .step-card {
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-chrome);
+      transition: border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .step-card.is-active {
+      background: var(--plum-soft);
+      border-color: var(--plum-border);
+    }
+
+    .step-card.is-done {
+      background: var(--mint-bg);
+      border-color: var(--mint-border);
+    }
+
+    .step-kicker {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--plum-ink);
+      margin-bottom: 5px;
+    }
+
+    .step-card.is-done .step-kicker { color: var(--mint-ink); }
+
+    .step-card h4 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .step-card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pair-live-box {
+      display: none;
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--plum-soft);
+      border: 1px solid var(--plum-border);
+    }
+    .pair-live-box.show { display: block; }
+
+    .pair-code-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 18px;
       flex-wrap: wrap;
-    }
-    .seg {
-      display: inline-flex;
-      padding: 3px;
-      border-radius: 999px;
-      background: var(--surface-band);
-      border: 1px solid var(--border);
-      gap: 2px;
-    }
-    .seg-btn {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      color: var(--text-muted);
-      font: 450 12.5px/1 var(--font-sans);
-      height: 28px;
-      padding: 0 13px;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: background-color 140ms ease, color 140ms ease;
-    }
-    .seg-btn.active {
-      background: var(--bg);
-      color: var(--ink);
-      font-weight: 500;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    }
-    .audit-tools { display: flex; align-items: center; gap: 8px; }
-    .audit-search {
-      height: 32px !important;
-      width: 220px !important;
-      border-radius: 999px !important;
-      font-family: var(--font-sans) !important;
-      font-size: 12.5px !important;
-      padding: 0 14px !important;
+      margin: 10px 0 12px;
     }
 
-    .audit-table {
-      width: 100%;
-      border-collapse: collapse;
+    .pair-code {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--plum-ink);
+      background: var(--bg-card);
+      border: 1px solid var(--plum-border);
+      padding: 6px 14px;
+      border-radius: 9px;
     }
-    .audit-table th {
-      text-align: left;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-faint);
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .audit-table td {
-      padding: 13px 12px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-      vertical-align: middle;
-    }
-    .audit-table tr:last-child td { border-bottom: 0; }
-    .audit-kind { font-weight: 500; color: var(--ink); white-space: nowrap; }
-    .audit-kind.err { color: var(--danger); }
-    .audit-kind.ok { color: var(--ok); }
-    .audit-time { color: var(--text-faint); white-space: nowrap; }
-    .audit-dur { text-align: right; color: var(--text-muted); white-space: nowrap; }
-    .audit-empty { padding: 48px 16px; text-align: center; color: var(--text-muted); }
 
-    .cli-bar {
-      margin-top: 24px;
-      padding: 14px 18px;
-      border-radius: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+    /* Audit Stream */
+    .audit-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
     }
-    .cli-label { font-size: 12px; color: var(--text-faint); flex-shrink: 0; }
-    .cli-code {
-      font-family: var(--font-mono);
+
+    .seg-group {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      padding: 5px 10px;
+      border-radius: 6px;
       font-size: 12px;
-      color: var(--text-secondary);
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .seg-btn.active {
+      background: var(--bg-card);
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .audit-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .audit-row {
+      display: grid;
+      grid-template-columns: 74px 86px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--bg-chrome);
+      font-size: 12.5px;
+    }
+
+    .audit-time {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .audit-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 6px;
+      text-align: center;
+      background: var(--bg-subtle);
+      color: var(--charcoal);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .audit-tag.is-op { background: var(--plum-soft); color: var(--plum-ink); }
+    .audit-tag.is-ok { background: var(--mint-bg); color: var(--mint-ink); }
+    .audit-tag.is-err { background: var(--danger-bg); color: var(--danger-ink); }
+
+    .audit-summary {
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      flex: 1;
-    }
-
-    /* Modal & Toast */
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 60;
-      background: var(--modal-backdrop);
-      backdrop-filter: blur(4px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .modal-bg.show { display: flex; }
-    .modal {
-      width: 100%;
-      max-width: 400px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 26px;
-    }
-    .modal h3 {
-      margin: 0 0 8px;
-      font-family: var(--font-serif);
-      font-size: 22px;
-      font-weight: 400;
       color: var(--ink);
     }
-    .modal p { margin: 0 0 22px; font-size: 13.5px; color: var(--text-secondary); }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
+    .audit-dur {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* CLI Preview */
+    .cli-box {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Action Row */
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 70;
-      padding: 11px 18px;
-      border-radius: 999px;
+      right: 20px;
+      bottom: 20px;
+      z-index: 60;
+      max-width: 380px;
+      padding: 10px 14px;
+      border-radius: 10px;
       background: var(--ink);
       color: var(--bg);
       font-size: 13px;
+      box-shadow: var(--shadow-md);
       opacity: 0;
       transform: translateY(8px);
       pointer-events: none;
-      transition: opacity 160ms ease, transform 160ms ease;
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.err { background: var(--danger); color: #ffffff; }
 
-    @media (max-width: 820px) {
-      .topbar-inner { padding: 0 16px; }
-      .stage-head, .canvas { padding-left: 16px; padding-right: 16px; }
-      .metrics-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.is-error {
+      background: #991b1b;
+      color: #ffffff;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(13, 13, 13, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .modal-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .modal-card p {
+      margin: 0 0 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .route-bar { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stepper-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 740px) {
+      .app-shell { height: auto; min-height: 100vh; overflow: visible; }
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 10px 12px;
+      }
+      .nav-section-label, .sidebar-device-card { display: none; }
+      .nav-list {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+      }
+      .nav-item {
+        width: auto;
+        white-space: nowrap;
+        padding: 7px 10px;
+      }
+      .sidebar-footer {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 8px;
+      }
+      .main-canvas { padding: 16px 14px 28px; }
       .form-grid { grid-template-columns: 1fr; }
-      .hero-title { font-size: 30px; }
+      .audit-row { grid-template-columns: 62px 76px 1fr; }
+      .audit-dur { display: none; }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3L3 19h18L12 3z" />
-          </svg>
-        </span>
-        <span class="brand-name">Omni MCP</span>
+  <div class="app-shell">
+    <!-- Top Desktop Window Bar -->
+    <header class="topbar">
+      <div class="brand-group">
+        <svg class="brand-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="omni-ring" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#6A0085" />
+              <stop offset="55%" stop-color="#9A24B8" />
+              <stop offset="100%" stop-color="#FF78C8" />
+            </linearGradient>
+            <linearGradient id="omni-core" x1="22" y1="22" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0D0D0D" />
+              <stop offset="100%" stop-color="#3B074C" />
+            </linearGradient>
+          </defs>
+          <rect x="4" y="4" width="56" height="56" rx="16" fill="#0D0D0D" />
+          <circle cx="32" cy="32" r="19" stroke="url(#omni-ring)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="92 28" transform="rotate(-24 32 32)" />
+          <path d="M32 32 L18.5 23.5 M32 32 L45.5 23.5 M32 32 L32 48" stroke="#FFC9FF" stroke-width="2.4" stroke-linecap="round" opacity="0.88" />
+          <circle cx="18.5" cy="23.5" r="4.2" fill="#FFFFFF" />
+          <circle cx="45.5" cy="23.5" r="4.2" fill="#FFC9FF" />
+          <circle cx="32" cy="48" r="4.2" fill="#FFFFFF" />
+          <circle cx="32" cy="32" r="7.5" fill="url(#omni-core)" stroke="#FFFFFF" stroke-width="2.6" />
+          <circle cx="32" cy="32" r="2.4" fill="#FFC9FF" />
+        </svg>
+        <span class="brand-title">omni-mcp Console</span>
+        <span id="osVersionChip" class="brand-meta">Desktop</span>
       </div>
 
-      <nav class="nav" aria-label="主导航">
-        <button type="button" class="nav-btn active" data-view="connection">连接配置</button>
-        <button type="button" class="nav-btn" data-view="access">目录与权限 <span class="nav-count" id="navDirCount">0</span></button>
-        <button type="button" class="nav-btn" data-view="audit">实时审计流 <span class="nav-count" id="navAuditCount">0</span></button>
-      </nav>
+      <div class="route-bar" aria-label="连接拓扑">
+        <span class="route-node" data-i18n="routeWebAi">网页 AI</span>
+        <span aria-hidden="true">→</span>
+        <span id="routeHub" class="route-mono">Hub /mcp</span>
+        <span aria-hidden="true">⇄</span>
+        <span id="routeDevice" class="route-node">—</span>
+        <span aria-hidden="true">·</span>
+        <span id="routeDirs" class="route-mono">0 dirs</span>
+      </div>
 
-      <div class="top-actions">
-        <button type="button" class="btn btn-icon" id="themeToggle" title="切换深浅主题" aria-label="切换主题">
-          <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-          </svg>
+      <div class="topbar-actions">
+        <div id="statusChip" class="status-chip">
+          <span class="status-dot"></span>
+          <span id="statusText">未连接</span>
+        </div>
+        <button type="button" id="toggleConnBtn" class="btn btn-primary">连接 Hub</button>
+        <button type="button" id="langToggle" class="icon-btn" aria-label="Switch language">EN</button>
+        <button type="button" id="themeToggle" class="icon-btn" aria-label="切换深浅主题">
+          <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
         </button>
-        <button type="button" class="btn btn-sm btn-ghost" id="quitBtn">退出</button>
-        <button type="button" class="btn btn-sm btn-primary" id="toggleConnBtn">连接 Hub</button>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <section class="atmosphere">
-    <div class="stage-head">
-      <div class="hero-row">
+    <div class="workspace">
+      <!-- Sidebar -->
+      <aside class="sidebar">
         <div>
-          <div class="hero-eyebrow conn-state" id="connState" data-state="disconnected">
-            <span class="status-dot"></span>
-            <span id="connStateText">未连接</span>
-            <span>·</span>
-            <span class="mono" id="sidebarHub">请填写 Hub 地址</span>
-          </div>
-          <h1 class="hero-title" id="heroTitle">尚未配置设备</h1>
-          <p class="hero-sub" id="heroSub">本机通过标准 HTTPS 反向接入云端 Hub，所有文件访问受操作系统句柄隔离，无需暴露公网端口。</p>
-        </div>
-        <div class="hero-cta">
-          <button type="button" class="btn btn-lg" id="saveOnlyBtn">仅保存</button>
-          <button type="button" class="btn btn-lg btn-primary" id="saveConnectBtn">保存并连接</button>
-        </div>
-      </div>
+          <div class="nav-section-label" data-i18n="navTitle">桌面控制台</div>
+          <nav class="nav-list" aria-label="控制台导航">
+            <button type="button" class="nav-item active" data-view="overview">
+              <span class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                <span data-i18n="navOverview">连接总览</span>
+              </span>
+            </button>
+            <button type="button" class="nav-item" data-view="pairing">
+              <span class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <span data-i18n="navPairing">一键配对</span>
+              </span>
+              <span id="pairNavBadge" class="nav-badge">—</span>
+            </button>
+            <button type="button" class="nav-item" data-view="folders">
+              <span class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                <span data-i18n="navFolders">目录与权限</span>
+              </span>
+              <span id="dirsNavBadge" class="nav-badge">0</span>
+            </button>
+            <button type="button" class="nav-item" data-view="audit">
+              <span class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span data-i18n="navAudit">实时审计</span>
+              </span>
+              <span id="eventsNavBadge" class="nav-badge">0</span>
+            </button>
+          </nav>
 
-      <div class="metrics-row">
-        <div>
-          <div class="metric-label">本机平台</div>
-          <div class="metric-val mono" id="statOS">-</div>
-        </div>
-        <div>
-          <div class="metric-label">Shell 引擎</div>
-          <div class="metric-val mono" id="statShell">-</div>
-        </div>
-        <div>
-          <div class="metric-label">授权工作区</div>
-          <div class="metric-val" id="statDirs">0 个目录</div>
-        </div>
-        <div>
-          <div class="metric-label">安全边界</div>
-          <div class="metric-val ok" id="statExec">仅文件沙箱</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <main class="canvas">
-    <div class="alert" id="connErrBox" role="alert">
-      <span id="connErrText"></span>
-    </div>
-
-    <div class="pair-card" id="pairingBanner" role="status">
-      <div class="pair-left">
-        <div class="pair-code-box">
-          <div class="pair-code-lbl">配对验证码</div>
-          <div class="pair-code-val" id="pairCodeVal">----</div>
-        </div>
-        <div>
-          <div class="pair-title" id="pairTitle">等待 Hub 浏览器批准接入</div>
-          <div class="pair-desc" id="pairDesc">请在打开的 Hub 页面核对验证码并点击「批准接入」，批准后本设备将自动保存独立凭证并上线。</div>
-        </div>
-      </div>
-      <div class="pair-actions">
-        <button type="button" class="btn btn-sm btn-primary" id="openApproveBtn">打开 Hub 批准页</button>
-        <button type="button" class="btn btn-sm" id="cancelPairBtn">取消配对</button>
-      </div>
-    </div>
-
-    <!-- View 1: Connection -->
-    <div class="view active" id="view-connection">
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">枢纽与设备身份</h2>
-            <p class="section-desc">自定义本机显示名称并填写 Hub 地址，首次连接将自动跳转浏览器一键审批，无需登录 VPS 配置密钥。</p>
-          </div>
-          <span class="field-hint mono" id="headerMeta">dev</span>
-        </div>
-
-        <div class="panel">
-          <div class="form-grid">
-            <div class="field">
-              <label class="field-label" for="hubInput">Hub 地址</label>
-              <input id="hubInput" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
+          <div class="sidebar-device-card">
+            <div class="device-card-row">
+              <span class="device-card-label" data-i18n="sideSystem">系统</span>
+              <span id="sideOsVal" class="device-card-val">—</span>
             </div>
-            <div class="field">
-              <label class="field-label" for="nameInput">设备名称</label>
-              <input id="nameInput" type="text" placeholder="my-workstation" autocomplete="off" />
+            <div class="device-card-row">
+              <span class="device-card-label" data-i18n="sideShell">终端</span>
+              <span id="sideShellVal" class="device-card-val">—</span>
+            </div>
+            <div class="device-card-row">
+              <span class="device-card-label" data-i18n="sideVault">凭证存储</span>
+              <span id="sideVaultVal" class="device-card-val">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <div id="dirtyBanner" class="dirty-banner">
+            <span data-i18n="unsavedHint">配置有未保存修改</span>
+            <button type="button" id="quickSaveBtn" class="btn btn-plum btn-sm" data-i18n="saveBtn">保存</button>
+          </div>
+          <button type="button" id="quitBtn" class="btn" style="width:100%" data-i18n="quitApp">退出桌面控制台</button>
+        </div>
+      </aside>
+
+      <!-- Main Views -->
+      <main class="main-canvas">
+        <div class="view-container">
+          <!-- Global Connection Error Banner -->
+          <div id="connErrBox" class="alert" role="alert">
+            <span id="connErrText"></span>
+          </div>
+
+          <!-- Global Active Pairing Banner -->
+          <div id="pairingTopBanner" class="alert is-pairing-banner" role="status">
+            <div>
+              <strong data-i18n="pairBannerTitle">正在等待 Hub 批准接入</strong>
+              <span id="pairBannerMeta" style="margin-left:8px;font-family:var(--font-mono)"></span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" id="bannerApproveBtn" class="btn btn-plum btn-sm" data-i18n="openApprove">打开 Hub 批准页</button>
+              <button type="button" id="bannerCancelPairBtn" class="btn btn-sm" data-i18n="cancelPair">取消</button>
             </div>
           </div>
 
-          <div class="auth-note" id="authNoteBox">
-            <span id="tokenStateText">无需手动填密钥：填好地址、设备名并选定工作目录后，点击「保存并连接」即可在 Hub 页面一键批准接入。</span>
-            <div class="auth-note-actions">
-              <button type="button" id="rePairBtn" class="btn btn-sm" style="display:none">重新配对</button>
-              <button type="button" id="clearTokenBtn" class="btn btn-sm btn-ghost" style="display:none">清除凭证</button>
-            </div>
-          </div>
-
-          <details class="adv-token" id="advTokenBox">
-            <summary>
-              <span>高级：手动粘贴静态令牌（可选，常规使用无需填写）</span>
-              <span class="field-hint" id="tokenStorageHint"></span>
-            </summary>
-            <div class="field">
-              <label class="field-label" for="tokenInput">
-                <span>静态配对令牌</span>
-                <span class="field-hint">仅用于预配环境变量模式</span>
-              </label>
-              <div class="input-row">
-                <input id="tokenInput" type="password" placeholder="留空则默认使用 Hub 一键审批配对" autocomplete="new-password" />
-                <button type="button" id="toggleTokenVis" class="btn btn-sm">显示</button>
+          <!-- VIEW 1: Overview & Connection -->
+          <section id="view-overview" class="view-pane active">
+            <div class="view-head">
+              <div>
+                <h1 class="view-title" data-i18n="ovTitle">本机接入与状态总览</h1>
+                <p class="view-sub" data-i18n="ovSub">让 Gemini、ChatGPT、Claude 网页端通过你的自托管 Hub 安全读写授权目录。</p>
               </div>
-              <div class="field-hint">若 Hub 采用静态环境变量模式，可粘贴 <code id="envNameCode">OMNI_AGENT_TOKEN_MY_WORKSTATION</code> 对应的令牌值。</div>
+              <div class="action-row">
+                <button type="button" id="saveOnlyBtn" class="btn" data-i18n="saveConfig">仅保存配置</button>
+                <button type="button" id="saveConnectBtn" class="btn btn-plum" data-i18n="saveAndConnect">保存并连接 Hub</button>
+              </div>
             </div>
-          </details>
-        </div>
-      </section>
 
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">启动与保存行为</h2>
-          </div>
-        </div>
-        <div class="setting-list">
-          <div class="setting-row">
-            <div>
-              <div class="setting-title">本机加密保存配对凭证</div>
-              <div class="setting-desc">开启后凭证仅存储在当前系统用户的受保护配置中，下次打开免重新配对。</div>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="kpiState">连接状态</div>
+                <div id="kpiStateVal" class="stat-value">未连接</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="kpiDirs">已授权文件夹</div>
+                <div id="kpiDirsVal" class="stat-value mono">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="kpiExec">命令执行</div>
+                <div id="kpiExecVal" class="stat-value">默认关闭</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="kpiUptime">在线时长 / 凭证</div>
+                <div id="kpiUptimeVal" class="stat-value mono">—</div>
+              </div>
             </div>
-            <label class="switch">
-              <input type="checkbox" id="saveTokenToggle" checked />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <div>
-              <div class="setting-title">启动程序时自动连接</div>
-              <div class="setting-desc">双击打开控制台后立即建立隧道连接，无需手动点击连接。</div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title" data-i18n="connCardTitle">Hub 与设备配置</h2>
+                <span id="configPathHint" class="card-hint" style="font-family:var(--font-mono)"></span>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="hubInput" data-i18n="hubLabel">Hub 公网 HTTPS 地址</label>
+                  <input id="hubInput" class="input input-mono" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
+                  <span class="field-help" data-i18n="hubHelp">填你的 VPS Hub 域名（无需加 /mcp，系统自动处理）</span>
+                </div>
+                <div class="field">
+                  <label for="nameInput" data-i18n="nameLabel">本机设备名称</label>
+                  <input id="nameInput" class="input input-mono" type="text" placeholder="my-macbook" autocomplete="off" />
+                  <span id="envHint" class="field-help">小写字母、数字和连字符，例如 office-win 或 my-mac</span>
+                </div>
+              </div>
+
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+                <div id="execToggleCard" class="toggle-card">
+                  <div>
+                    <div class="toggle-title" data-i18n="execToggleTitle">允许 AI 执行终端命令（--allow-exec）</div>
+                    <div id="execDesc" class="toggle-desc">默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。</div>
+                  </div>
+                  <label class="switch" aria-label="允许执行终端命令">
+                    <input id="allowExecToggle" type="checkbox" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div id="execGuardNotice" class="exec-guard">
+                  <strong data-i18n="execGuardTitle">安全提醒：已勾选开启命令执行</strong>
+                  <div data-i18n="execGuardBody">开启后，授权连接的网页 AI 可以以当前系统用户身份运行构建、测试等终端命令（仍受 Hub 策略护栏保护）。保存配置后生效，不需要时可随时关闭。</div>
+                </div>
+
+                <div class="toggle-card">
+                  <div>
+                    <div class="toggle-title" data-i18n="autoConnTitle">启动控制台时自动连接 Hub</div>
+                    <div class="toggle-desc" data-i18n="autoConnDesc">下次双击打开桌面应用时自动恢复在线，无需手动点击连接。</div>
+                  </div>
+                  <label class="switch" aria-label="启动时自动连接">
+                    <input id="autoConnectToggle" type="checkbox" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
             </div>
-            <label class="switch">
-              <input type="checkbox" id="autoConnectToggle" />
-              <span class="slider"></span>
-            </label>
-          </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title" data-i18n="recentAuditTitle">最近本机操作审计</h2>
+                <button type="button" id="jumpAuditBtn" class="btn btn-sm" data-i18n="viewAllAudit">查看全部记录 →</button>
+              </div>
+              <ul id="miniAuditList" class="audit-list"></ul>
+              <div id="miniAuditEmpty" class="empty-box" data-i18n="auditEmpty">暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。</div>
+            </div>
+          </section>
+
+          <!-- VIEW 2: One-Click Pairing -->
+          <section id="view-pairing" class="view-pane">
+            <div class="view-head">
+              <div>
+                <h1 class="view-title" data-i18n="pairTitle">一键配对与安全凭证</h1>
+                <p class="view-sub" data-i18n="pairSub">无需登录服务器手动生成密钥，在浏览器批准一次即可加密保存长期凭证。</p>
+              </div>
+              <div class="action-row">
+                <button type="button" id="rePairBtn" class="btn btn-plum" data-i18n="startPairBtn">发起一键配对</button>
+                <button type="button" id="clearTokenBtn" class="btn btn-danger" data-i18n="clearTokenBtn">清除已保存凭证</button>
+              </div>
+            </div>
+
+            <div class="stepper-grid">
+              <div id="stepCard1" class="step-card">
+                <div class="step-kicker">STEP 01</div>
+                <h4 data-i18n="pStep1Title">填写 Hub 地址并选择目录</h4>
+                <p data-i18n="pStep1Desc">设置设备名称与至少一个授权工作区文件夹。</p>
+              </div>
+              <div id="stepCard2" class="step-card">
+                <div class="step-kicker">STEP 02</div>
+                <h4 data-i18n="pStep2Title">前往 Hub /agents 一键批准</h4>
+                <p data-i18n="pStep2Desc">核对配对码并在你的 Hub 管理页点击批准接入。</p>
+              </div>
+              <div id="stepCard3" class="step-card">
+                <div class="step-kicker">STEP 03</div>
+                <h4 data-i18n="pStep3Title">系统加密保存并秒连上线</h4>
+                <p data-i18n="pStep3Desc">令牌自动存入本机安全存储区（Keychain / DPAPI），立即上线。</p>
+              </div>
+            </div>
+
+            <!-- Live Pairing Active Panel -->
+            <div id="pairLiveBox" class="pair-live-box">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <strong data-i18n="pairWaitHead">等待 Hub 批准中 — 请在浏览器核对以下配对码：</strong>
+                <span id="pairCountdown" style="font-family:var(--font-mono);font-size:12px"></span>
+              </div>
+              <div class="pair-code-row">
+                <div id="pairCodeDisplay" class="pair-code">------</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button type="button" id="openApproveBtn" class="btn btn-plum" data-i18n="openApprove">打开 Hub 批准页</button>
+                  <button type="button" id="cancelPairBtn" class="btn" data-i18n="cancelPair">取消配对</button>
+                </div>
+              </div>
+              <div id="pairApproveUrlText" style="font-family:var(--font-mono);font-size:11.5px;word-break:break-all;opacity:0.85"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title" data-i18n="tokenCardTitle">凭证状态与手动令牌（可选）</h2>
+                <span id="tokenStorageBadge" class="brand-meta">—</span>
+              </div>
+              <div id="tokenStatusLine" style="font-size:13px;color:var(--charcoal);margin-bottom:14px"></div>
+
+              <div class="toggle-card" style="margin-bottom:14px">
+                <div>
+                  <div class="toggle-title" data-i18n="saveTokenTitle">在本机安全保存配对令牌</div>
+                  <div class="toggle-desc" data-i18n="saveTokenDesc">关闭后令牌仅保存在本次内存会话中，重启应用需重新配对。</div>
+                </div>
+                <label class="switch" aria-label="在本机安全保存令牌">
+                  <input id="saveTokenToggle" type="checkbox" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="field">
+                <label for="tokenInput" data-i18n="manualTokenLabel">手动粘贴 Hub 配对令牌（一般无需填写，推荐直接点上方「发起一键配对」）</label>
+                <div class="input-row">
+                  <input id="tokenInput" class="input input-mono" type="password" placeholder="粘贴令牌后点击「保存配置」覆盖本地凭证" autocomplete="off" />
+                  <button type="button" id="toggleTokenVis" class="btn" data-i18n="showBtn">显示</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 3: Folders & Permissions -->
+          <section id="view-folders" class="view-pane">
+            <div class="view-head">
+              <div>
+                <h1 class="view-title" data-i18n="dirTitle">授权文件夹与命令行预览</h1>
+                <p class="view-sub" data-i18n="dirSub">AI 只能在下方明确授权的目录内读写文件，任何越界路径都会被底层沙箱拦截。</p>
+              </div>
+              <div class="action-row">
+                <button type="button" id="pickDirBtn" class="btn btn-plum" data-i18n="pickDirBtn">选择本地文件夹…</button>
+                <button type="button" id="saveDirsBtn" class="btn" data-i18n="saveConfig">保存配置</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title" data-i18n="allowedDirsHead">已授权工作目录</h2>
+                <span id="dirCountHint" class="card-hint">0 个目录</span>
+              </div>
+              <div class="input-row">
+                <input id="dirInput" class="input input-mono" type="text" placeholder="输入目录路径后按回车，或点击上方「选择本地文件夹…」" autocomplete="off" />
+                <button type="button" id="addDirBtn" class="btn" data-i18n="addDirBtn">添加路径</button>
+              </div>
+              <ul id="dirList" class="dir-list"></ul>
+              <div id="dirEmptyBox" class="empty-box" style="margin-top:12px" data-i18n="dirEmpty">
+                尚未添加任何工作目录。点击「选择本地文件夹…」授权你希望 AI 协助的项目目录。
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title" data-i18n="cliCardTitle">等效命令行启动参数</h2>
+                <button type="button" id="copyCliBtn" class="btn btn-sm" data-i18n="copyCliBtn">复制命令</button>
+              </div>
+              <pre id="cliPreview" class="cli-box"></pre>
+            </div>
+          </section>
+
+          <!-- VIEW 4: Full Live Audit -->
+          <section id="view-audit" class="view-pane">
+            <div class="view-head">
+              <div>
+                <h1 class="view-title" data-i18n="auditTitle">实时操作审计流</h1>
+                <p class="view-sub" data-i18n="auditSub">通过本机 SSE 实时推送每次连接状态变化与 AI 调用的工具详情。</p>
+              </div>
+              <button type="button" id="clearEventsBtn" class="btn" data-i18n="clearAuditBtn">清空记录</button>
+            </div>
+
+            <div class="card">
+              <div class="audit-toolbar">
+                <div class="seg-group" role="tablist" aria-label="事件筛选">
+                  <button type="button" class="seg-btn active" data-filter="all" data-i18n="filterAll">全部</button>
+                  <button type="button" class="seg-btn" data-filter="operation" data-i18n="filterOp">工具调用</button>
+                  <button type="button" class="seg-btn" data-filter="connection" data-i18n="filterConn">连接状态</button>
+                  <button type="button" class="seg-btn" data-filter="error" data-i18n="filterErr">仅错误</button>
+                </div>
+                <input id="auditSearch" class="input" style="max-width:260px;height:32px;font-size:12.5px" type="search" placeholder="筛选方法名或路径关键词…" />
+              </div>
+              <ul id="auditList" class="audit-list"></ul>
+              <div id="auditEmptyBox" class="empty-box" data-i18n="auditEmpty">暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。</div>
+            </div>
+          </section>
         </div>
-      </section>
+      </main>
     </div>
+  </div>
 
-    <!-- View 2: Access & Sandbox -->
-    <div class="view" id="view-access">
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">授权工作目录</h2>
-            <p class="section-desc">所有读写、搜索与补丁操作均由操作系统目录句柄（os.Root）强隔离，AI 无法越界访问未授权路径。</p>
-          </div>
-          <button type="button" id="pickDirBtn" class="btn btn-lg btn-primary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-              <line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>
-            </svg>
-            <span>浏览选择文件夹</span>
-          </button>
-        </div>
-
-        <div class="panel">
-          <div class="input-row">
-            <input id="dirInput" type="text" placeholder="输入或粘贴本地目录路径，例如 D:\Projects\MyApp" autocomplete="off" />
-            <button type="button" id="addDirBtn" class="btn btn-lg">添加</button>
-          </div>
-          <div class="dir-list" id="dirList"></div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">终端命令执行权限</h2>
-            <p class="section-desc">遵循最小权限原则，命令执行默认关闭；仅在你完全信任所连 Hub 时开启。</p>
-          </div>
-        </div>
-        <div class="exec-card" id="execCard">
-          <div>
-            <div class="setting-title">允许 AI 在本机执行终端命令（--allow-exec）</div>
-            <div class="setting-desc" id="execDesc">当前已关闭：AI 仅能在上方授权目录内读、写、搜文件，所有 shell 命令都会被直接拒绝。</div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="allowExecToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-      </section>
-    </div>
-
-    <!-- View 3: Live Audit -->
-    <div class="view" id="view-audit">
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">实时操作审计流</h2>
-            <p class="section-desc">远端 AI 对本机发起的每一次文件读取、补丁修改与命令执行均会实时记录于此。</p>
-          </div>
-        </div>
-
-        <div class="audit-bar">
-          <div class="seg" role="tablist">
-            <button type="button" class="seg-btn active" data-filter="all">全部</button>
-            <button type="button" class="seg-btn" data-filter="fs">文件操作</button>
-            <button type="button" class="seg-btn" data-filter="shell">终端命令</button>
-            <button type="button" class="seg-btn" data-filter="err">异常与系统</button>
-          </div>
-          <div class="audit-tools">
-            <input id="auditSearch" class="audit-search" type="text" placeholder="筛选路径、命令或关键字…" />
-            <button type="button" id="clearEventsBtn" class="btn btn-sm">清空</button>
-          </div>
-        </div>
-
-        <div class="panel" style="padding: 8px 20px;">
-          <table class="audit-table">
-            <thead>
-              <tr>
-                <th style="width:96px;">时间</th>
-                <th style="width:104px;">操作</th>
-                <th>详情</th>
-                <th style="width:88px;text-align:right;">耗时</th>
-              </tr>
-            </thead>
-            <tbody id="auditBody"></tbody>
-          </table>
-        </div>
-
-        <div class="cli-bar">
-          <span class="cli-label">等效命令行</span>
-          <span class="cli-code" id="cliPreview">-</span>
-          <button type="button" id="copyCliBtn" class="btn btn-sm">复制</button>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <div class="modal-bg" id="quitModal" role="dialog" aria-modal="true">
-    <div class="modal">
-      <h3>退出本地控制台？</h3>
-      <p>退出后将立即断开与 Hub 的隧道连接并关闭后台进程，已保存的本机配置不会丢失。</p>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-sm" id="cancelQuitBtn">取消</button>
-        <button type="button" class="btn btn-sm btn-danger" id="confirmQuitBtn">确认退出</button>
+  <!-- Quit Confirmation Modal -->
+  <div id="quitModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="quitModalTitle">
+    <div class="modal-card">
+      <h3 id="quitModalTitle" data-i18n="quitModalTitle">退出 omni-mcp Console？</h3>
+      <p data-i18n="quitModalDesc">退出后会立即断开本机与 Hub 的连接，网页端 AI 将无法再访问此电脑。已保存的配置与加密令牌会保留在本地。</p>
+      <div class="action-row">
+        <button type="button" id="cancelQuitBtn" class="btn" data-i18n="cancelBtn">取消</button>
+        <button type="button" id="confirmQuitBtn" class="btn btn-danger" data-i18n="confirmQuitBtn">确认退出</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const CSRF = '__OMNI_CSRF_TOKEN__';
+    const CSRF_TOKEN = '__OMNI_CSRF_TOKEN__';
     const $ = (id) => document.getElementById(id);
+
+    const I18N = {
+      zh: {
+        routeWebAi: '网页 AI',
+        navTitle: '桌面控制台',
+        navOverview: '连接总览',
+        navPairing: '一键配对',
+        navFolders: '目录与权限',
+        navAudit: '实时审计',
+        sideSystem: '系统',
+        sideShell: '终端',
+        sideVault: '凭证存储',
+        unsavedHint: '配置有未保存修改',
+        saveBtn: '保存',
+        quitApp: '退出桌面控制台',
+        pairBannerTitle: '正在等待 Hub 批准接入',
+        openApprove: '打开 Hub 批准页',
+        cancelPair: '取消配对',
+        ovTitle: '本机接入与状态总览',
+        ovSub: '让 Gemini、ChatGPT、Claude 网页端通过你的自托管 Hub 安全读写授权目录。',
+        saveConfig: '仅保存配置',
+        saveAndConnect: '保存并连接 Hub',
+        kpiState: '连接状态',
+        kpiDirs: '已授权文件夹',
+        kpiExec: '命令执行',
+        kpiUptime: '在线状态 / 凭证',
+        connCardTitle: 'Hub 与设备配置',
+        hubLabel: 'Hub 公网 HTTPS 地址',
+        hubHelp: '填你的 VPS Hub 域名（无需加 /mcp，系统自动处理）',
+        nameLabel: '本机设备名称',
+        execToggleTitle: '允许 AI 执行终端命令（--allow-exec）',
+        execOffDesc: '默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。',
+        execOnDesc: '已开启：AI 可在本机以当前用户身份运行命令（受 Hub 策略护栏约束）。',
+        execGuardTitle: '安全提醒：已勾选开启命令执行',
+        execGuardBody: '开启后，授权连接的网页 AI 可以以当前系统用户身份运行构建、测试等终端命令（仍受 Hub 策略护栏保护）。保存配置后生效，不需要时可随时关闭。',
+        autoConnTitle: '启动控制台时自动连接 Hub',
+        autoConnDesc: '下次双击打开桌面应用时自动恢复在线，无需手动点击连接。',
+        recentAuditTitle: '最近本机操作审计',
+        viewAllAudit: '查看全部记录 →',
+        auditEmpty: '暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。',
+        pairTitle: '一键配对与安全凭证',
+        pairSub: '无需登录服务器手动生成密钥，在浏览器批准一次即可加密保存长期凭证。',
+        startPairBtn: '发起一键配对',
+        clearTokenBtn: '清除已保存凭证',
+        pStep1Title: '填写 Hub 地址并选择目录',
+        pStep1Desc: '设置设备名称与至少一个授权工作区文件夹。',
+        pStep2Title: '前往 Hub /agents 一键批准',
+        pStep2Desc: '核对配对码并在你的 Hub 管理页点击批准接入。',
+        pStep3Title: '系统加密保存并秒连上线',
+        pStep3Desc: '令牌自动存入本机安全存储区（Keychain / DPAPI），立即上线。',
+        pairWaitHead: '等待 Hub 批准中 — 请在浏览器核对以下配对码：',
+        tokenCardTitle: '凭证状态与手动令牌（可选）',
+        saveTokenTitle: '在本机安全保存配对令牌',
+        saveTokenDesc: '关闭后令牌仅保存在本次内存会话中，重启应用需重新配对。',
+        manualTokenLabel: '手动粘贴 Hub 配对令牌（一般无需填写，推荐直接点上方「发起一键配对」）',
+        showBtn: '显示',
+        hideBtn: '隐藏',
+        dirTitle: '授权文件夹与命令行预览',
+        dirSub: 'AI 只能在下方明确授权的目录内读写文件，任何越界路径都会被底层沙箱拦截。',
+        pickDirBtn: '选择本地文件夹…',
+        pickingBtn: '等待选择…',
+        allowedDirsHead: '已授权工作目录',
+        addDirBtn: '添加路径',
+        removeBtn: '移除',
+        dirEmpty: '尚未添加任何工作目录。点击「选择本地文件夹…」授权你希望 AI 协助的项目目录。',
+        cliCardTitle: '等效命令行启动参数',
+        copyCliBtn: '复制命令',
+        auditTitle: '实时操作审计流',
+        auditSub: '通过本机 SSE 实时推送每次连接状态变化与 AI 调用的工具详情。',
+        clearAuditBtn: '清空记录',
+        filterAll: '全部',
+        filterOp: '工具调用',
+        filterConn: '连接状态',
+        filterErr: '仅错误',
+        quitModalTitle: '退出 omni-mcp Console？',
+        quitModalDesc: '退出后会立即断开本机与 Hub 的连接，网页端 AI 将无法再访问此电脑。已保存的配置与加密令牌会保留在本地。',
+        cancelBtn: '取消',
+        confirmQuitBtn: '确认退出',
+        stDisconnected: '未连接',
+        stPairing: '等待配对批准',
+        stConnecting: '正在连接…',
+        stConnected: '已连接 Hub',
+        stReconnecting: '重连中…',
+        btnConnect: '连接 Hub',
+        btnDisconnect: '断开连接',
+        btnCancelPair: '取消配对',
+        execOffShort: '默认关闭',
+        execOnShort: '已开启',
+        tokenPaired: '已配对',
+        tokenMissing: '未配对',
+        dirsCount: (n) => n + ' 个目录',
+        dirPlaceholder: '输入目录路径后按回车，或点击上方「选择本地文件夹…」',
+        searchPlaceholder: '筛选方法名或路径关键词…',
+        tokenPlaceholder: '粘贴令牌后点击「保存配置」覆盖本地凭证',
+        tokenStatusYes: (name) => '当前设备已保存有效配对凭证' + (name ? '（绑定设备：' + name + '）' : '') + '，下次启动可免密直连。',
+        tokenStatusNo: '当前设备尚未配对。填好 Hub 地址与授权目录后，点击「发起一键配对」或直接点右上角「连接 Hub」即可自动引导配对。'
+      },
+      en: {
+        routeWebAi: 'Web AI',
+        navTitle: 'Desktop Console',
+        navOverview: 'Overview',
+        navPairing: 'One-Click Pairing',
+        navFolders: 'Folders & Safety',
+        navAudit: 'Live Audit',
+        sideSystem: 'OS',
+        sideShell: 'Shell',
+        sideVault: 'Vault',
+        unsavedHint: 'Unsaved changes',
+        saveBtn: 'Save',
+        quitApp: 'Quit Desktop App',
+        pairBannerTitle: 'Waiting for Hub Approval',
+        openApprove: 'Open Hub Approval',
+        cancelPair: 'Cancel Pairing',
+        ovTitle: 'Device Connection & Overview',
+        ovSub: 'Let Gemini, ChatGPT, and Claude web clients safely read and edit authorized folders through your self-hosted Hub.',
+        saveConfig: 'Save Settings',
+        saveAndConnect: 'Save & Connect',
+        kpiState: 'Status',
+        kpiDirs: 'Allowed Folders',
+        kpiExec: 'Shell Execution',
+        kpiUptime: 'Session / Credential',
+        connCardTitle: 'Hub & Device Profile',
+        hubLabel: 'Hub Public HTTPS Origin',
+        hubHelp: 'Your VPS Hub origin (no /mcp suffix required)',
+        nameLabel: 'Device Name',
+        execToggleTitle: 'Allow AI to run shell commands (--allow-exec)',
+        execOffDesc: 'Disabled by default: AI can only read/edit authorized folders and cannot run shell commands.',
+        execOnDesc: 'Enabled: AI may execute local shell commands as current user (guarded by Hub policy).',
+        execGuardTitle: 'Safety Notice: Shell Execution Selected',
+        execGuardBody: 'Once saved, authorized web AI sessions can run build/test commands as your OS user (still subject to Hub policy guards). Toggle off anytime.',
+        autoConnTitle: 'Auto-connect when console opens',
+        autoConnDesc: 'Reconnect automatically the next time you launch this desktop app.',
+        recentAuditTitle: 'Recent Local Audit Activity',
+        viewAllAudit: 'View Full Stream →',
+        auditEmpty: 'No events yet. Once connected, every file read, edit, or command call appears here in real time.',
+        pairTitle: 'One-Click Pairing & Credentials',
+        pairSub: 'No manual SSH key generation — approve once in your Hub browser page and store securely on-device.',
+        startPairBtn: 'Start One-Click Pairing',
+        clearTokenBtn: 'Clear Saved Token',
+        pStep1Title: 'Configure Hub & Folders',
+        pStep1Desc: 'Set a device name and authorize at least one workspace folder.',
+        pStep2Title: 'Approve on Hub /agents',
+        pStep2Desc: 'Verify the pairing code in your Hub portal and click Approve.',
+        pStep3Title: 'Encrypted & Online',
+        pStep3Desc: 'Token is sealed in native OS storage (Keychain / DPAPI) and connected.',
+        pairWaitHead: 'Waiting for Hub approval — confirm this pairing code in your browser:',
+        tokenCardTitle: 'Credential Status & Manual Token (Optional)',
+        saveTokenTitle: 'Persist pairing token in local secure storage',
+        saveTokenDesc: 'When disabled, the token lives only in memory for this session.',
+        manualTokenLabel: 'Manual Hub pairing token (optional — One-Click Pairing above is recommended)',
+        showBtn: 'Show',
+        hideBtn: 'Hide',
+        dirTitle: 'Authorized Folders & CLI Preview',
+        dirSub: 'AI access is strictly sandboxed inside these directories. Any path outside is blocked.',
+        pickDirBtn: 'Choose Folder…',
+        pickingBtn: 'Selecting…',
+        allowedDirsHead: 'Allowed Workspace Directories',
+        addDirBtn: 'Add Path',
+        removeBtn: 'Remove',
+        dirEmpty: 'No folders added yet. Click "Choose Folder…" to grant AI access to a project directory.',
+        cliCardTitle: 'Equivalent CLI Command',
+        copyCliBtn: 'Copy Command',
+        auditTitle: 'Real-Time Operation Audit Stream',
+        auditSub: 'Live SSE feed of every connection transition and MCP tool invocation on this machine.',
+        clearAuditBtn: 'Clear Log',
+        filterAll: 'All',
+        filterOp: 'Tool Calls',
+        filterConn: 'Connection',
+        filterErr: 'Errors Only',
+        quitModalTitle: 'Quit omni-mcp Console?',
+        quitModalDesc: 'Closing the desktop console disconnects this machine from your Hub immediately. Saved settings and encrypted tokens remain intact.',
+        cancelBtn: 'Cancel',
+        confirmQuitBtn: 'Quit App',
+        stDisconnected: 'Disconnected',
+        stPairing: 'Awaiting Approval',
+        stConnecting: 'Connecting…',
+        stConnected: 'Connected',
+        stReconnecting: 'Reconnecting…',
+        btnConnect: 'Connect Hub',
+        btnDisconnect: 'Disconnect',
+        btnCancelPair: 'Cancel Pairing',
+        execOffShort: 'Disabled',
+        execOnShort: 'Enabled',
+        tokenPaired: 'Paired',
+        tokenMissing: 'Unpaired',
+        dirsCount: (n) => n + (n === 1 ? ' folder' : ' folders'),
+        dirPlaceholder: 'Type a directory path and press Enter, or click "Choose Folder…"',
+        searchPlaceholder: 'Filter by tool name or path…',
+        tokenPlaceholder: 'Paste token and click Save Settings to override',
+        tokenStatusYes: (name) => 'A valid pairing credential is stored on this device' + (name ? ' (bound to: ' + name + ')' : '') + '.',
+        tokenStatusNo: 'This device is not paired yet. Enter your Hub URL and a folder, then click "Start One-Click Pairing" or "Connect Hub".'
+      }
+    };
+
+    let lang = 'zh';
+    try {
+      const savedLang = localStorage.getItem('omni-console-lang');
+      if (savedLang === 'en' || savedLang === 'zh') lang = savedLang;
+    } catch {}
 
     let state = null;
     let draftDirs = [];
@@ -1064,228 +1685,298 @@
     let formDirty = false;
     let auditFilter = 'all';
     let auditQuery = '';
+    let toastTimer = null;
+    let countdownTimer = null;
 
-    function esc(s) {
-      return String(s == null ? '' : s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function t(key) {
+      return (I18N[lang] && I18N[lang][key]) || I18N.zh[key] || key;
     }
 
-    function showToast(msg, isErr) {
+    function applyStaticI18n() {
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+      $('langToggle').textContent = lang === 'zh' ? 'EN' : '中文';
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const val = t(el.dataset.i18n);
+        if (typeof val === 'string') el.textContent = val;
+      });
+      $('dirInput').placeholder = t('dirPlaceholder');
+      $('auditSearch').placeholder = t('searchPlaceholder');
+      $('tokenInput').placeholder = t('tokenPlaceholder');
+      updateExecDesc();
+      if (state) renderState(state, false);
+    }
+
+    function showToast(msg, isError) {
       const el = $('toast');
       el.textContent = msg;
-      el.className = 'toast show' + (isErr ? ' err' : '');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => { el.className = 'toast'; }, 3000);
+      el.className = 'toast show' + (isError ? ' is-error' : '');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3600);
     }
 
     async function api(path, opts = {}) {
-      const headers = Object.assign({ 'Content-Type': 'application/json', 'X-Omni-UI-Token': CSRF }, opts.headers || {});
+      const headers = Object.assign({}, opts.headers || {});
+      if (opts.method === 'POST') {
+        headers['X-Omni-UI-Token'] = CSRF_TOKEN;
+        if (opts.body && !headers['Content-Type']) {
+          headers['Content-Type'] = 'application/json';
+        }
+      }
       const res = await fetch(path, Object.assign({}, opts, { headers }));
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || ('请求失败 (' + res.status + ')'));
+      if (!res.ok) {
+        throw new Error(data.error || ('HTTP ' + res.status));
+      }
       return data;
     }
 
-    function formatTime(iso) {
-      if (!iso) return '';
-      const d = new Date(iso);
-      if (isNaN(d.getTime())) return '';
-      return d.toLocaleTimeString([], { hour12: false });
+    function markDirty(v) {
+      formDirty = !!v;
+      $('dirtyBanner').classList.toggle('show', formDirty);
     }
 
-    function markDirty(dirty) {
-      formDirty = dirty;
-      $('saveOnlyBtn').textContent = dirty ? '保存更改' : '仅保存';
+    function prettyOS(os, arch) {
+      if (os === 'darwin') return 'macOS' + (arch ? ' ' + arch : '');
+      if (os === 'windows') return 'Windows' + (arch ? ' ' + arch : '');
+      if (os === 'linux') return 'Linux' + (arch ? ' ' + arch : '');
+      return (os || 'Desktop') + (arch ? ' ' + arch : '');
     }
 
     function updateEnvHint() {
-      const raw = ($('nameInput').value.trim() || 'my-workstation').toUpperCase().replace(/[^A-Z0-9]+/g, '_');
-      $('envNameCode').textContent = 'OMNI_AGENT_TOKEN_' + raw;
+      const raw = $('nameInput').value.trim();
+      if (!raw) {
+        $('envHint').textContent = lang === 'zh'
+          ? '小写字母、数字和连字符，例如 my-macbook 或 office-win'
+          : 'Lowercase letters, digits, hyphens (e.g. my-macbook, office-win)';
+        return;
+      }
+      const env = 'OMNI_AGENT_TOKEN_' + raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+      $('envHint').textContent = (lang === 'zh' ? '对应环境变量：' : 'Env var: ') + env;
     }
 
     function updateExecDesc() {
       const on = $('allowExecToggle').checked;
-      $('execCard').className = 'exec-card' + (on ? ' elevated' : '');
-      $('execDesc').textContent = on
-        ? '当前已开启：AI 可在工作区中执行本机终端命令（权限等同于当前登录用户），所有命令都会出现在实时审计流中。'
-        : '当前已关闭：AI 仅能在上方授权目录内读、写、搜文件，所有 shell 命令都会被直接拒绝。';
+      $('execDesc').textContent = on ? t('execOnDesc') : t('execOffDesc');
+      $('execToggleCard').classList.toggle('is-armed', on);
+      $('execGuardNotice').classList.toggle('show', on);
     }
 
     function renderDirs() {
-      const box = $('dirList');
-      $('navDirCount').textContent = String(draftDirs.length);
-      if (!draftDirs.length) {
-        box.innerHTML = '<div class="dir-empty">尚未添加工作目录。请点击上方「浏览选择文件夹」或输入本地路径。</div>';
-        return;
-      }
-      box.innerHTML = draftDirs.map((dir, i) => `
-        <div class="dir-item">
-          <div class="dir-path" title="${esc(dir)}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.65">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-            </svg>
-            <span>${esc(dir)}</span>
-          </div>
-          <button type="button" class="btn btn-sm btn-ghost" data-rm-dir="${i}">移除</button>
-        </div>
-      `).join('');
-      box.querySelectorAll('[data-rm-dir]').forEach(btn => {
+      const list = $('dirList');
+      list.innerHTML = '';
+      $('dirCountHint').textContent = t('dirsCount')(draftDirs.length);
+      $('dirsNavBadge').textContent = String(draftDirs.length);
+      $('kpiDirsVal').textContent = String(draftDirs.length);
+      $('routeDirs').textContent = draftDirs.length + (draftDirs.length === 1 ? ' dir' : ' dirs');
+      $('dirEmptyBox').style.display = draftDirs.length === 0 ? 'block' : 'none';
+
+      draftDirs.forEach((dir, idx) => {
+        const li = document.createElement('li');
+        li.className = 'dir-item';
+        const span = document.createElement('span');
+        span.className = 'dir-path';
+        span.textContent = dir;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm';
+        btn.textContent = t('removeBtn');
+        btn.setAttribute('aria-label', t('removeBtn') + ' ' + dir);
         btn.onclick = () => {
-          draftDirs.splice(Number(btn.dataset.rmDir), 1);
-          renderDirs();
+          draftDirs.splice(idx, 1);
           markDirty(true);
+          renderDirs();
         };
+        li.appendChild(span);
+        li.appendChild(btn);
+        list.appendChild(li);
       });
     }
 
     function addDir(val) {
-      const p = String(val || '').trim();
-      if (!p) return;
-      if (!draftDirs.includes(p)) {
-        draftDirs.push(p);
-        renderDirs();
+      const clean = (val || '').trim();
+      if (!clean) return;
+      if (!draftDirs.includes(clean)) {
+        draftDirs.push(clean);
         markDirty(true);
+        renderDirs();
       }
       $('dirInput').value = '';
     }
 
-    function opLabel(ev) {
-      if (ev.error) return { text: '异常', cls: 'err' };
-      if (ev.kind === 'connected') return { text: '已上线', cls: 'ok' };
-      if (ev.kind === 'connecting') return { text: '连接中', cls: '' };
-      if (ev.kind === 'system') return { text: '系统', cls: '' };
-      const map = {
-        'fs.read': '读文件', 'fs.glob': '列目录', 'fs.search': '搜内容',
-        'fs.patch': '改文件', 'shell.exec': '执行命令', 'shell.output': '读输出', 'shell.kill': '终止进程'
-      };
-      return { text: map[ev.method] || ev.method || '操作', cls: '' };
+    function formatTime(iso) {
+      if (!iso) return '--:--:--';
+      try {
+        const d = new Date(iso);
+        return d.toTimeString().slice(0, 8);
+      } catch {
+        return '--:--:--';
+      }
+    }
+
+    function buildAuditRow(ev) {
+      const li = document.createElement('li');
+      li.className = 'audit-row';
+
+      const timeEl = document.createElement('span');
+      timeEl.className = 'audit-time';
+      timeEl.textContent = formatTime(ev.time);
+
+      const tagEl = document.createElement('span');
+      let tagClass = 'audit-tag';
+      if (ev.error) tagClass += ' is-err';
+      else if (ev.kind === 'operation') tagClass += ' is-op';
+      else if (ev.kind === 'connected') tagClass += ' is-ok';
+      tagEl.className = tagClass;
+      tagEl.textContent = ev.method || ev.kind || 'event';
+
+      const sumEl = document.createElement('span');
+      sumEl.className = 'audit-summary';
+      sumEl.textContent = ev.error ? (ev.summary ? ev.summary + ' · ' + ev.error : ev.error) : (ev.summary || ev.kind);
+      sumEl.title = sumEl.textContent;
+
+      const durEl = document.createElement('span');
+      durEl.className = 'audit-dur';
+      durEl.textContent = ev.duration_ms ? (ev.duration_ms + ' ms') : (ev.retry_in_sec ? ('retry ' + ev.retry_in_sec + 's') : '');
+
+      li.appendChild(timeEl);
+      li.appendChild(tagEl);
+      li.appendChild(sumEl);
+      li.appendChild(durEl);
+      return li;
     }
 
     function renderEvents(events) {
-      const list = Array.isArray(events) ? events.slice().reverse() : [];
-      $('navAuditCount').textContent = String(list.length);
-      const q = auditQuery.toLowerCase();
-      const filtered = list.filter(ev => {
-        if (auditFilter === 'fs' && !(ev.method || '').startsWith('fs.')) return false;
-        if (auditFilter === 'shell' && !(ev.method || '').startsWith('shell.')) return false;
-        if (auditFilter === 'err' && !ev.error && ev.kind !== 'system' && ev.kind !== 'disconnected') return false;
-        if (q) {
-          const hay = [ev.method, ev.summary, ev.error].join(' ').toLowerCase();
-          if (!hay.includes(q)) return false;
+      const all = Array.isArray(events) ? events.slice().reverse() : [];
+      $('eventsNavBadge').textContent = String(all.length);
+
+      // Mini audit on overview (latest 5)
+      const mini = $('miniAuditList');
+      mini.innerHTML = '';
+      const latest = all.slice(0, 5);
+      $('miniAuditEmpty').style.display = latest.length === 0 ? 'block' : 'none';
+      latest.forEach((ev) => mini.appendChild(buildAuditRow(ev)));
+
+      // Full audit with filter + search
+      const filtered = all.filter((ev) => {
+        if (auditFilter === 'operation' && ev.kind !== 'operation') return false;
+        if (auditFilter === 'connection' && ev.kind === 'operation') return false;
+        if (auditFilter === 'error' && !ev.error) return false;
+        if (auditQuery) {
+          const hay = ((ev.method || '') + ' ' + (ev.summary || '') + ' ' + (ev.error || '') + ' ' + (ev.kind || '')).toLowerCase();
+          if (!hay.includes(auditQuery.toLowerCase())) return false;
         }
         return true;
       });
-      const body = $('auditBody');
-      if (!filtered.length) {
-        body.innerHTML = '<tr><td colspan="4" class="audit-empty">暂无匹配的审计记录</td></tr>';
-        return;
-      }
-      body.innerHTML = filtered.map(ev => {
-        const lbl = opLabel(ev);
-        const detail = ev.error || ev.summary || '-';
-        const dur = ev.duration_ms ? (ev.duration_ms + ' ms') : '—';
-        return `
-          <tr>
-            <td class="audit-time mono">${esc(formatTime(ev.time))}</td>
-            <td><span class="audit-kind ${lbl.cls}">${esc(lbl.text)}</span></td>
-            <td class="mono" style="word-break:break-all;">${esc(detail)}</td>
-            <td class="audit-dur mono">${esc(dur)}</td>
-          </tr>
-        `;
-      }).join('');
+      const full = $('auditList');
+      full.innerHTML = '';
+      $('auditEmptyBox').style.display = filtered.length === 0 ? 'block' : 'none';
+      filtered.forEach((ev) => full.appendChild(buildAuditRow(ev)));
     }
 
     function updatePairingCountdown() {
-      if (!state || state.state !== 'pairing' || !state.pairing) return;
-      const exp = new Date(state.pairing.expires_at).getTime();
-      const sec = Math.max(0, Math.ceil((exp - Date.now()) / 1000));
-      const m = Math.floor(sec / 60);
-      const r = sec % 60;
-      const rem = m > 0 ? (m + ' 分 ' + r + ' 秒') : (r + ' 秒');
-      $('pairDesc').textContent = '请在打开的 Hub 页面核对上方验证码并点击「批准接入」（有效期剩余 ' + rem + '）。批准后本机将自动加密保存独立凭证并立即上线。';
+      if (!state || !state.pairing || !state.pairing.expires_at) {
+        $('pairCountdown').textContent = '';
+        return;
+      }
+      const left = Math.max(0, Math.floor((new Date(state.pairing.expires_at).getTime() - Date.now()) / 1000));
+      const m = Math.floor(left / 60);
+      const s = String(left % 60).padStart(2, '0');
+      $('pairCountdown').textContent = (lang === 'zh' ? '剩余有效时间 ' : 'Expires in ') + m + ':' + s;
     }
-    setInterval(updatePairingCountdown, 1000);
 
-    function renderState(next, forceFormSync = false) {
+    function renderState(next, forceFormSync) {
+      if (!next) return;
       state = next;
       const st = next.state || 'disconnected';
-      $('connState').dataset.state = st;
+      const prof = next.profile || {};
+
+      // OS & version metadata
+      const osLabel = prettyOS(next.os, next.arch);
+      $('osVersionChip').textContent = osLabel + ' · ' + (next.version || 'dev');
+      $('sideOsVal').textContent = osLabel;
+      $('sideShellVal').textContent = next.shell || '—';
+      $('sideVaultVal').textContent = next.token_storage || '—';
+      $('tokenStorageBadge').textContent = next.token_storage || '—';
+      $('configPathHint').textContent = next.config_path || '';
+      $('cliPreview').textContent = next.cli_preview || '';
+
+      // Route bar
+      let hubHost = 'Hub /mcp';
+      if (prof.hub) {
+        try { hubHost = new URL(prof.hub).host + '/mcp'; } catch { hubHost = prof.hub; }
+      }
+      $('routeHub').textContent = hubHost;
+      $('routeDevice').textContent = prof.name || '—';
+
+      // Status chip + top connect button + KPIs
       const stateLabels = {
-        connected: '已连接',
-        connecting: '正在连接…',
-        pairing: '等待 Hub 审批…',
-        reconnecting: next.retry_in_sec ? ('重连中 · ' + next.retry_in_sec + 's') : '重连中…',
-        disconnected: '未连接'
+        disconnected: t('stDisconnected'),
+        pairing: t('stPairing'),
+        connecting: t('stConnecting'),
+        connected: t('stConnected'),
+        reconnecting: t('stReconnecting') + (next.retry_in_sec ? ' (' + next.retry_in_sec + 's)' : '')
       };
-      $('connStateText').textContent = stateLabels[st] || '未连接';
-      $('heroTitle').textContent = next.profile.name || '连接你的本地工作站';
+      const statusLabel = stateLabels[st] || st;
+      $('statusChip').className = 'status-chip is-' + st;
+      $('statusText').textContent = statusLabel;
+      $('kpiStateVal').textContent = statusLabel;
+      $('kpiExecVal').textContent = prof.allow_exec ? t('execOnShort') : t('execOffShort');
+      $('kpiUptimeVal').textContent = st === 'connected' && next.connected_at
+        ? ('Since ' + formatTime(next.connected_at))
+        : (prof.has_token ? t('tokenPaired') : t('tokenMissing'));
 
-      let hubHost = '尚未填写 Hub 地址';
-      if (next.profile.hub) {
-        try { hubHost = new URL(next.profile.hub).host; } catch { hubHost = next.profile.hub; }
-      }
-      if (next.connected_at) hubHost += ' · 上线于 ' + formatTime(next.connected_at);
-      $('sidebarHub').textContent = hubHost;
-      $('headerMeta').textContent = (next.version || 'dev') + ' · 127.0.0.1';
-
-      const isPairing = st === 'pairing';
-      const active = st === 'connected' || st === 'connecting' || st === 'reconnecting';
-      const toggleBtn = $('toggleConnBtn');
-      toggleBtn.textContent = isPairing ? '取消配对' : (active ? '立即断开' : '连接 Hub');
-      toggleBtn.className = 'btn btn-sm ' + ((active || isPairing) ? 'btn-danger' : 'btn-primary');
-
-      $('statOS').textContent = (next.os || '-') + ' / ' + (next.arch || '-');
-      $('statShell').textContent = (next.shell || '-').split(' ')[0];
-      $('statShell').title = next.shell || '';
-      const dirCount = next.profile.allow_dirs ? next.profile.allow_dirs.length : 0;
-      $('statDirs').textContent = dirCount + ' 个目录';
-      $('statExec').textContent = next.profile.allow_exec ? '文件 + 命令执行' : '仅文件沙箱';
-      $('statExec').className = 'metric-val ' + (next.profile.allow_exec ? 'warn' : 'ok');
-
-      $('tokenStorageHint').textContent = next.token_storage || '';
-      $('cliPreview').textContent = next.cli_preview || '-';
-
-      const noteBox = $('authNoteBox');
-      if (next.profile.has_token) {
-        noteBox.className = 'auth-note paired';
-        $('tokenStateText').textContent = next.profile.paired_name
-          ? ('设备 ' + next.profile.paired_name + ' 已完成 Hub 配对授权，独立凭证已在本机加密保存。')
-          : '已保存本机配对凭证（更改设备名称后会自动发起新设备一键配对）。';
-        $('rePairBtn').style.display = 'inline-flex';
-        $('clearTokenBtn').style.display = 'inline-flex';
+      const connBtn = $('toggleConnBtn');
+      if (st === 'pairing') {
+        connBtn.textContent = t('btnCancelPair');
+        connBtn.className = 'btn btn-danger';
+      } else if (st === 'connected' || st === 'connecting' || st === 'reconnecting') {
+        connBtn.textContent = t('btnDisconnect');
+        connBtn.className = 'btn btn-danger';
       } else {
-        noteBox.className = 'auth-note';
-        $('tokenStateText').textContent = '无需手动配置密钥：填写 Hub 地址、自定义设备名并选择工作目录后，点击「保存并连接」即可在 Hub 一键批准接入。';
-        $('rePairBtn').style.display = 'none';
-        $('clearTokenBtn').style.display = 'none';
+        connBtn.textContent = t('btnConnect');
+        connBtn.className = 'btn btn-primary';
       }
 
-      const pairBanner = $('pairingBanner');
-      if (isPairing && next.pairing) {
-        pairBanner.className = 'pair-card show';
-        $('pairCodeVal').textContent = next.pairing.code || '----';
-        $('pairTitle').textContent = '等待 Hub 批准设备 ' + (next.pairing.device_name || next.profile.name || '');
+      // Pairing stepper & live banner
+      const isPairing = st === 'pairing' && next.pairing;
+      const hasBasics = !!(prof.hub && prof.name && Array.isArray(prof.allow_dirs) && prof.allow_dirs.length > 0);
+      $('stepCard1').className = 'step-card ' + (hasBasics ? 'is-done' : 'is-active');
+      $('stepCard2').className = 'step-card ' + (isPairing ? 'is-active' : (prof.has_token ? 'is-done' : ''));
+      $('stepCard3').className = 'step-card ' + (st === 'connected' ? 'is-done' : (prof.has_token && !isPairing ? 'is-active' : ''));
+      $('pairNavBadge').textContent = isPairing ? (next.pairing.code || '...') : (prof.has_token ? 'OK' : '—');
+
+      const onPairingTab = $('view-pairing').classList.contains('active');
+      $('pairingTopBanner').classList.toggle('show', !!isPairing && !onPairingTab);
+      $('pairLiveBox').classList.toggle('show', !!isPairing);
+      if (isPairing) {
+        $('pairCodeDisplay').textContent = next.pairing.code || '------';
+        $('pairBannerMeta').textContent = (next.pairing.code || '') + ' · ' + (next.pairing.device_name || '');
+        $('pairApproveUrlText').textContent = next.pairing.approve_url || '';
         updatePairingCountdown();
-      } else {
-        pairBanner.className = 'pair-card';
       }
 
+      $('tokenStatusLine').textContent = prof.has_token
+        ? t('tokenStatusYes')(prof.paired_name || prof.name)
+        : t('tokenStatusNo');
+      $('clearTokenBtn').disabled = !prof.has_token;
+
+      // Error banner
       const errBox = $('connErrBox');
       if (next.last_error) {
         errBox.className = 'alert show';
-        $('connErrText').textContent = '连接异常：' + next.last_error;
+        $('connErrText').textContent = (lang === 'zh' ? '连接异常：' : 'Connection error: ') + next.last_error;
       } else {
         errBox.className = 'alert';
       }
 
+      // Sync form fields when safe
       if (!formInitialized || (forceFormSync && !formDirty)) {
-        $('hubInput').value = next.profile.hub || '';
-        $('nameInput').value = next.profile.name || '';
-        $('allowExecToggle').checked = !!next.profile.allow_exec;
-        $('saveTokenToggle').checked = next.profile.save_token !== false;
-        $('autoConnectToggle').checked = !!next.profile.auto_connect;
-        draftDirs = Array.isArray(next.profile.allow_dirs) ? next.profile.allow_dirs.slice() : [];
+        $('hubInput').value = prof.hub || '';
+        $('nameInput').value = prof.name || '';
+        $('allowExecToggle').checked = !!prof.allow_exec;
+        $('saveTokenToggle').checked = prof.save_token !== false;
+        $('autoConnectToggle').checked = !!prof.auto_connect;
+        draftDirs = Array.isArray(prof.allow_dirs) ? prof.allow_dirs.slice() : [];
         renderDirs();
         updateEnvHint();
         updateExecDesc();
@@ -1314,26 +2005,42 @@
         $('tokenInput').value = '';
         markDirty(false);
         renderState(next, true);
-        showToast(connectNow ? (next.state === 'pairing' ? '已发起一键配对，请在浏览器批准接入' : '配置已保存，正在连接 Hub') : '配置已保存');
+        if (connectNow) {
+          showToast(next.state === 'pairing'
+            ? (lang === 'zh' ? '已发起一键配对，请在浏览器批准接入' : 'Pairing started — approve in your Hub browser page')
+            : (lang === 'zh' ? '配置已保存，正在连接 Hub' : 'Settings saved, connecting to Hub'));
+        } else {
+          showToast(lang === 'zh' ? '配置已保存' : 'Settings saved');
+        }
       } catch (e) {
         showToast(e.message, true);
       }
     }
 
-    // Navigation
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        btn.classList.add('active');
-        $('view-' + btn.dataset.view).classList.add('active');
-      };
+    function switchView(viewId) {
+      document.querySelectorAll('.nav-item').forEach((b) => {
+        const active = b.dataset.view === viewId;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-current', active ? 'page' : 'false');
+      });
+      document.querySelectorAll('.view-pane').forEach((p) => {
+        p.classList.toggle('active', p.id === 'view-' + viewId);
+      });
+      if (state && state.state === 'pairing' && state.pairing) {
+        $('pairingTopBanner').classList.toggle('show', viewId !== 'pairing');
+      }
+    }
+
+    document.querySelectorAll('.nav-item').forEach((btn) => {
+      btn.onclick = () => switchView(btn.dataset.view);
     });
 
+    $('jumpAuditBtn').onclick = () => switchView('audit');
+
     // Audit filters
-    document.querySelectorAll('.seg-btn').forEach(btn => {
+    document.querySelectorAll('.seg-btn').forEach((btn) => {
       btn.onclick = () => {
-        document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.seg-btn').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         auditFilter = btn.dataset.filter;
         if (state) renderEvents(state.events);
@@ -1342,6 +2049,13 @@
     $('auditSearch').oninput = (e) => {
       auditQuery = e.target.value.trim();
       if (state) renderEvents(state.events);
+    };
+
+    // Language toggle
+    $('langToggle').onclick = () => {
+      lang = lang === 'zh' ? 'en' : 'zh';
+      try { localStorage.setItem('omni-console-lang', lang); } catch {}
+      applyStaticI18n();
     };
 
     // Theme toggle
@@ -1354,12 +2068,12 @@
     $('themeToggle').onclick = () => {
       const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('omni-steep-theme', next); } catch {}
+      try { localStorage.setItem('omni-console-theme', next); } catch {}
       syncThemeIcon();
     };
     syncThemeIcon();
 
-    // Form & Actions
+    // Form bindings
     $('hubInput').oninput = () => markDirty(true);
     $('nameInput').oninput = () => { markDirty(true); updateEnvHint(); };
     $('tokenInput').oninput = () => markDirty(true);
@@ -1367,35 +2081,41 @@
     $('saveTokenToggle').onchange = () => markDirty(true);
     $('autoConnectToggle').onchange = () => markDirty(true);
     $('addDirBtn').onclick = () => addDir($('dirInput').value);
-    $('dirInput').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addDir($('dirInput').value); } };
+    $('dirInput').onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addDir($('dirInput').value);
+      }
+    };
 
     $('toggleTokenVis').onclick = () => {
       const inp = $('tokenInput');
       const show = inp.type === 'password';
       inp.type = show ? 'text' : 'password';
-      $('toggleTokenVis').textContent = show ? '隐藏' : '显示';
+      $('toggleTokenVis').textContent = show ? t('hideBtn') : t('showBtn');
     };
 
     $('pickDirBtn').onclick = async () => {
       const btn = $('pickDirBtn');
-      const orig = btn.innerHTML;
       btn.disabled = true;
-      btn.textContent = '等待选择…';
+      btn.textContent = t('pickingBtn');
       try {
         const res = await api('/api/pick-dir', { method: 'POST' });
         if (res.path) {
           addDir(res.path);
-          showToast('已添加目录：' + res.path);
+          showToast((lang === 'zh' ? '已添加目录：' : 'Folder added: ') + res.path);
         }
       } catch (e) {
         showToast(e.message, true);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = orig;
+        btn.textContent = t('pickDirBtn');
       }
     };
 
     $('saveOnlyBtn').onclick = () => saveConfig(false);
+    $('saveDirsBtn').onclick = () => saveConfig(false);
+    $('quickSaveBtn').onclick = () => saveConfig(false);
     $('saveConnectBtn').onclick = () => saveConfig(true);
 
     $('toggleConnBtn').onclick = async () => {
@@ -1404,44 +2124,51 @@
       try {
         if (isPairing) {
           renderState(await api('/api/pair/cancel', { method: 'POST' }), false);
-          showToast('已取消配对请求');
+          showToast(lang === 'zh' ? '已取消配对请求' : 'Pairing canceled');
         } else if (active) {
           renderState(await api('/api/disconnect', { method: 'POST' }), false);
-          showToast('已断开与 Hub 的连接');
+          showToast(lang === 'zh' ? '已断开与 Hub 的连接' : 'Disconnected from Hub');
         } else if (formDirty) {
           await saveConfig(true);
         } else {
           const next = await api('/api/connect', { method: 'POST' });
           renderState(next, false);
-          if (next.state === 'pairing') showToast('已发起一键配对，请在浏览器批准接入');
+          if (next.state === 'pairing') {
+            switchView('pairing');
+            showToast(lang === 'zh' ? '已发起一键配对，请在浏览器批准接入' : 'Pairing started — approve in your browser');
+          }
         }
       } catch (e) {
         showToast(e.message, true);
       }
     };
 
-    $('openApproveBtn').onclick = async () => {
+    async function openApprove() {
       try {
         await api('/api/pair/open', { method: 'POST' });
       } catch (e) {
         showToast(e.message, true);
       }
-    };
-
-    $('cancelPairBtn').onclick = async () => {
+    }
+    async function cancelPair() {
       try {
         renderState(await api('/api/pair/cancel', { method: 'POST' }), false);
-        showToast('已取消配对请求');
+        showToast(lang === 'zh' ? '已取消配对请求' : 'Pairing canceled');
       } catch (e) {
         showToast(e.message, true);
       }
-    };
+    }
+    $('openApproveBtn').onclick = openApprove;
+    $('bannerApproveBtn').onclick = openApprove;
+    $('cancelPairBtn').onclick = cancelPair;
+    $('bannerCancelPairBtn').onclick = cancelPair;
 
     $('rePairBtn').onclick = async () => {
       try {
         if (formDirty) await saveConfig(false);
-        renderState(await api('/api/pair/start', { method: 'POST' }), false);
-        showToast('已重新发起配对，请在浏览器批准');
+        const next = await api('/api/pair/start', { method: 'POST' });
+        renderState(next, false);
+        showToast(lang === 'zh' ? '已发起一键配对，请在浏览器批准' : 'Pairing started — approve in browser');
       } catch (e) {
         showToast(e.message, true);
       }
@@ -1450,7 +2177,7 @@
     $('clearTokenBtn').onclick = async () => {
       try {
         renderState(await api('/api/token/clear', { method: 'POST' }), false);
-        showToast('已清除本地保存的配对凭证');
+        showToast(lang === 'zh' ? '已清除本地保存的配对凭证' : 'Saved pairing token cleared');
       } catch (e) {
         showToast(e.message, true);
       }
@@ -1467,9 +2194,9 @@
     $('copyCliBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText($('cliPreview').textContent);
-        showToast('命令行已复制');
+        showToast(lang === 'zh' ? '命令行已复制' : 'CLI command copied');
       } catch {
-        showToast('复制失败，请手动复制', true);
+        showToast(lang === 'zh' ? '复制失败，请手动复制' : 'Copy failed', true);
       }
     };
 
@@ -1479,14 +2206,16 @@
       try {
         await api('/api/shutdown', { method: 'POST' });
         $('quitModal').classList.remove('show');
-        showToast('本地控制台已关闭，可关闭此标签页');
+        showToast(lang === 'zh' ? '桌面控制台已关闭，可关闭此窗口' : 'Console stopped. You may close this window.');
       } catch (e) {
         showToast(e.message, true);
       }
     };
 
-    // Initial load + SSE live stream
+    countdownTimer = setInterval(updatePairingCountdown, 1000);
+
     async function boot() {
+      applyStaticI18n();
       try {
         const initial = await api('/api/state', { method: 'GET' });
         renderState(initial, true);
@@ -1500,6 +2229,7 @@
         });
       } catch {}
     }
+
     boot();
   </script>
 </body>

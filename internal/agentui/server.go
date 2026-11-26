@@ -19,6 +19,12 @@ import (
 //go:embed web/index.html
 var indexHTML string
 
+//go:embed web/logo.svg
+var logoSVG []byte
+
+//go:embed web/favicon.ico
+var faviconICO []byte
+
 const sessionCookieName = "omni_agent_ui_session"
 
 // Options configures the local Agent UI HTTP server.
@@ -61,6 +67,8 @@ func (s *Server) BootstrapToken() string {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleIndex)
+	mux.HandleFunc("/logo.svg", s.handleLogo)
+	mux.HandleFunc("/favicon.ico", s.handleFavicon)
 	mux.HandleFunc("/api/state", s.requireSession(s.handleState, false))
 	mux.HandleFunc("/api/events", s.requireSession(s.handleEvents, false))
 	mux.HandleFunc("/api/config", s.requireSession(s.handleConfig, true))
@@ -157,6 +165,18 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	page := strings.Replace(indexHTML, "__OMNI_CSRF_TOKEN__", s.csrfToken, 1)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(page))
+}
+
+func (s *Server) handleLogo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/svg+xml; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	_, _ = w.Write(logoSVG)
+}
+
+func (s *Server) handleFavicon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/x-icon")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	_, _ = w.Write(faviconICO)
 }
 
 func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
@@ -345,12 +365,6 @@ func Run(ctx context.Context, opts Options) error {
 
 	ctrl.AutoStartIfConfigured()
 
-	if !opts.NoOpen {
-		if err := openBrowser(uiURL); err != nil {
-			opts.Log.Warn("自动打开浏览器失败，请手动访问上方地址", "err", err)
-		}
-	}
-
 	errCh := make(chan error, 1)
 	go func() {
 		if err := httpSrv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -358,6 +372,12 @@ func Run(ctx context.Context, opts Options) error {
 		}
 		close(errCh)
 	}()
+
+	if !opts.NoOpen {
+		if err := openDesktopWindow(uiURL); err != nil {
+			opts.Log.Warn("自动打开桌面控制台失败，请手动访问上方地址", "err", err)
+		}
+	}
 
 	select {
 	case <-runCtx.Done():

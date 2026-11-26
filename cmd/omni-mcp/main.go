@@ -40,7 +40,7 @@ const usage = `omni-mcp —— 给 agent 用的统一多机基础工具 MCP 服�
   omni-mcp agent --hub URL --name NAME --allow-dir PATH
                                     将本机反向连接到 Hub
   omni-mcp ui [--listen 127.0.0.1:18485] [--no-open]
-                                    启动 Agent 可视化本地控制台（Windows 双击默认进入）
+                                    启动 Agent 桌面控制台（Windows / macOS 双击默认进入）
   omni-mcp hash-password [密码]     生成 bcrypt 密码哈希，填到 auth.users
   omni-mcp gen-token                生成一个随机静态令牌，填到 auth.static_tokens
   omni-mcp check-policy '命令'      查看某条 shell 命令会被策略如何处理
@@ -60,8 +60,18 @@ func main() {
 }
 
 func run(args []string) error {
+	// macOS Finder passes -psn_* when double-clicking a .app bundle.
+	filtered := make([]string, 0, len(args))
+	for _, a := range args {
+		if strings.HasPrefix(a, "-psn_") {
+			continue
+		}
+		filtered = append(filtered, a)
+	}
+	args = filtered
+
 	cmd := "serve"
-	if len(args) == 0 && runtime.GOOS == "windows" {
+	if len(args) == 0 && (runtime.GOOS == "windows" || runtime.GOOS == "darwin") {
 		cmd = "ui"
 	}
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {

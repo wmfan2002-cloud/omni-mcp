@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="omni-ring" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6A0085" />
+      <stop offset="55%" stop-color="#9A24B8" />
+      <stop offset="100%" stop-color="#FF78C8" />
+    </linearGradient>
+    <linearGradient id="omni-core" x1="22" y1="22" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0D0D0D" />
+      <stop offset="100%" stop-color="#3B074C" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="#0D0D0D" />
+  <circle cx="32" cy="32" r="19" stroke="url(#omni-ring)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="92 28" transform="rotate(-24 32 32)" />
+  <path d="M32 32 L18.5 23.5 M32 32 L45.5 23.5 M32 32 L32 48" stroke="#FFC9FF" stroke-width="2.4" stroke-linecap="round" opacity="0.88" />
+  <circle cx="18.5" cy="23.5" r="4.2" fill="#FFFFFF" />
+  <circle cx="45.5" cy="23.5" r="4.2" fill="#FFC9FF" />
+  <circle cx="32" cy="48" r="4.2" fill="#FFFFFF" />
+  <circle cx="32" cy="32" r="7.5" fill="url(#omni-core)" stroke="#FFFFFF" stroke-width="2.6" />
+  <circle cx="32" cy="32" r="2.4" fill="#FFC9FF" />
+</svg>

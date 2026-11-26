@@ -10,7 +10,11 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
@@ -18,13 +22,25 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - name: Verify formatting
+        if: runner.os == 'Linux'
         run: test -z "$(gofmt -l $(find cmd internal -name '*.go'))"
-      - name: Vet
+      - name: Vet (Unix)
+        if: runner.os != 'Windows'
         run: go vet ./...
-      - name: Test
+      - name: Test (Unix)
+        if: runner.os != 'Windows'
         run: go test ./... -count=1
-      - name: Build Linux Hub and Windows Agent
+      - name: Vet and Test (Windows Agent & Desktop)
+        if: runner.os == 'Windows'
+        run: |
+          go vet ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/policy/... ./internal/process/...
+          go test ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/policy/... ./internal/process/... -count=1
+      - name: Cross-compile all desktop and server targets
+        if: runner.os == 'Linux'
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /tmp/omni-mcp-linux-amd64 ./cmd/omni-mcp
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /tmp/omni-mcp-linux-arm64 ./cmd/omni-mcp
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o /tmp/omni-mcp-windows-amd64.exe ./cmd/omni-mcp
-
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-H=windowsgui" -o /tmp/omni-mcp-desktop-windows-amd64.exe ./cmd/omni-mcp
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o /tmp/omni-mcp-darwin-arm64 ./cmd/omni-mcp
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o /tmp/omni-mcp-darwin-amd64 ./cmd/omni-mcp
