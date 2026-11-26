@@ -24,12 +24,16 @@ jobs:
       - name: Verify formatting
         if: runner.os == 'Linux'
         run: test -z "$(gofmt -l $(find cmd internal -name '*.go'))"
-      - name: Vet (Unix)
-        if: runner.os != 'Windows'
-        run: go vet ./...
-      - name: Test (Unix)
-        if: runner.os != 'Windows'
-        run: go test ./... -count=1
+      - name: Vet and Test (Linux Hub & All Packages)
+        if: runner.os == 'Linux'
+        run: |
+          go vet ./...
+          go test ./... -count=1
+      - name: Vet and Test (macOS Agent & Desktop)
+        if: runner.os == 'macOS'
+        run: |
+          go vet ./...
+          go test ./cmd/... ./internal/agent/... ./internal/agentui/... ./internal/config/... ./internal/policy/... ./internal/process/... -count=1
       - name: Vet and Test (Windows Agent & Desktop)
         if: runner.os == 'Windows'
         run: |
