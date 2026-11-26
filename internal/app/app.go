@@ -82,9 +82,20 @@ type Built struct {
 	Close   func()
 }
 
+// BuildOptions 提供嵌入运行（如桌面端本机网关模式）时的可选装配参数。
+type BuildOptions struct {
+	// ExtraAgentTokens 为内置回环 Agent 预置内存配对令牌，不写入环境变量或磁盘。
+	ExtraAgentTokens map[string]string
+}
+
 // Build 按配置装配整个服务，但不监听端口。抽出来是为了让集成测试能用
 // httptest 跑完整的 OAuth + MCP 链路，而不必去猜端口。
 func Build(cfg *config.Config, log *slog.Logger) (*Built, error) {
+	return BuildWithOptions(cfg, log, BuildOptions{})
+}
+
+// BuildWithOptions 按配置与附加运行选项装配整个服务。
+func BuildWithOptions(cfg *config.Config, log *slog.Logger, opts BuildOptions) (*Built, error) {
 	if err := cfg.Normalize(); err != nil {
 		return nil, err
 	}
@@ -108,7 +119,13 @@ func Build(cfg *config.Config, log *slog.Logger) (*Built, error) {
 	}
 	upMgr := upstream.New(cfg.Upstreams, log)
 	deviceFleet := fleet.New(cfg.Fleet, cfg.Tools.Shell.Path, cfg.Tools.Shell.Env)
-	agents := agent.NewManager(agent.TokensFromEnvironment(os.Environ()), log, func(devices []agent.Info) {
+	agentTokens := agent.TokensFromEnvironment(os.Environ())
+	for k, v := range opts.ExtraAgentTokens {
+		if strings.TrimSpace(k) != "" && strings.TrimSpace(v) != "" {
+			agentTokens[k] = strings.TrimSpace(v)
+		}
+	}
+	agents := agent.NewManager(agentTokens, log, func(devices []agent.Info) {
 		hosts := make([]fleet.Host, 0, len(devices))
 		for _, device := range devices {
 			hosts = append(hosts, fleet.Host{

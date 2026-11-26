@@ -25,6 +25,9 @@ var logoSVG []byte
 //go:embed web/favicon.ico
 var faviconICO []byte
 
+//go:embed web/icon-256.png
+var icon256PNG []byte
+
 const sessionCookieName = "omni_agent_ui_session"
 
 // Options configures the local Agent UI HTTP server.
@@ -69,11 +72,17 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/", s.handleIndex)
 	mux.HandleFunc("/logo.svg", s.handleLogo)
 	mux.HandleFunc("/favicon.ico", s.handleFavicon)
+	mux.HandleFunc("/icon-256.png", s.handleIcon256)
 	mux.HandleFunc("/api/state", s.requireSession(s.handleState, false))
 	mux.HandleFunc("/api/events", s.requireSession(s.handleEvents, false))
 	mux.HandleFunc("/api/config", s.requireSession(s.handleConfig, true))
 	mux.HandleFunc("/api/connect", s.requireSession(s.handleConnect, true))
 	mux.HandleFunc("/api/disconnect", s.requireSession(s.handleDisconnect, true))
+	mux.HandleFunc("/api/gateway/start", s.requireSession(s.handleGatewayStart, true))
+	mux.HandleFunc("/api/gateway/stop", s.requireSession(s.handleGatewayStop, true))
+	mux.HandleFunc("/api/gateway/reveal", s.requireSession(s.handleGatewayReveal, true))
+	mux.HandleFunc("/api/gateway/rotate", s.requireSession(s.handleGatewayRotate, true))
+	mux.HandleFunc("/api/gateway/clear-tunnel-token", s.requireSession(s.handleGatewayClearTunnelToken, true))
 	mux.HandleFunc("/api/pair/start", s.requireSession(s.handlePairStart, true))
 	mux.HandleFunc("/api/pair/cancel", s.requireSession(s.handlePairCancel, true))
 	mux.HandleFunc("/api/pair/open", s.requireSession(s.handlePairOpen, true))
@@ -179,6 +188,12 @@ func (s *Server) handleFavicon(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(faviconICO)
 }
 
+func (s *Server) handleIcon256(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	_, _ = w.Write(icon256PNG)
+}
+
 func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s.ctrl.Snapshot())
 }
@@ -253,6 +268,55 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleDisconnect(w http.ResponseWriter, r *http.Request) {
 	s.ctrl.Disconnect()
+	writeJSON(w, http.StatusOK, s.ctrl.Snapshot())
+}
+
+func (s *Server) handleGatewayStart(w http.ResponseWriter, r *http.Request) {
+	if err := s.ctrl.StartGateway(); err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, s.ctrl.Snapshot())
+}
+
+func (s *Server) handleGatewayStop(w http.ResponseWriter, r *http.Request) {
+	s.ctrl.StopGateway()
+	writeJSON(w, http.StatusOK, s.ctrl.Snapshot())
+}
+
+func (s *Server) handleGatewayReveal(w http.ResponseWriter, r *http.Request) {
+	creds, err := s.ctrl.RevealGatewayCredentials()
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, creds)
+}
+
+func (s *Server) handleGatewayRotate(w http.ResponseWriter, r *http.Request) {
+	creds, err := s.ctrl.RotateGatewayCredentials()
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"credentials": creds,
+		"snapshot":    s.ctrl.Snapshot(),
+	})
+}
+
+func (s *Server) handleGatewayClearTunnelToken(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Provider string `json:"provider"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&req); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "请求参数解析失败: "+err.Error())
+		return
+	}
+	if err := s.ctrl.ClearTunnelToken(req.Provider); err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	writeJSON(w, http.StatusOK, s.ctrl.Snapshot())
 }
 

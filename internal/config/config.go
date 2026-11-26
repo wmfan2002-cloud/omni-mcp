@@ -112,6 +112,8 @@ type Fleet struct {
 	// 留空默认 true（兼容单机模式与旧配置）；设为 false 时要求至少配置一台远端主机，
 	// local 不会出现在 target 枚举与 servers 列表中，纯远端网关模式也不依赖本机 bash。
 	ExposeLocal *bool `yaml:"expose_local,omitempty"`
+	// AgentOnly 为 true 时允许仅通过 Agent 接入而不配置静态 SSH fleet.hosts（供本机独立网关模式使用）。
+	AgentOnly bool `yaml:"agent_only,omitempty"`
 	// DefaultTarget 指定省略 target 参数时的默认目标机器。
 	// 留空时：ExposeLocal 为 true 则默认 local；ExposeLocal 为 false 则 target 为必填参数。
 	DefaultTarget string `yaml:"default_target,omitempty"`
@@ -568,7 +570,7 @@ func (c *Config) normalizeFleet() error {
 	if f.ProbeTimeout <= 0 {
 		f.ProbeTimeout = 10 * time.Second
 	}
-	if !f.LocalExposed() && len(f.Hosts) == 0 {
+	if !f.LocalExposed() && len(f.Hosts) == 0 && !f.AgentOnly {
 		return fmt.Errorf("fleet.expose_local 为 false 时必须至少配置一台 fleet.hosts")
 	}
 	seen := map[string]bool{"local": true}
@@ -609,7 +611,7 @@ func (c *Config) normalizeFleet() error {
 		if f.DefaultTarget == "local" && !f.LocalExposed() {
 			return fmt.Errorf("fleet.expose_local 为 false 时不能将 fleet.default_target 设为 %q", f.DefaultTarget)
 		}
-		if !validTargets[f.DefaultTarget] {
+		if !validTargets[f.DefaultTarget] && !(f.AgentOnly && f.DefaultTarget != "local" && potentialAgentTargetRE.MatchString(f.DefaultTarget)) {
 			return fmt.Errorf("fleet.default_target %q 不在可用目标列表中", f.DefaultTarget)
 		}
 	}

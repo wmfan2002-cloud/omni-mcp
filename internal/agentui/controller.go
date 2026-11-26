@@ -43,20 +43,21 @@ type PairingState struct {
 
 // Snapshot is the complete sanitized state rendered by the browser UI.
 type Snapshot struct {
-	State        string        `json:"state"` // disconnected | pairing | connecting | connected | reconnecting
-	ConnectedAt  *time.Time    `json:"connected_at,omitempty"`
-	LastError    string        `json:"last_error,omitempty"`
-	RetryInSec   int           `json:"retry_in_sec,omitempty"`
-	Pairing      *PairingState `json:"pairing,omitempty"`
-	Version      string        `json:"version"`
-	OS           string        `json:"os"`
-	Arch         string        `json:"arch"`
-	Shell        string        `json:"shell"`
-	ConfigPath   string        `json:"config_path"`
-	TokenStorage string        `json:"token_storage"`
-	Profile      PublicProfile `json:"profile"`
-	CLIPreview   string        `json:"cli_preview"`
-	Events       []UIEvent     `json:"events"`
+	State        string         `json:"state"` // disconnected | pairing | connecting | connected | reconnecting
+	ConnectedAt  *time.Time     `json:"connected_at,omitempty"`
+	LastError    string         `json:"last_error,omitempty"`
+	RetryInSec   int            `json:"retry_in_sec,omitempty"`
+	Pairing      *PairingState  `json:"pairing,omitempty"`
+	Version      string         `json:"version"`
+	OS           string         `json:"os"`
+	Arch         string         `json:"arch"`
+	Shell        string         `json:"shell"`
+	ConfigPath   string         `json:"config_path"`
+	TokenStorage string         `json:"token_storage"`
+	Profile      PublicProfile  `json:"profile"`
+	CLIPreview   string         `json:"cli_preview"`
+	Events       []UIEvent      `json:"events"`
+	Gateway      *GatewayStatus `json:"gateway,omitempty"`
 }
 
 // ConfigUpdate is sent by POST /api/config.
@@ -69,6 +70,16 @@ type ConfigUpdate struct {
 	SaveToken   bool     `json:"save_token"`
 	Token       string   `json:"token,omitempty"`
 	ConnectNow  bool     `json:"connect_now,omitempty"`
+
+	Mode               string  `json:"mode,omitempty"`
+	GatewayPort        *int    `json:"gateway_port,omitempty"`
+	GatewayRandomPort  *bool   `json:"gateway_random_port,omitempty"`
+	GatewayTunnel      string  `json:"gateway_tunnel,omitempty"`
+	GatewayNgrokDomain *string `json:"gateway_ngrok_domain,omitempty"`
+	GatewayNgrokToken  string  `json:"gateway_ngrok_token,omitempty"`
+	GatewayCFPublicURL *string `json:"gateway_cf_public_url,omitempty"`
+	GatewayCFToken     string  `json:"gateway_cf_token,omitempty"`
+	StartGatewayNow    bool    `json:"start_gateway_now,omitempty"`
 }
 
 // Controller manages the Agent profile, lifecycle, and live SSE subscribers.
@@ -97,6 +108,21 @@ type Controller struct {
 	nextEventID  int64
 	events       []UIEvent
 	subs         map[chan struct{}]struct{}
+
+	// Local Standalone Gateway state & sealed runtime secrets.
+	runtimeGatewayPassword string
+	runtimeGatewayBearer   string
+	runtimeNgrokToken      string
+	runtimeCFToken         string
+	gwGen                  uint64
+	gwRuntime              *gatewayRuntime
+	gwState                string
+	gwTunnel               string
+	gwLocalURL             string
+	gwPublicURL            string
+	gwStatusNote           string
+	gwLastError            string
+	gwStartedAt            *time.Time
 }
 
 func NewController(configPath, version string, log *slog.Logger) (*Controller, error) {
@@ -124,6 +150,8 @@ func NewController(configPath, version string, log *slog.Logger) (*Controller, e
 		httpClient: &http.Client{Timeout: 12 * time.Second},
 		profile:    prof,
 		state:      "disconnected",
+		gwState:    "stopped",
+		gwTunnel:   normalizeTunnelProvider(prof.GatewayTunnel),
 		events:     make([]UIEvent, 0, 32),
 		subs:       map[chan struct{}]struct{}{},
 	}
@@ -132,6 +160,26 @@ func NewController(configPath, version string, log *slog.Logger) (*Controller, e
 			c.runtimeToken = plain
 		} else if err != nil {
 			c.log.Warn("读取已保存配对令牌失败，请重新输入", "err", err)
+		}
+	}
+	if strings.TrimSpace(prof.GatewayNgrokTokenSealed) != "" {
+		if plain, err := unsealToken(prof.GatewayNgrokTokenSealed); err == nil && plain != "" {
+			c.runtimeNgrokToken = plain
+		}
+	}
+	if strings.TrimSpace(prof.GatewayCFTokenSealed) != "" {
+		if plain, err := unsealToken(prof.GatewayCFTokenSealed); err == nil && plain != "" {
+			c.runtimeCFToken = plain
+		}
+	}
+	if strings.TrimSpace(prof.GatewayPasswordSealed) != "" {
+		if plain, err := unsealToken(prof.GatewayPasswordSealed); err == nil && plain != "" {
+			c.runtimeGatewayPassword = plain
+		}
+	}
+	if strings.TrimSpace(prof.GatewayBearerSealed) != "" {
+		if plain, err := unsealToken(prof.GatewayBearerSealed); err == nil && plain != "" {
+			c.runtimeGatewayBearer = plain
 		}
 	}
 	return c, nil
@@ -198,7 +246,37 @@ func (c *Controller) Snapshot() Snapshot {
 		p := *c.pairing
 		pairingCopy = &p
 	}
-	pub := c.profile.Public((c.runtimeToken != "" && c.profile.tokenMatchesName()) || hasEnvToken)
+	pub := c.profile.Public(
+		(c.runtimeToken != "" && c.profile.tokenMatchesName()) || hasEnvToken,
+		c.runtimeNgrokToken != "",
+		c.runtimeCFToken != "",
+		c.runtimeGatewayPassword != "" && c.runtimeGatewayBearer != "",
+	)
+	var gwStartedCopy *time.Time
+	if c.gwStartedAt != nil {
+		t := *c.gwStartedAt
+		gwStartedCopy = &t
+	}
+	_, cfReady := findCloudflared()
+	mcpEndpoint := ""
+	if c.gwPublicURL != "" {
+		mcpEndpoint = strings.TrimRight(c.gwPublicURL, "/") + "/mcp"
+	}
+	gwStatus := &GatewayStatus{
+		State:            c.gwState,
+		Tunnel:           normalizeTunnelProvider(c.profile.GatewayTunnel),
+		LocalURL:         c.gwLocalURL,
+		PublicURL:        c.gwPublicURL,
+		MCPEndpoint:      mcpEndpoint,
+		Username:         gatewayUsername,
+		CloudflaredReady: cfReady,
+		StatusNote:       c.gwStatusNote,
+		LastError:        c.gwLastError,
+		StartedAt:        gwStartedCopy,
+	}
+	if c.gwRuntime != nil && c.gwTunnel != "" {
+		gwStatus.Tunnel = c.gwTunnel
+	}
 	return Snapshot{
 		State:        c.state,
 		ConnectedAt:  connectedCopy,
@@ -214,17 +292,38 @@ func (c *Controller) Snapshot() Snapshot {
 		Profile:      pub,
 		CLIPreview:   buildCLIPreview(c.profile),
 		Events:       eventsCopy,
+		Gateway:      gwStatus,
 	}
 }
 
 func (c *Controller) SaveConfig(req ConfigUpdate) error {
+	c.mu.Lock()
+	currentMode := normalizeMode(c.profile.Mode)
+	c.mu.Unlock()
+
+	mode := currentMode
+	if strings.TrimSpace(req.Mode) != "" {
+		mode = normalizeMode(req.Mode)
+	}
+
 	hub := strings.TrimSpace(req.Hub)
 	name := strings.TrimSpace(req.Name)
-	if hub == "" {
-		return errors.New("请填写 Hub 地址（例如 https://mcp.example.com）")
-	}
-	if err := agent.ValidateHubURL(hub); err != nil {
-		return fmt.Errorf("Hub 地址无效: %w", err)
+	if mode == ModeRemote {
+		if hub == "" {
+			return errors.New("请填写 Hub 地址（例如 https://mcp.example.com）")
+		}
+		if err := agent.ValidateHubURL(hub); err != nil {
+			return fmt.Errorf("Hub 地址无效: %w", err)
+		}
+	} else {
+		if hub != "" {
+			if err := agent.ValidateHubURL(hub); err != nil {
+				return fmt.Errorf("Hub 地址无效: %w", err)
+			}
+		}
+		if name == "" {
+			name = defaultDeviceName()
+		}
 	}
 	if err := agent.ValidateName(name); err != nil {
 		return fmt.Errorf("设备名称无效（仅允许小写字母、数字和连字符，不能为 local）: %w", err)
@@ -240,12 +339,59 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 	c.mu.Lock()
 	next := c.profile
 	nameChanged := c.profile.Name != "" && c.profile.Name != name
+	next.Mode = mode
 	next.Hub = hub
 	next.Name = name
 	next.AllowDirs = dirs
 	next.AllowExec = req.AllowExec
 	next.AutoConnect = req.AutoConnect
 	next.SaveToken = req.SaveToken
+
+	if req.GatewayPort != nil {
+		p := *req.GatewayPort
+		if p < 0 || p > 65535 {
+			c.mu.Unlock()
+			return errors.New("本机网关端口必须在 0 到 65535 之间")
+		}
+		next.GatewayPort = p
+		if p == 0 {
+			next.GatewayRandomPort = true
+		} else {
+			next.GatewayRandomPort = false
+		}
+	}
+	if req.GatewayRandomPort != nil {
+		next.GatewayRandomPort = *req.GatewayRandomPort
+		if next.GatewayRandomPort {
+			next.GatewayPort = 0
+		} else if next.GatewayPort <= 0 {
+			next.GatewayPort = defaultGatewayPort
+		}
+	}
+	if strings.TrimSpace(req.GatewayTunnel) != "" {
+		next.GatewayTunnel = normalizeTunnelProvider(req.GatewayTunnel)
+	}
+	if req.GatewayNgrokDomain != nil {
+		cleanDom, derr := normalizeNgrokDomain(*req.GatewayNgrokDomain)
+		if derr != nil {
+			c.mu.Unlock()
+			return derr
+		}
+		next.GatewayNgrokDomain = cleanDom
+	}
+	if req.GatewayCFPublicURL != nil {
+		rawCFURL := strings.TrimSpace(*req.GatewayCFPublicURL)
+		if rawCFURL != "" {
+			cleanCFURL, uerr := validatePublicHTTPSURL(rawCFURL)
+			if uerr != nil {
+				c.mu.Unlock()
+				return uerr
+			}
+			next.GatewayCFPublicURL = cleanCFURL
+		} else {
+			next.GatewayCFPublicURL = ""
+		}
+	}
 
 	tokenInput := strings.TrimSpace(req.Token)
 	nextRuntimeToken := c.runtimeToken
@@ -273,13 +419,45 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 		next.TokenSealed = ""
 	}
 
+	nextNgrokTok := c.runtimeNgrokToken
+	if tok := strings.TrimSpace(req.GatewayNgrokToken); tok != "" {
+		nextNgrokTok = tok
+		if next.SaveToken {
+			sealed, serr := sealToken(tok)
+			if serr != nil {
+				c.mu.Unlock()
+				return fmt.Errorf("加密保存 ngrok Authtoken 失败: %w", serr)
+			}
+			next.GatewayNgrokTokenSealed = sealed
+		} else {
+			next.GatewayNgrokTokenSealed = ""
+		}
+	}
+	nextCFTok := c.runtimeCFToken
+	if tok := strings.TrimSpace(req.GatewayCFToken); tok != "" {
+		nextCFTok = tok
+		if next.SaveToken {
+			sealed, serr := sealToken(tok)
+			if serr != nil {
+				c.mu.Unlock()
+				return fmt.Errorf("加密保存 Cloudflare Tunnel Token 失败: %w", serr)
+			}
+			next.GatewayCFTokenSealed = sealed
+		} else {
+			next.GatewayCFTokenSealed = ""
+		}
+	}
+
 	if err := saveProfile(c.configPath, next); err != nil {
 		c.mu.Unlock()
 		return err
 	}
 	wasRunning := c.cancelRun != nil
+	wasGatewayRunning := c.gwRuntime != nil
 	c.profile = next
 	c.runtimeToken = nextRuntimeToken
+	c.runtimeNgrokToken = nextNgrokTok
+	c.runtimeCFToken = nextCFTok
 	c.appendEventLocked(UIEvent{
 		Kind:    "system",
 		Summary: fmt.Sprintf("配置已保存（%s · %d 个目录 · 执行权限:%v）", next.Name, len(next.AllowDirs), next.AllowExec),
@@ -287,6 +465,18 @@ func (c *Controller) SaveConfig(req ConfigUpdate) error {
 	c.notifyLocked()
 	c.mu.Unlock()
 
+	if mode == ModeGateway {
+		if wasRunning {
+			c.stopActive(false)
+		}
+		if req.StartGatewayNow || wasGatewayRunning {
+			return c.StartGateway()
+		}
+		return nil
+	}
+	if wasGatewayRunning {
+		c.stopGateway(false)
+	}
 	if req.ConnectNow || wasRunning {
 		return c.Connect()
 	}
@@ -319,9 +509,21 @@ func (c *Controller) ClearEvents() {
 
 func (c *Controller) AutoStartIfConfigured() {
 	c.mu.Lock()
-	should := c.profile.AutoConnect && c.profile.Hub != "" && c.profile.Name != "" && len(c.profile.AllowDirs) > 0
+	mode := normalizeMode(c.profile.Mode)
+	auto := c.profile.AutoConnect
+	hasDirs := len(c.profile.AllowDirs) > 0
+	hasHub := c.profile.Hub != "" && c.profile.Name != ""
 	c.mu.Unlock()
-	if !should {
+	if !auto || !hasDirs {
+		return
+	}
+	if mode == ModeGateway {
+		if err := c.StartGateway(); err != nil {
+			c.log.Warn("本机网关自动启动失败", "err", err)
+		}
+		return
+	}
+	if !hasHub {
 		return
 	}
 	if err := c.Connect(); err != nil {
@@ -330,6 +532,7 @@ func (c *Controller) AutoStartIfConfigured() {
 }
 
 func (c *Controller) Connect() error {
+	c.stopGateway(false)
 	c.stopActive(false)
 
 	c.mu.Lock()
@@ -667,6 +870,7 @@ func (c *Controller) Disconnect() {
 
 func (c *Controller) Close() {
 	c.stopActive(false)
+	c.stopGateway(false)
 }
 
 func (c *Controller) stopActive(logUserAction bool) {

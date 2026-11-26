@@ -76,6 +76,10 @@ func openBrowser(targetURL string) error {
 	return cmd.Start()
 }
 
+func hideCmdWindow(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+}
+
 func pickDirectory(ctx context.Context) (string, error) {
 	script := `
 $ProgressPreference = 'SilentlyContinue'

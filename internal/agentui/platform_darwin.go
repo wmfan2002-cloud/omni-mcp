@@ -68,6 +68,8 @@ func openBrowser(targetURL string) error {
 	return exec.Command("open", targetURL).Start()
 }
 
+func hideCmdWindow(cmd *exec.Cmd) {}
+
 func pickDirectory(ctx context.Context) (string, error) {
 	out, err := exec.CommandContext(ctx, "osascript", "-e", `POSIX path of (choose folder with prompt "选择允许 Omni MCP Agent 访问的工作目录")`).Output()
 	if err != nil {

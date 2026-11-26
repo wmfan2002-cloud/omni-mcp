@@ -17,6 +17,8 @@ func openBrowser(targetURL string) error {
 	return exec.Command("xdg-open", targetURL).Start()
 }
 
+func hideCmdWindow(cmd *exec.Cmd) {}
+
 func pickDirectory(ctx context.Context) (string, error) {
 	if zenity, err := exec.LookPath("zenity"); err == nil {
 		out, err := exec.CommandContext(ctx, zenity, "--file-selection", "--directory", "--title=选择工作目录").Output()

@@ -20,6 +20,18 @@ type Profile struct {
 	SaveToken       bool     `json:"save_token"`
 	TokenSealed     string   `json:"token_sealed,omitempty"`
 	TokenDeviceName string   `json:"token_device_name,omitempty"`
+
+	// Local Standalone Gateway Mode settings (zero-VPS mode).
+	Mode                    string `json:"mode,omitempty"` // remote | gateway
+	GatewayPort             int    `json:"gateway_port,omitempty"`
+	GatewayRandomPort       bool   `json:"gateway_random_port,omitempty"`
+	GatewayTunnel           string `json:"gateway_tunnel,omitempty"` // cloudflare_quick | ngrok | cloudflare_named | local
+	GatewayNgrokDomain      string `json:"gateway_ngrok_domain,omitempty"`
+	GatewayNgrokTokenSealed string `json:"gateway_ngrok_token_sealed,omitempty"`
+	GatewayCFPublicURL      string `json:"gateway_cf_public_url,omitempty"`
+	GatewayCFTokenSealed    string `json:"gateway_cf_token_sealed,omitempty"`
+	GatewayPasswordSealed   string `json:"gateway_password_sealed,omitempty"`
+	GatewayBearerSealed     string `json:"gateway_bearer_sealed,omitempty"`
 }
 
 // PublicProfile is the sanitized view safe to send to the browser UI.
@@ -32,18 +44,32 @@ type PublicProfile struct {
 	SaveToken   bool     `json:"save_token"`
 	HasToken    bool     `json:"has_token"`
 	PairedName  string   `json:"paired_name,omitempty"`
+
+	Mode               string `json:"mode"`
+	GatewayPort        int    `json:"gateway_port"`
+	GatewayRandomPort  bool   `json:"gateway_random_port"`
+	GatewayTunnel      string `json:"gateway_tunnel"`
+	GatewayNgrokDomain string `json:"gateway_ngrok_domain,omitempty"`
+	GatewayCFPublicURL string `json:"gateway_cf_public_url,omitempty"`
+	HasNgrokToken      bool   `json:"has_ngrok_token"`
+	HasCFToken         bool   `json:"has_cf_token"`
+	HasGatewayCreds    bool   `json:"has_gateway_creds"`
 }
 
 func (p Profile) tokenMatchesName() bool {
 	return strings.TrimSpace(p.TokenDeviceName) == "" || p.TokenDeviceName == p.Name
 }
 
-func (p Profile) Public(hasRuntimeToken bool) PublicProfile {
+func (p Profile) Public(hasRuntimeToken, hasRuntimeNgrok, hasRuntimeCF, hasRuntimeGatewayCreds bool) PublicProfile {
 	dirs := append([]string(nil), p.AllowDirs...)
 	if dirs == nil {
 		dirs = []string{}
 	}
 	hasSealed := strings.TrimSpace(p.TokenSealed) != "" && p.tokenMatchesName()
+	port := p.GatewayPort
+	if port <= 0 && !p.GatewayRandomPort {
+		port = defaultGatewayPort
+	}
 	return PublicProfile{
 		Hub:         p.Hub,
 		Name:        p.Name,
@@ -53,6 +79,16 @@ func (p Profile) Public(hasRuntimeToken bool) PublicProfile {
 		SaveToken:   p.SaveToken,
 		HasToken:    hasRuntimeToken || hasSealed,
 		PairedName:  p.TokenDeviceName,
+
+		Mode:               normalizeMode(p.Mode),
+		GatewayPort:        port,
+		GatewayRandomPort:  p.GatewayRandomPort,
+		GatewayTunnel:      normalizeTunnelProvider(p.GatewayTunnel),
+		GatewayNgrokDomain: p.GatewayNgrokDomain,
+		GatewayCFPublicURL: p.GatewayCFPublicURL,
+		HasNgrokToken:      hasRuntimeNgrok || strings.TrimSpace(p.GatewayNgrokTokenSealed) != "",
+		HasCFToken:         hasRuntimeCF || strings.TrimSpace(p.GatewayCFTokenSealed) != "",
+		HasGatewayCreds:    hasRuntimeGatewayCreds || (strings.TrimSpace(p.GatewayPasswordSealed) != "" && strings.TrimSpace(p.GatewayBearerSealed) != ""),
 	}
 }
 
@@ -70,8 +106,11 @@ func DefaultConfigPath() (string, error) {
 
 func defaultProfile() Profile {
 	return Profile{
-		AllowDirs: []string{},
-		SaveToken: true,
+		AllowDirs:     []string{},
+		SaveToken:     true,
+		Mode:          ModeRemote,
+		GatewayPort:   defaultGatewayPort,
+		GatewayTunnel: TunnelCloudflareQuick,
 	}
 }
 
@@ -89,6 +128,11 @@ func loadProfile(path string) (Profile, error) {
 	}
 	if p.AllowDirs == nil {
 		p.AllowDirs = []string{}
+	}
+	p.Mode = normalizeMode(p.Mode)
+	p.GatewayTunnel = normalizeTunnelProvider(p.GatewayTunnel)
+	if p.GatewayPort <= 0 && !p.GatewayRandomPort {
+		p.GatewayPort = defaultGatewayPort
 	}
 	return p, nil
 }

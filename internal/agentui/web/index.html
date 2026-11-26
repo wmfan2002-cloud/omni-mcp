@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#ffffff" />
   <title>omni-mcp Console</title>
-  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link rel="icon" href="/icon-256.png" type="image/png" sizes="256x256" />
   <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
   <script>
     (function () {
       try {
@@ -1060,10 +1061,202 @@
       color: var(--muted);
     }
 
+    /* Local Gateway Mode styles */
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 10px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .mode-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 6px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .mode-btn:hover { color: var(--ink); }
+    .mode-btn.active {
+      background: var(--bg-card);
+      color: var(--plum);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .nav-item.is-hidden { display: none; }
+
+    .tunnel-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .tunnel-card {
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .tunnel-card:hover { border-color: var(--border-strong); background: var(--bg-subtle); }
+    .tunnel-card.active {
+      border-color: var(--plum);
+      background: var(--plum-soft);
+      box-shadow: 0 0 0 1px var(--plum);
+    }
+    .tunnel-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .tunnel-card-name {
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--ink);
+    }
+    .tunnel-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: var(--bg-subtle);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .tunnel-card.active .tunnel-tag {
+      background: var(--bg-card);
+      color: var(--plum);
+      border-color: var(--plum-border);
+    }
+    .tunnel-card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .gw-provider-panel {
+      display: none;
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+    }
+    .gw-provider-panel.show { display: block; }
+
+    .gw-live-card {
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .gw-live-card.show { display: block; }
+    .gw-live-card.is-running {
+      border-color: #16a34a55;
+      box-shadow: 0 2px 10px rgba(22, 163, 74, 0.06);
+    }
+    .gw-endpoint-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 9px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      margin: 10px 0 12px;
+      flex-wrap: wrap;
+    }
+    .gw-endpoint-url {
+      flex: 1;
+      min-width: 180px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      word-break: break-all;
+    }
+    .cred-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .cred-box {
+      padding: 10px 12px;
+      border-radius: 9px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cred-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .cred-val-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cred-val {
+      flex: 1;
+      min-width: 110px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink);
+      word-break: break-all;
+    }
+    .gw-note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .status-chip.is-running {
+      color: #15803d;
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .status-chip.is-running .status-dot { background: #16a34a; }
+    .status-chip.is-starting, .status-chip.is-downloading {
+      color: #92400e;
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+    .status-chip.is-starting .status-dot, .status-chip.is-downloading .status-dot { background: #f59e0b; }
+    .status-chip.is-error {
+      color: #b91c1c;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .status-chip.is-error .status-dot { background: #dc2626; }
+    [data-theme="dark"] .status-chip.is-running { background: rgba(22, 163, 74, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #86efac; }
+    [data-theme="dark"] .status-chip.is-starting, [data-theme="dark"] .status-chip.is-downloading { background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.35); color: #fcd34d; }
+    [data-theme="dark"] .status-chip.is-error { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; }
+
     @media (max-width: 900px) {
       .route-bar { display: none; }
       .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .stepper-grid { grid-template-columns: 1fr; }
+      .tunnel-grid, .cred-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 740px) {
@@ -1156,19 +1349,30 @@
       <aside class="sidebar">
         <div>
           <div class="nav-section-label" data-i18n="navTitle">桌面控制台</div>
+          <div class="mode-switch" role="tablist" aria-label="运行模式">
+            <button type="button" id="modeRemoteBtn" class="mode-btn active" role="tab" data-i18n="modeRemote">连接远程 Hub</button>
+            <button type="button" id="modeGatewayBtn" class="mode-btn" role="tab" data-i18n="modeGateway">本机独立网关</button>
+          </div>
           <nav class="nav-list" aria-label="控制台导航">
-            <button type="button" class="nav-item active" data-view="overview">
+            <button type="button" class="nav-item active" data-view="overview" data-mode="remote">
               <span class="nav-item-left">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
                 <span data-i18n="navOverview">连接总览</span>
               </span>
             </button>
-            <button type="button" class="nav-item" data-view="pairing">
+            <button type="button" class="nav-item" data-view="pairing" data-mode="remote">
               <span class="nav-item-left">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 <span data-i18n="navPairing">一键配对</span>
               </span>
               <span id="pairNavBadge" class="nav-badge">—</span>
+            </button>
+            <button type="button" class="nav-item is-hidden" data-view="gateway" data-mode="gateway">
+              <span class="nav-item-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></svg>
+                <span data-i18n="navGateway">本机网关</span>
+              </span>
+              <span id="gwNavBadge" class="nav-badge">—</span>
             </button>
             <button type="button" class="nav-item" data-view="folders">
               <span class="nav-item-left">
@@ -1318,6 +1522,196 @@
               </div>
               <ul id="miniAuditList" class="audit-list"></ul>
               <div id="miniAuditEmpty" class="empty-box" data-i18n="auditEmpty">暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。</div>
+            </div>
+          </section>
+
+          <!-- VIEW 1B: Local Standalone Gateway (Zero-VPS Mode) -->
+          <section id="view-gateway" class="view-pane">
+            <div class="view-head">
+              <div>
+                <h1 class="view-title" data-i18n="gwTitle">本机独立网关（免服务器）</h1>
+                <p class="view-sub" data-i18n="gwSub">无需购买 VPS：直接在这台电脑启动内置 OAuth 2.1 MCP 网关，并通过免费公网隧道供网页 AI 或本地 IDE 连接。</p>
+              </div>
+              <div class="action-row">
+                <button type="button" id="gwSaveOnlyBtn" class="btn" data-i18n="saveConfig">仅保存配置</button>
+                <button type="button" id="gwPrimaryBtn" class="btn btn-plum" data-i18n="gwStartBtn">保存并启动网关</button>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="gwKpiState">网关状态</div>
+                <div id="gwKpiStateVal" class="stat-value">已停止</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="gwKpiTunnel">隧道出口</div>
+                <div id="gwKpiTunnelVal" class="stat-value">Cloudflare 秒开</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="kpiDirs">已授权文件夹</div>
+                <div id="gwKpiDirsVal" class="stat-value mono">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label" data-i18n="kpiExec">命令执行</div>
+                <div id="gwKpiExecVal" class="stat-value">默认关闭</div>
+              </div>
+            </div>
+
+            <!-- Live Endpoint & Credentials Card -->
+            <div id="gwLiveCard" class="gw-live-card">
+              <div class="card-head" style="margin-bottom:4px">
+                <h2 class="card-title" data-i18n="gwLiveTitle">MCP 接入地址与认证凭证</h2>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button type="button" id="gwCopyJsonBtn" class="btn btn-sm" data-i18n="gwCopyJson">复制客户端 JSON</button>
+                  <button type="button" id="gwRotateCredsBtn" class="btn btn-sm" data-i18n="gwRotateCreds">重置密码与令牌</button>
+                </div>
+              </div>
+              <div id="gwStatusNoteLine" style="font-size:12.5px;color:var(--muted)"></div>
+              <div class="gw-endpoint-row">
+                <span id="gwEndpointText" class="gw-endpoint-url">—</span>
+                <button type="button" id="gwCopyEndpointBtn" class="btn btn-plum btn-sm" data-i18n="gwCopyUrl">复制 /mcp 地址</button>
+              </div>
+              <div class="cred-grid">
+                <div class="cred-box">
+                  <span class="cred-label" data-i18n="gwOAuthCredLabel">网页 AI 登录（ChatGPT / Claude / Gemini · OAuth 2.1）</span>
+                  <div class="cred-val-row">
+                    <span class="cred-val"><span style="color:var(--muted)">admin / </span><span id="gwPasswordDisplay">••••••••••••</span></span>
+                    <button type="button" id="gwRevealBtn" class="btn btn-sm" data-i18n="showBtn">显示</button>
+                    <button type="button" id="gwCopyPwBtn" class="btn btn-sm" data-i18n="copyBtn">复制</button>
+                  </div>
+                </div>
+                <div class="cred-box">
+                  <span class="cred-label" data-i18n="gwBearerLabel">Static Bearer Token（Cursor / Claude Desktop / AI Studio）</span>
+                  <div class="cred-val-row">
+                    <span id="gwBearerDisplay" class="cred-val">••••••••••••••••</span>
+                    <button type="button" id="gwCopyBearerBtn" class="btn btn-sm" data-i18n="copyBtn">复制</button>
+                  </div>
+                </div>
+              </div>
+              <div id="gwTunnelTip" class="gw-note"></div>
+            </div>
+
+            <!-- Tunnel Provider & Gateway Settings -->
+            <div class="card">
+              <div class="card-head">
+                <h2 class="card-title" data-i18n="gwTunnelCardTitle">选择公网出口与网关参数</h2>
+                <button type="button" id="gwJumpDirsBtn" class="btn btn-sm" data-i18n="gwManageDirs">管理授权文件夹 →</button>
+              </div>
+
+              <div class="tunnel-grid" role="radiogroup" aria-label="隧道方式">
+                <button type="button" class="tunnel-card active" data-tunnel="cloudflare_quick">
+                  <div class="tunnel-card-top">
+                    <span class="tunnel-card-name" data-i18n="tunCfQuickName">Cloudflare 快速隧道</span>
+                    <span class="tunnel-tag" data-i18n="tunCfQuickTag">零注册秒开</span>
+                  </div>
+                  <div class="tunnel-card-desc" data-i18n="tunCfQuickDesc">免费免账号，自动下载官方 cloudflared，3 秒获得临时 HTTPS 地址。</div>
+                </button>
+                <button type="button" class="tunnel-card" data-tunnel="ngrok">
+                  <div class="tunnel-card-top">
+                    <span class="tunnel-card-name" data-i18n="tunNgrokName">ngrok 固定域名</span>
+                    <span class="tunnel-tag" data-i18n="tunNgrokTag">内置 SDK · 免费固定</span>
+                  </div>
+                  <div class="tunnel-card-desc" data-i18n="tunNgrokDesc">原生内置 Go SDK 免安装，免费账号送 1 个永久 HTTPS 静态域名。</div>
+                </button>
+                <button type="button" class="tunnel-card" data-tunnel="cloudflare_named">
+                  <div class="tunnel-card-top">
+                    <span class="tunnel-card-name" data-i18n="tunCfNamedName">Cloudflare Named Tunnel</span>
+                    <span class="tunnel-tag" data-i18n="tunCfNamedTag">自有固定域名</span>
+                  </div>
+                  <div class="tunnel-card-desc" data-i18n="tunCfNamedDesc">填入 Cloudflare Zero Trust Tunnel Token，绑定你自己的长期域名。</div>
+                </button>
+                <button type="button" class="tunnel-card" data-tunnel="local">
+                  <div class="tunnel-card-top">
+                    <span class="tunnel-card-name" data-i18n="tunLocalName">仅本机直连</span>
+                    <span class="tunnel-tag" data-i18n="tunLocalTag">零公网暴露</span>
+                  </div>
+                  <div class="tunnel-card-desc" data-i18n="tunLocalDesc">仅监听 127.0.0.1，专为 Cursor、Claude Desktop、Windsurf 等本地 AI 客户端设计。</div>
+                </button>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="gwNameInput" data-i18n="nameLabel">本机设备名称</label>
+                  <input id="gwNameInput" class="input input-mono" type="text" placeholder="my-pc" autocomplete="off" />
+                  <span class="field-help" data-i18n="gwNameHelp">留空将自动使用主机名（小写字母、数字和连字符）</span>
+                </div>
+                <div class="field">
+                  <label for="gwPortInput" data-i18n="gwPortLabel">本机监听端口（127.0.0.1）</label>
+                  <input id="gwPortInput" class="input input-mono" type="number" min="0" max="65535" value="8485" />
+                  <span class="field-help" data-i18n="gwPortHelp">默认 8485；填 0 自动分配可用端口</span>
+                </div>
+              </div>
+
+              <!-- Provider-specific panels -->
+              <div id="panel-cloudflare_quick" class="gw-provider-panel show">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                  <span style="font-size:12.5px;color:var(--charcoal)" data-i18n="cfQuickPanelInfo">启动时将自动检测本机 cloudflared，未安装时从 GitHub 官方发布页自动下载至用户缓存目录。</span>
+                  <span id="cfBinaryBadge" class="brand-meta">检测中…</span>
+                </div>
+              </div>
+
+              <div id="panel-ngrok" class="gw-provider-panel">
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="gwNgrokTokenInput" data-i18n="ngrokTokenLabel">ngrok Authtoken（加密保存至本机密钥库）</label>
+                    <div style="display:flex;gap:8px">
+                      <input id="gwNgrokTokenInput" class="input input-mono" type="password" placeholder="粘贴 ngrok Authtoken…" autocomplete="off" />
+                      <button type="button" id="gwClearNgrokBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
+                    </div>
+                    <span id="gwNgrokTokenHint" class="field-help">免费注册 dashboard.ngrok.com → Your Authtoken 获取。</span>
+                  </div>
+                  <div class="field">
+                    <label for="gwNgrokDomainInput" data-i18n="ngrokDomainLabel">ngrok 固定域名（可选，推荐填写免费静态域名）</label>
+                    <input id="gwNgrokDomainInput" class="input input-mono" type="text" placeholder="my-pc.ngrok-free.app" autocomplete="off" />
+                    <span class="field-help" data-i18n="ngrokDomainHelp">留空则由 ngrok 每次分配随机域名；在 ngrok 后台 Domains 可免费领取 1 个永久域名。</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="panel-cloudflare_named" class="gw-provider-panel">
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="gwCfUrlInput" data-i18n="cfNamedUrlLabel">公网 HTTPS 根地址</label>
+                    <input id="gwCfUrlInput" class="input input-mono" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
+                    <span class="field-help" data-i18n="cfNamedUrlHelp">在 Cloudflare Zero Trust → Tunnels 里将此域名指向本机端口（如 http://127.0.0.1:8485）</span>
+                  </div>
+                  <div class="field">
+                    <label for="gwCfTokenInput" data-i18n="cfNamedTokenLabel">Cloudflare Tunnel Token（加密保存）</label>
+                    <div style="display:flex;gap:8px">
+                      <input id="gwCfTokenInput" class="input input-mono" type="password" placeholder="粘贴 eyJ... Tunnel Token" autocomplete="off" />
+                      <button type="button" id="gwClearCfBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
+                    </div>
+                    <span id="gwCfTokenHint" class="field-help">仅通过环境变量传给 cloudflared 子进程，不暴露在命令行参数中。</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="panel-local" class="gw-provider-panel">
+                <span style="font-size:12.5px;color:var(--charcoal)" data-i18n="localPanelInfo">仅在本机回环地址监听，不会连接任何外部隧道，适合本机运行的 Cursor、Claude Desktop、Windsurf 或自建本地代理。</span>
+              </div>
+
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+                <div id="gwExecToggleCard" class="toggle-card">
+                  <div>
+                    <div class="toggle-title" data-i18n="execToggleTitle">允许 AI 执行终端命令（--allow-exec）</div>
+                    <div id="gwExecDesc" class="toggle-desc">默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。</div>
+                  </div>
+                  <label class="switch">
+                    <input id="gwAllowExecToggle" type="checkbox" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-card">
+                  <div>
+                    <div class="toggle-title" data-i18n="gwAutoStartTitle">启动控制台时自动开启本机网关</div>
+                    <div class="toggle-desc" data-i18n="gwAutoStartDesc">下次打开桌面控制台时自动恢复本机网关与隧道在线。</div>
+                  </div>
+                  <label class="switch">
+                    <input id="gwAutoConnectToggle" type="checkbox" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1575,6 +1969,58 @@
         tokenPlaceholder: '粘贴令牌后点击「保存配置」覆盖本地凭证',
         tokenStatusYes: (name) => '当前设备已保存有效配对凭证' + (name ? '（绑定设备：' + name + '）' : '') + '，下次启动可免密直连。',
         tokenStatusNo: '当前设备尚未配对。填好 Hub 地址与授权目录后，点击「发起一键配对」或直接点右上角「连接 Hub」即可自动引导配对。'
+        ,
+        modeRemote: '连接远程 Hub',
+        modeGateway: '本机独立网关',
+        navGateway: '本机网关',
+        gwTitle: '本机独立网关（免服务器）',
+        gwSub: '无需购买 VPS：直接在这台电脑启动内置 OAuth 2.1 MCP 网关，并通过免费公网隧道供网页 AI 或本地 IDE 连接。',
+        gwStartBtn: '保存并启动网关',
+        gwStopBtn: '停止本机网关',
+        gwTopStart: '启动网关',
+        gwTopStop: '停止网关',
+        gwKpiState: '网关状态',
+        gwKpiTunnel: '隧道出口',
+        gwLiveTitle: 'MCP 接入地址与认证凭证',
+        gwCopyJson: '复制客户端 JSON',
+        gwRotateCreds: '重置密码与令牌',
+        gwCopyUrl: '复制 /mcp 地址',
+        copyBtn: '复制',
+        clearBtn: '清除',
+        gwOAuthCredLabel: '网页 AI 登录（ChatGPT / Claude / Gemini · OAuth 2.1）',
+        gwBearerLabel: 'Static Bearer Token（Cursor / Claude Desktop / AI Studio）',
+        gwTunnelCardTitle: '选择公网出口与网关参数',
+        gwManageDirs: '管理授权文件夹 →',
+        tunCfQuickName: 'Cloudflare 快速隧道',
+        tunCfQuickTag: '零注册秒开',
+        tunCfQuickDesc: '免费免账号，自动下载官方 cloudflared，3 秒获得临时 HTTPS 地址。',
+        tunNgrokName: 'ngrok 固定域名',
+        tunNgrokTag: '内置 SDK · 免费固定',
+        tunNgrokDesc: '原生内置 Go SDK 免安装，免费账号送 1 个永久 HTTPS 静态域名。',
+        tunCfNamedName: 'Cloudflare Named Tunnel',
+        tunCfNamedTag: '自有固定域名',
+        tunCfNamedDesc: '填入 Cloudflare Zero Trust Tunnel Token，绑定你自己的长期域名。',
+        tunLocalName: '仅本机直连',
+        tunLocalTag: '零公网暴露',
+        tunLocalDesc: '仅监听 127.0.0.1，专为 Cursor、Claude Desktop、Windsurf 等本地 AI 客户端设计。',
+        gwNameHelp: '留空将自动使用主机名（小写字母、数字和连字符）',
+        gwPortLabel: '本机监听端口（127.0.0.1）',
+        gwPortHelp: '默认 8485；填 0 自动分配可用端口',
+        cfQuickPanelInfo: '启动时将自动检测本机 cloudflared，未安装时从 GitHub 官方发布页自动下载至用户缓存目录。',
+        ngrokTokenLabel: 'ngrok Authtoken（加密保存至本机密钥库）',
+        ngrokDomainLabel: 'ngrok 固定域名（可选，推荐填写免费静态域名）',
+        ngrokDomainHelp: '留空则由 ngrok 每次分配随机域名；在 ngrok 后台 Domains 可免费领取 1 个永久域名。',
+        cfNamedUrlLabel: '公网 HTTPS 根地址',
+        cfNamedUrlHelp: '在 Cloudflare Zero Trust → Tunnels 里将此域名指向本机端口（如 http://127.0.0.1:8485）',
+        cfNamedTokenLabel: 'Cloudflare Tunnel Token（加密保存）',
+        localPanelInfo: '仅在本机回环地址监听，不会连接任何外部隧道，适合本机运行的 Cursor、Claude Desktop、Windsurf 或自建本地代理。',
+        gwAutoStartTitle: '启动控制台时自动开启本机网关',
+        gwAutoStartDesc: '下次打开桌面控制台时自动恢复本机网关与隧道在线。',
+        gwStStopped: '已停止',
+        gwStDownloading: '下载组件中…',
+        gwStStarting: '启动中…',
+        gwStRunning: '网关运行中',
+        gwStError: '启动异常'
       },
       en: {
         routeWebAi: 'Web AI',
@@ -1670,6 +2116,58 @@
         tokenPlaceholder: 'Paste token and click Save Settings to override',
         tokenStatusYes: (name) => 'A valid pairing credential is stored on this device' + (name ? ' (bound to: ' + name + ')' : '') + '.',
         tokenStatusNo: 'This device is not paired yet. Enter your Hub URL and a folder, then click "Start One-Click Pairing" or "Connect Hub".'
+        ,
+        modeRemote: 'Remote Hub',
+        modeGateway: 'Local Gateway',
+        navGateway: 'Local Gateway',
+        gwTitle: 'Local Standalone Gateway (Zero-VPS)',
+        gwSub: 'No VPS required: run an embedded OAuth 2.1 MCP Hub right on this computer with a free HTTPS tunnel for web AI or local IDEs.',
+        gwStartBtn: 'Save & Start Gateway',
+        gwStopBtn: 'Stop Gateway',
+        gwTopStart: 'Start Gateway',
+        gwTopStop: 'Stop Gateway',
+        gwKpiState: 'Gateway Status',
+        gwKpiTunnel: 'Tunnel Exposure',
+        gwLiveTitle: 'MCP Endpoint & Credentials',
+        gwCopyJson: 'Copy Client JSON',
+        gwRotateCreds: 'Rotate Credentials',
+        gwCopyUrl: 'Copy /mcp URL',
+        copyBtn: 'Copy',
+        clearBtn: 'Clear',
+        gwOAuthCredLabel: 'Web AI OAuth 2.1 Login (ChatGPT / Claude / Gemini)',
+        gwBearerLabel: 'Static Bearer Token (Cursor / Claude Desktop / AI Studio)',
+        gwTunnelCardTitle: 'Tunnel Exposure & Gateway Settings',
+        gwManageDirs: 'Manage Folders →',
+        tunCfQuickName: 'Cloudflare Quick Tunnel',
+        tunCfQuickTag: 'Zero-Signup',
+        tunCfQuickDesc: 'Free, no account needed. Auto-downloads official cloudflared for an instant HTTPS URL.',
+        tunNgrokName: 'ngrok Static Domain',
+        tunNgrokTag: 'Built-in SDK · Free Static',
+        tunNgrokDesc: 'Native Go SDK built in. Free ngrok accounts include 1 permanent HTTPS static domain.',
+        tunCfNamedName: 'Cloudflare Named Tunnel',
+        tunCfNamedTag: 'Custom Domain',
+        tunCfNamedDesc: 'Use a Cloudflare Zero Trust Tunnel Token for your own permanent HTTPS domain.',
+        tunLocalName: 'Localhost Only',
+        tunLocalTag: 'No Public Exposure',
+        tunLocalDesc: 'Listen strictly on 127.0.0.1 for Cursor, Claude Desktop, Windsurf, or local agents.',
+        gwNameHelp: 'Leave blank to use your hostname (lowercase letters, numbers, hyphens)',
+        gwPortLabel: 'Local Port (127.0.0.1)',
+        gwPortHelp: 'Default 8485; set 0 for an automatic free port',
+        cfQuickPanelInfo: 'Uses installed cloudflared if present, or auto-downloads the official binary into your cache directory on first start.',
+        ngrokTokenLabel: 'ngrok Authtoken (sealed in OS vault)',
+        ngrokDomainLabel: 'ngrok Static Domain (optional, free static domain recommended)',
+        ngrokDomainHelp: 'Leave blank for an ephemeral URL, or claim 1 free permanent domain in dashboard.ngrok.com.',
+        cfNamedUrlLabel: 'Public HTTPS Origin',
+        cfNamedUrlHelp: 'Point this hostname in Cloudflare Zero Trust Tunnels to http://127.0.0.1:8485',
+        cfNamedTokenLabel: 'Cloudflare Tunnel Token (sealed in OS vault)',
+        localPanelInfo: 'Loopback-only listener with zero internet exposure. Ideal for Cursor, Claude Desktop, and local MCP clients.',
+        gwAutoStartTitle: 'Auto-start local gateway when console opens',
+        gwAutoStartDesc: 'Automatically bring up your local gateway and tunnel on app launch.',
+        gwStStopped: 'Stopped',
+        gwStDownloading: 'Downloading…',
+        gwStStarting: 'Starting…',
+        gwStRunning: 'Running',
+        gwStError: 'Error'
       }
     };
 
@@ -1687,6 +2185,10 @@
     let auditQuery = '';
     let toastTimer = null;
     let countdownTimer = null;
+    let activeMode = 'remote';
+    let selectedTunnel = 'cloudflare_quick';
+    let revealedCreds = null;
+    let credsVisible = false;
 
     function t(key) {
       return (I18N[lang] && I18N[lang][key]) || I18N.zh[key] || key;
@@ -1759,6 +2261,166 @@
       $('execDesc').textContent = on ? t('execOnDesc') : t('execOffDesc');
       $('execToggleCard').classList.toggle('is-armed', on);
       $('execGuardNotice').classList.toggle('show', on);
+      $('gwAllowExecToggle').checked = on;
+      $('gwExecDesc').textContent = on ? t('execOnDesc') : t('execOffDesc');
+      $('gwExecToggleCard').classList.toggle('is-armed', on);
+    }
+
+    function tunnelShortLabel(kind) {
+      const map = lang === 'zh'
+        ? { cloudflare_quick: 'Cloudflare 秒开', ngrok: 'ngrok 固定域名', cloudflare_named: 'Cloudflare 固定', local: '仅本机直连' }
+        : { cloudflare_quick: 'Cloudflare Quick', ngrok: 'ngrok Static', cloudflare_named: 'Cloudflare Named', local: 'Localhost Only' };
+      return map[kind] || kind;
+    }
+
+    function selectTunnel(kind, markAsDirty) {
+      selectedTunnel = kind || 'cloudflare_quick';
+      document.querySelectorAll('.tunnel-card').forEach((card) => {
+        card.classList.toggle('active', card.dataset.tunnel === selectedTunnel);
+      });
+      ['cloudflare_quick', 'ngrok', 'cloudflare_named', 'local'].forEach((k) => {
+        const el = $('panel-' + k);
+        if (el) el.classList.toggle('show', k === selectedTunnel);
+      });
+      $('gwKpiTunnelVal').textContent = tunnelShortLabel(selectedTunnel);
+      if (markAsDirty) markDirty(true);
+    }
+
+    function setActiveMode(mode, switchTab) {
+      activeMode = mode === 'gateway' ? 'gateway' : 'remote';
+      $('modeRemoteBtn').classList.toggle('active', activeMode === 'remote');
+      $('modeGatewayBtn').classList.toggle('active', activeMode === 'gateway');
+      document.querySelectorAll('.nav-item[data-mode]').forEach((item) => {
+        item.classList.toggle('is-hidden', item.dataset.mode !== activeMode);
+      });
+      if (switchTab) {
+        const curView = document.querySelector('.view-pane.active');
+        const curId = curView ? curView.id.replace('view-', '') : '';
+        if (activeMode === 'gateway' && (curId === 'overview' || curId === 'pairing' || !curId)) {
+          switchView('gateway');
+        } else if (activeMode === 'remote' && (curId === 'gateway' || !curId)) {
+          switchView('overview');
+        }
+      }
+      if (state) renderTopAndGateway(state);
+    }
+
+    function renderCredDisplay() {
+      if (credsVisible && revealedCreds) {
+        $('gwPasswordDisplay').textContent = revealedCreds.password || '—';
+        $('gwBearerDisplay').textContent = revealedCreds.bearer_token || '—';
+        $('gwRevealBtn').textContent = t('hideBtn');
+      } else {
+        $('gwPasswordDisplay').textContent = '••••••••••••';
+        $('gwBearerDisplay').textContent = '••••••••••••••••';
+        $('gwRevealBtn').textContent = t('showBtn');
+      }
+    }
+
+    async function ensureRevealedCreds() {
+      if (revealedCreds && revealedCreds.password && revealedCreds.bearer_token) return revealedCreds;
+      revealedCreds = await api('/api/gateway/reveal', { method: 'POST' });
+      return revealedCreds;
+    }
+
+    function renderTopAndGateway(next) {
+      const prof = next.profile || {};
+      const gw = next.gateway || { state: 'stopped', tunnel: prof.gateway_tunnel || 'cloudflare_quick' };
+      const gwActive = gw.state === 'running' || gw.state === 'starting' || gw.state === 'downloading';
+
+      // Gateway KPIs & live card
+      const gwLabels = {
+        stopped: t('gwStStopped'),
+        downloading: t('gwStDownloading'),
+        starting: t('gwStStarting'),
+        running: t('gwStRunning'),
+        error: t('gwStError')
+      };
+      const gwLabel = gwLabels[gw.state] || gw.state;
+      $('gwKpiStateVal').textContent = gwLabel;
+      $('gwKpiTunnelVal').textContent = tunnelShortLabel(gwActive ? gw.tunnel : selectedTunnel);
+      $('gwKpiDirsVal').textContent = String((prof.allow_dirs || []).length);
+      $('gwKpiExecVal').textContent = prof.allow_exec ? t('execOnShort') : t('execOffShort');
+      $('gwNavBadge').textContent = gw.state === 'running' ? 'ON' : (gwActive ? '…' : 'OFF');
+
+      $('cfBinaryBadge').textContent = gw.cloudflared_ready
+        ? (lang === 'zh' ? 'cloudflared 已就绪' : 'cloudflared ready')
+        : (lang === 'zh' ? '首次启动自动下载' : 'Auto-download on start');
+      $('gwNgrokTokenHint').textContent = prof.has_ngrok_token
+        ? (lang === 'zh' ? '已加密保存 ngrok Authtoken（留空保持不变，或输入新值覆盖）。' : 'ngrok Authtoken is saved in vault (leave blank to keep).')
+        : (lang === 'zh' ? '免费注册 dashboard.ngrok.com → Your Authtoken 获取。' : 'Get a free Authtoken at dashboard.ngrok.com.');
+      $('gwClearNgrokBtn').disabled = !prof.has_ngrok_token;
+      $('gwCfTokenHint').textContent = prof.has_cf_token
+        ? (lang === 'zh' ? '已加密保存 Cloudflare Tunnel Token（留空保持不变）。' : 'Cloudflare Tunnel Token is saved in vault (leave blank to keep).')
+        : (lang === 'zh' ? '仅通过环境变量传给 cloudflared 子进程，不暴露在命令行参数中。' : 'Passed strictly via env var to cloudflared, never in argv.');
+      $('gwClearCfBtn').disabled = !prof.has_cf_token;
+
+      const gwPri = $('gwPrimaryBtn');
+      if (gwActive) {
+        gwPri.textContent = t('gwStopBtn');
+        gwPri.className = 'btn btn-danger';
+      } else {
+        gwPri.textContent = t('gwStartBtn');
+        gwPri.className = 'btn btn-plum';
+      }
+
+      const liveCard = $('gwLiveCard');
+      const showLive = gwActive || !!gw.mcp_endpoint || !!prof.has_gateway_creds;
+      liveCard.classList.toggle('show', showLive);
+      liveCard.classList.toggle('is-running', gw.state === 'running');
+      $('gwStatusNoteLine').textContent = gw.status_note || (gw.state === 'running'
+        ? (lang === 'zh' ? '本机内置 OAuth 2.1 + MCP 服务已上线，可直接在网页 AI 或本地客户端接入。' : 'Embedded OAuth 2.1 + MCP Hub is live and ready for connections.')
+        : (lang === 'zh' ? '点击「保存并启动网关」后生成可用的 /mcp 接入地址。' : 'Click "Save & Start Gateway" to bring the /mcp endpoint online.'));
+      $('gwEndpointText').textContent = gw.mcp_endpoint || (gw.local_url ? (gw.local_url + '/mcp') : (lang === 'zh' ? '网关尚未启动' : 'Gateway not running'));
+      $('gwCopyEndpointBtn').disabled = !gw.mcp_endpoint;
+      $('gwCopyJsonBtn').disabled = !gw.mcp_endpoint;
+
+      const activeTun = gwActive ? gw.tunnel : selectedTunnel;
+      if (activeTun === 'cloudflare_quick') {
+        $('gwTunnelTip').textContent = lang === 'zh'
+          ? '提示：Cloudflare 快速隧道每次重启会分配新的随机 HTTPS 域名；如需永久固定域名，推荐切换到「ngrok 固定域名」或「Cloudflare Named Tunnel」。'
+          : 'Tip: Cloudflare Quick Tunnel generates a fresh HTTPS URL on each restart. Switch to ngrok Static Domain or Cloudflare Named Tunnel for a permanent URL.';
+      } else if (activeTun === 'ngrok') {
+        $('gwTunnelTip').textContent = lang === 'zh'
+          ? '提示：ngrok 免费版首次在浏览器打开 OAuth 登录页时可能显示一次确认页（点 Visit Site 即可，后续 MCP 接口调用不受影响）。'
+          : 'Tip: ngrok free tier may show a one-time interstitial on the browser OAuth screen; API calls to /mcp work directly.';
+      } else if (activeTun === 'local') {
+        $('gwTunnelTip').textContent = lang === 'zh'
+          ? '提示：仅本机直连模式不会暴露到公网；可直接将地址与 Bearer Token 填入 Cursor、Claude Desktop 或 Windsurf。'
+          : 'Tip: Localhost mode has zero public exposure. Use this URL and Bearer Token in Cursor, Claude Desktop, or Windsurf.';
+      } else {
+        $('gwTunnelTip').textContent = lang === 'zh'
+          ? '提示：请确认已在 Cloudflare Zero Trust 后台将此域名路由到本机监听端口。'
+          : 'Tip: Ensure your Cloudflare Zero Trust tunnel routes this hostname to your local gateway port.';
+      }
+      renderCredDisplay();
+
+      // When viewing Gateway Mode, reflect Gateway status in the shared Topbar!
+      if (activeMode === 'gateway') {
+        let gwHost = '127.0.0.1:' + (prof.gateway_port || 8485);
+        if (gw.public_url) {
+          try { gwHost = new URL(gw.public_url).host + '/mcp'; } catch { gwHost = gw.public_url; }
+        }
+        $('routeHub').textContent = gwHost;
+        $('routeDevice').textContent = prof.name || 'local-pc';
+        $('statusChip').className = 'status-chip is-' + (gw.state || 'stopped');
+        $('statusText').textContent = gwLabel;
+        const connBtn = $('toggleConnBtn');
+        if (gwActive) {
+          connBtn.textContent = t('gwTopStop');
+          connBtn.className = 'btn btn-danger';
+        } else {
+          connBtn.textContent = t('gwTopStart');
+          connBtn.className = 'btn btn-primary';
+        }
+        const errBox = $('connErrBox');
+        if (gw.last_error) {
+          errBox.className = 'alert show';
+          $('connErrText').textContent = (lang === 'zh' ? '本机网关异常：' : 'Gateway error: ') + gw.last_error;
+        } else {
+          errBox.className = 'alert';
+        }
+      }
     }
 
     function renderDirs() {
@@ -1971,12 +2633,21 @@
 
       // Sync form fields when safe
       if (!formInitialized || (forceFormSync && !formDirty)) {
+        const profMode = prof.mode === 'gateway' ? 'gateway' : 'remote';
         $('hubInput').value = prof.hub || '';
         $('nameInput').value = prof.name || '';
+        $('gwNameInput').value = prof.name || '';
+        $('gwPortInput').value = prof.gateway_random_port ? '0' : String(prof.gateway_port || 8485);
+        $('gwNgrokDomainInput').value = prof.gateway_ngrok_domain || '';
+        $('gwCfUrlInput').value = prof.gateway_cf_public_url || '';
         $('allowExecToggle').checked = !!prof.allow_exec;
+        $('gwAllowExecToggle').checked = !!prof.allow_exec;
         $('saveTokenToggle').checked = prof.save_token !== false;
         $('autoConnectToggle').checked = !!prof.auto_connect;
+        $('gwAutoConnectToggle').checked = !!prof.auto_connect;
         draftDirs = Array.isArray(prof.allow_dirs) ? prof.allow_dirs.slice() : [];
+        selectTunnel(prof.gateway_tunnel || 'cloudflare_quick', false);
+        setActiveMode(profMode, !formInitialized);
         renderDirs();
         updateEnvHint();
         updateExecDesc();
@@ -1984,28 +2655,47 @@
         markDirty(false);
       }
 
+      renderTopAndGateway(next);
       renderEvents(next.events);
     }
 
-    async function saveConfig(connectNow) {
+    async function saveConfig(connectNow, startGatewayNow) {
       const pendingDir = $('dirInput').value.trim();
       if (pendingDir) addDir(pendingDir);
+      const portRaw = parseInt($('gwPortInput').value, 10);
+      const gwPort = Number.isFinite(portRaw) && portRaw >= 0 && portRaw <= 65535 ? portRaw : 8485;
+      const devName = activeMode === 'gateway'
+        ? ($('gwNameInput').value.trim() || $('nameInput').value.trim())
+        : $('nameInput').value.trim();
       const payload = {
+        mode: activeMode,
         hub: $('hubInput').value.trim(),
-        name: $('nameInput').value.trim(),
+        name: devName,
         allow_dirs: draftDirs,
         allow_exec: $('allowExecToggle').checked,
         save_token: $('saveTokenToggle').checked,
         auto_connect: $('autoConnectToggle').checked,
         token: $('tokenInput').value.trim(),
-        connect_now: !!connectNow
+        connect_now: !!connectNow && activeMode === 'remote',
+        gateway_port: gwPort,
+        gateway_random_port: gwPort === 0,
+        gateway_tunnel: selectedTunnel,
+        gateway_ngrok_domain: $('gwNgrokDomainInput').value.trim(),
+        gateway_ngrok_token: $('gwNgrokTokenInput').value.trim(),
+        gateway_cf_public_url: $('gwCfUrlInput').value.trim(),
+        gateway_cf_token: $('gwCfTokenInput').value.trim(),
+        start_gateway_now: !!startGatewayNow && activeMode === 'gateway'
       };
       try {
         const next = await api('/api/config', { method: 'POST', body: JSON.stringify(payload) });
         $('tokenInput').value = '';
+        $('gwNgrokTokenInput').value = '';
+        $('gwCfTokenInput').value = '';
         markDirty(false);
         renderState(next, true);
-        if (connectNow) {
+        if (startGatewayNow) {
+          showToast(lang === 'zh' ? '配置已保存，正在启动本机网关与隧道…' : 'Settings saved, starting local gateway…');
+        } else if (connectNow) {
           showToast(next.state === 'pairing'
             ? (lang === 'zh' ? '已发起一键配对，请在浏览器批准接入' : 'Pairing started — approve in your Hub browser page')
             : (lang === 'zh' ? '配置已保存，正在连接 Hub' : 'Settings saved, connecting to Hub'));
@@ -2036,6 +2726,19 @@
     });
 
     $('jumpAuditBtn').onclick = () => switchView('audit');
+    $('gwJumpDirsBtn').onclick = () => switchView('folders');
+
+    $('modeRemoteBtn').onclick = () => {
+      setActiveMode('remote', true);
+      markDirty(true);
+    };
+    $('modeGatewayBtn').onclick = () => {
+      setActiveMode('gateway', true);
+      markDirty(true);
+    };
+    document.querySelectorAll('.tunnel-card').forEach((card) => {
+      card.onclick = () => selectTunnel(card.dataset.tunnel, true);
+    });
 
     // Audit filters
     document.querySelectorAll('.seg-btn').forEach((btn) => {
@@ -2075,11 +2778,19 @@
 
     // Form bindings
     $('hubInput').oninput = () => markDirty(true);
-    $('nameInput').oninput = () => { markDirty(true); updateEnvHint(); };
+    $('nameInput').oninput = () => { $('gwNameInput').value = $('nameInput').value; markDirty(true); updateEnvHint(); };
+    $('gwNameInput').oninput = () => { $('nameInput').value = $('gwNameInput').value; markDirty(true); updateEnvHint(); };
+    $('gwPortInput').oninput = () => markDirty(true);
+    $('gwNgrokTokenInput').oninput = () => markDirty(true);
+    $('gwNgrokDomainInput').oninput = () => markDirty(true);
+    $('gwCfUrlInput').oninput = () => markDirty(true);
+    $('gwCfTokenInput').oninput = () => markDirty(true);
     $('tokenInput').oninput = () => markDirty(true);
     $('allowExecToggle').onchange = () => { markDirty(true); updateExecDesc(); };
+    $('gwAllowExecToggle').onchange = () => { $('allowExecToggle').checked = $('gwAllowExecToggle').checked; markDirty(true); updateExecDesc(); };
     $('saveTokenToggle').onchange = () => markDirty(true);
-    $('autoConnectToggle').onchange = () => markDirty(true);
+    $('autoConnectToggle').onchange = () => { $('gwAutoConnectToggle').checked = $('autoConnectToggle').checked; markDirty(true); };
+    $('gwAutoConnectToggle').onchange = () => { $('autoConnectToggle').checked = $('gwAutoConnectToggle').checked; markDirty(true); };
     $('addDirBtn').onclick = () => addDir($('dirInput').value);
     $('dirInput').onkeydown = (e) => {
       if (e.key === 'Enter') {
@@ -2116,9 +2827,119 @@
     $('saveOnlyBtn').onclick = () => saveConfig(false);
     $('saveDirsBtn').onclick = () => saveConfig(false);
     $('quickSaveBtn').onclick = () => saveConfig(false);
-    $('saveConnectBtn').onclick = () => saveConfig(true);
+    $('saveConnectBtn').onclick = () => saveConfig(true, false);
+    $('gwSaveOnlyBtn').onclick = () => saveConfig(false, false);
+
+    async function handleGatewayPrimaryToggle() {
+      const gw = state && state.gateway;
+      const gwActive = gw && (gw.state === 'running' || gw.state === 'starting' || gw.state === 'downloading');
+      try {
+        if (gwActive) {
+          renderState(await api('/api/gateway/stop', { method: 'POST' }), false);
+          showToast(lang === 'zh' ? '已停止本机网关' : 'Local gateway stopped');
+        } else if (formDirty || $('gwNgrokTokenInput').value.trim() || $('gwCfTokenInput').value.trim()) {
+          await saveConfig(false, true);
+        } else {
+          renderState(await api('/api/gateway/start', { method: 'POST' }), false);
+          showToast(lang === 'zh' ? '正在启动本机网关与隧道…' : 'Starting local gateway & tunnel…');
+        }
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    $('gwPrimaryBtn').onclick = handleGatewayPrimaryToggle;
+
+    $('gwRevealBtn').onclick = async () => {
+      try {
+        if (!credsVisible) {
+          await ensureRevealedCreds();
+          credsVisible = true;
+        } else {
+          credsVisible = false;
+        }
+        renderCredDisplay();
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    };
+
+    $('gwCopyEndpointBtn').onclick = async () => {
+      const ep = state && state.gateway && state.gateway.mcp_endpoint;
+      if (!ep) return;
+      try {
+        await navigator.clipboard.writeText(ep);
+        showToast(lang === 'zh' ? '已复制 MCP 接入地址' : 'MCP endpoint copied');
+      } catch { showToast(lang === 'zh' ? '复制失败' : 'Copy failed', true); }
+    };
+
+    $('gwCopyPwBtn').onclick = async () => {
+      try {
+        const creds = await ensureRevealedCreds();
+        await navigator.clipboard.writeText(creds.password);
+        showToast(lang === 'zh' ? '已复制 OAuth 登录密码（用户名 admin）' : 'OAuth password copied (username: admin)');
+      } catch (e) { showToast(e.message, true); }
+    };
+
+    $('gwCopyBearerBtn').onclick = async () => {
+      try {
+        const creds = await ensureRevealedCreds();
+        await navigator.clipboard.writeText(creds.bearer_token);
+        showToast(lang === 'zh' ? '已复制 Bearer Token' : 'Bearer Token copied');
+      } catch (e) { showToast(e.message, true); }
+    };
+
+    $('gwCopyJsonBtn').onclick = async () => {
+      const ep = state && state.gateway && state.gateway.mcp_endpoint;
+      if (!ep) return;
+      try {
+        const creds = await ensureRevealedCreds();
+        const snippet = JSON.stringify({
+          mcpServers: {
+            'omni-mcp-local': {
+              url: ep,
+              headers: {
+                Authorization: 'Bearer ' + creds.bearer_token
+              }
+            }
+          }
+        }, null, 2);
+        await navigator.clipboard.writeText(snippet);
+        showToast(lang === 'zh' ? '已复制 Cursor / Claude Desktop MCP JSON 配置' : 'Client MCP JSON copied');
+      } catch (e) { showToast(e.message, true); }
+    };
+
+    $('gwRotateCredsBtn').onclick = async () => {
+      try {
+        const res = await api('/api/gateway/rotate', { method: 'POST' });
+        if (res.credentials) {
+          revealedCreds = res.credentials;
+          credsVisible = true;
+        }
+        if (res.snapshot) renderState(res.snapshot, false);
+        showToast(lang === 'zh' ? '已重置 OAuth 密码与 Bearer 令牌' : 'Credentials rotated');
+      } catch (e) { showToast(e.message, true); }
+    };
+
+    $('gwClearNgrokBtn').onclick = async () => {
+      try {
+        renderState(await api('/api/gateway/clear-tunnel-token', { method: 'POST', body: JSON.stringify({ provider: 'ngrok' }) }), false);
+        showToast(lang === 'zh' ? '已清除保存的 ngrok Authtoken' : 'Saved ngrok Authtoken cleared');
+      } catch (e) { showToast(e.message, true); }
+    };
+
+    $('gwClearCfBtn').onclick = async () => {
+      try {
+        renderState(await api('/api/gateway/clear-tunnel-token', { method: 'POST', body: JSON.stringify({ provider: 'cloudflare_named' }) }), false);
+        showToast(lang === 'zh' ? '已清除保存的 Cloudflare Tunnel Token' : 'Saved Cloudflare Token cleared');
+      } catch (e) { showToast(e.message, true); }
+    };
 
     $('toggleConnBtn').onclick = async () => {
+      if (activeMode === 'gateway') {
+        await handleGatewayPrimaryToggle();
+        return;
+      }
       const isPairing = state && state.state === 'pairing';
       const active = state && (state.state === 'connected' || state.state === 'connecting' || state.state === 'reconnecting');
       try {
