@@ -1,430 +1,1153 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>设备管理中心 · Omni MCP Hub</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>设备管理中心 · omni-mcp</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20fill%3D%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22omni-ring%22%20x1%3D%228%22%20y1%3D%228%22%20x2%3D%2256%22%20y2%3D%2256%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%236A0085%22%20%2F%3E%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%239A24B8%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23FF78C8%22%20%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22omni-core%22%20x1%3D%2222%22%20y1%3D%2222%22%20x2%3D%2242%22%20y2%3D%2242%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230D0D0D%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%233B074C%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2256%22%20height%3D%2256%22%20rx%3D%2216%22%20fill%3D%22%230D0D0D%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2219%22%20stroke%3D%22url(%23omni-ring)%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%20stroke-dasharray%3D%2292%2028%22%20transform%3D%22rotate(-24%2032%2032)%22%20%2F%3E%3Cpath%20d%3D%22M32%2032%20L18.5%2023.5%20M32%2032%20L45.5%2023.5%20M32%2032%20L32%2048%22%20stroke%3D%22%23FFC9FF%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.88%22%20%2F%3E%3Ccircle%20cx%3D%2218.5%22%20cy%3D%2223.5%22%20r%3D%224.2%22%20fill%3D%22%23FFFFFF%22%20%2F%3E%3Ccircle%20cx%3D%2245.5%22%20cy%3D%2223.5%22%20r%3D%224.2%22%20fill%3D%22%23FFC9FF%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2248%22%20r%3D%224.2%22%20fill%3D%22%23FFFFFF%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%227.5%22%20fill%3D%22url(%23omni-core)%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%222.6%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%222.4%22%20fill%3D%22%23FFC9FF%22%20%2F%3E%3C%2Fsvg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
-    try {
-      var t = localStorage.getItem('omni-steep-theme');
-      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
-    } catch (e) {}
+    (function () {
+      try {
+        var saved = localStorage.getItem("omni-theme") || localStorage.getItem("omni-steep-theme");
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.setAttribute("data-theme", saved);
+        } else {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      } catch (e) {}
+    })();
   </script>
   <style>
-    :root, [data-theme="light"] {
-      --bg: #ffffff;
-      --surface: #fafafb;
-      --surface-band: #f7f7f8;
-      --header-bg: rgba(255, 255, 255, 0.82);
-      --border: #e7e8ea;
-      --border-strong: #d4d6dc;
-      --ink: #17191c;
-      --text: #17191c;
-      --text-secondary: #5e626d;
-      --text-muted: #777b86;
-      --text-faint: #a3a6af;
-      --btn-primary-bg: #17191c;
-      --btn-primary-fg: #ffffff;
-      --btn-primary-hover: #2d3036;
-      --btn-ghost-bg: rgba(23, 25, 28, 0.045);
-      --btn-ghost-hover: rgba(23, 25, 28, 0.085);
-      --ok: #1f7a4d;
-      --ok-dot: #1f9d60;
-      --danger: #b42318;
-      --danger-bg: rgba(180, 35, 24, 0.08);
-      --danger-border: rgba(180, 35, 24, 0.22);
-      --hero-glow: radial-gradient(68% 95% at 20% 10%, rgba(211, 227, 252, 0.65) 0%, rgba(211, 227, 252, 0) 64%),
-                   radial-gradient(58% 90% at 86% 18%, rgba(251, 225, 209, 0.72) 0%, rgba(251, 225, 209, 0) 62%);
-      --pair-glow: linear-gradient(135deg, rgba(211, 227, 252, 0.58) 0%, rgba(251, 225, 209, 0.45) 100%);
-      --font-serif: "Newsreader", "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", "Segoe UI", sans-serif;
-      --font-mono: ui-monospace, "Cascadia Mono", SFMono-Regular, Menlo, Consolas, monospace;
-    }
-    [data-theme="dark"] {
-      --bg: #121212;
-      --surface: #1a1a1a;
-      --surface-band: #1e1e1e;
-      --header-bg: rgba(34, 34, 34, 0.78);
-      --border: #252525;
-      --border-strong: #343434;
-      --ink: #ffffff;
-      --text: #e7e7e7;
-      --text-secondary: #a0a0a0;
-      --text-muted: #898989;
-      --text-faint: #6c6c6c;
-      --btn-primary-bg: #ffffff;
-      --btn-primary-fg: #000000;
-      --btn-primary-hover: #e7e7e7;
-      --btn-ghost-bg: rgba(255, 255, 255, 0.05);
-      --btn-ghost-hover: rgba(255, 255, 255, 0.1);
-      --ok: #5cd69a;
-      --ok-dot: #34d399;
+    :root, [data-theme="dark"] {
+      --bg: #09090b;
+      --surface: #111115;
+      --surface-alt: #18181d;
+      --surface-code: #09090c;
+      --header-bg: rgba(9, 9, 11, 0.86);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --fg: #fafafa;
+      --text: #a1a1aa;
+      --muted: #71717a;
+      --cta-bg: #fafafa;
+      --cta-hover: #e4e4e7;
+      --cta-fg: #09090b;
+      --accent: #c084fc;
+      --accent-bright: #d8b4fe;
+      --accent-ink: #09090b;
+      --accent-soft: rgba(192, 132, 252, 0.09);
+      --accent-border: rgba(192, 132, 252, 0.26);
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, 0.10);
+      --warn-border: rgba(251, 191, 36, 0.26);
       --danger: #f87171;
-      --danger-bg: rgba(248, 113, 113, 0.1);
-      --danger-border: rgba(248, 113, 113, 0.26);
-      --hero-glow: radial-gradient(64% 92% at 50% -10%, rgba(77, 47, 135, 0.34) 0%, rgba(21, 16, 30, 0.45) 48%, rgba(18, 18, 18, 0) 78%);
-      --pair-glow: linear-gradient(135deg, rgba(77, 47, 135, 0.24) 0%, rgba(21, 16, 30, 0.55) 100%);
+      --danger-soft: rgba(239, 68, 68, 0.10);
+      --danger-border: rgba(239, 68, 68, 0.28);
+      --glow: rgba(154, 36, 184, 0.15);
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
-    * { box-sizing: border-box; }
+
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-alt: #f4f4f5;
+      --surface-code: #f8f8fa;
+      --header-bg: rgba(250, 250, 250, 0.88);
+      --border: #e4e4e7;
+      --border-strong: #d4d4d8;
+      --fg: #09090b;
+      --text: #3f3f46;
+      --muted: #71717a;
+      --cta-bg: #09090b;
+      --cta-hover: #27272a;
+      --cta-fg: #ffffff;
+      --accent: #9333ea;
+      --accent-bright: #7e22ce;
+      --accent-ink: #ffffff;
+      --accent-soft: rgba(147, 51, 234, 0.07);
+      --accent-border: rgba(147, 51, 234, 0.24);
+      --ok: #16a34a;
+      --warn: #d97706;
+      --warn-soft: rgba(217, 119, 6, 0.08);
+      --warn-border: rgba(217, 119, 6, 0.26);
+      --danger: #dc2626;
+      --danger-soft: rgba(220, 38, 38, 0.08);
+      --danger-border: rgba(220, 38, 38, 0.26);
+      --glow: rgba(154, 36, 184, 0.07);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
-      font-family: var(--font-sans); font-size: 14px; line-height: 1.55;
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      background-image: radial-gradient(920px 360px at 50% -120px, var(--glow), transparent 72%);
+      color: var(--fg);
+      line-height: 1.55;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       -webkit-font-smoothing: antialiased;
-      transition: background-color 180ms ease, color 180ms ease;
     }
-    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* 3-Zone Top Bar */
     .topbar {
-      position: sticky; top: 0; z-index: 20; height: 60px;
-      background: var(--header-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
     .topbar-inner {
-      max-width: 1040px; height: 100%; margin: 0 auto; padding: 0 28px;
-      display: flex; align-items: center; justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
     }
-    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
-    .mark {
-      width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--bg);
-      display: grid; place-items: center;
+    .brand-mark {
+      font-size: 15.5px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .brand-name { font-size: 14.5px; font-weight: 500; letter-spacing: -0.015em; }
-    .brand-sep { color: var(--text-faint); margin: 0 4px; }
-    .brand-sub { font-size: 13.5px; color: var(--text-muted); }
-    .top-actions { display: flex; align-items: center; gap: 8px; }
-    .user-label { font-size: 12.5px; color: var(--text-muted); padding-right: 4px; }
+    .topnav {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+    }
+    .topnav a {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 0.15s ease;
+    }
+    .topnav a:hover { color: var(--fg); text-decoration: underline; text-underline-offset: 4px; }
+    .logout-btn {
+      height: 34px;
+      padding: 0 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
 
+    /* Main Workspace */
+    main { flex: 1; padding: 32px 0 48px; }
+    .head-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .head-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .head-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.028em;
+      color: var(--fg);
+    }
+    .head-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      height: 32px; padding: 0 14px; border-radius: 999px; font: 450 13px/1 var(--font-sans);
-      border: 1px solid var(--border); background: var(--btn-ghost-bg); color: var(--text);
-      cursor: pointer; text-decoration: none; transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
     }
-    .btn:hover { background: var(--btn-ghost-hover); border-color: var(--border-strong); }
-    .btn-lg { height: 40px; padding: 0 20px; font-size: 13.5px; }
-    .btn-icon { width: 32px; padding: 0; }
-    .btn-primary { background: var(--btn-primary-bg); border-color: var(--btn-primary-bg); color: var(--btn-primary-fg); font-weight: 500; }
-    .btn-primary:hover { background: var(--btn-primary-hover); border-color: var(--btn-primary-hover); }
-    .btn-danger { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); }
-    .btn-danger:hover, .btn-danger-solid { background: var(--danger); border-color: var(--danger); color: #ffffff; }
-
-    .atmosphere { background: var(--hero-glow); border-bottom: 1px solid var(--border); }
-    .hero {
-      max-width: 1040px; margin: 0 auto; padding: 38px 28px 30px;
-      display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    .btn:hover { border-color: var(--border-strong); background: var(--surface-alt); }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 700;
     }
-    .hero h1 {
-      margin: 0 0 8px; font-family: var(--font-serif); font-size: 38px; font-weight: 400;
-      line-height: 1.14; letter-spacing: -0.025em; color: var(--ink);
+    .btn-primary:hover { opacity: 0.92; }
+    .btn-danger {
+      border-color: var(--danger-border);
+      background: var(--danger-soft);
+      color: var(--danger);
     }
-    .hero p { margin: 0; font-size: 14.5px; color: var(--text-secondary); max-width: 560px; }
-    .metrics { display: flex; gap: 32px; }
-    .metric { text-align: right; }
-    .metric-val { font-family: var(--font-serif); font-size: 34px; line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
-    .metric-lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .btn-danger-solid {
+      border-color: var(--danger);
+      background: var(--danger);
+      color: #ffffff;
+    }
 
-    .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 28px 64px; }
-    .section { margin-bottom: 36px; }
-    .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
-    .section-title { font-family: var(--font-serif); font-size: 24px; font-weight: 400; letter-spacing: -0.02em; color: var(--ink); }
-    .section-meta { font-size: 12.5px; color: var(--text-faint); }
+    /* Overview Strip */
+    .blueprint-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .topo-bar {
+      padding: 11px 20px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .topo-bar strong { color: var(--fg); font-weight: 600; }
+    .topo-accent { color: var(--accent-bright); font-weight: 600; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .kpi-cell {
+      padding: 18px 20px;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+    }
+    .kpi-cell:last-child { border-right: none; }
+    .kpi-lbl {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .kpi-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--fg);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .kpi-val.is-emerald { color: var(--ok); }
+    .kpi-val.is-amber { color: var(--warn); }
+    .kpi-sub {
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .text-btn {
+      border: none;
+      background: none;
+      color: var(--accent-bright);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .text-btn:hover { text-decoration: underline; }
 
+    /* Pending Pairing Requests Deck */
+    .pending-deck {
+      margin-bottom: 24px;
+      background: var(--surface);
+      border: 1px solid var(--accent-border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .pending-head {
+      padding: 13px 20px;
+      background: var(--accent-soft);
+      border-bottom: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-bright);
+    }
+    .pending-list {
+      display: flex;
+      flex-direction: column;
+    }
     .pair-card {
-      background: var(--pair-glow), var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 24px 28px; margin-bottom: 14px;
-      display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
     }
-    .pair-left { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 260px; }
-    .pair-code-box {
-      padding: 12px 18px; border-radius: 14px; background: var(--bg);
-      border: 1px solid var(--border); text-align: center; min-width: 148px;
+    .pair-card:last-child { border-bottom: none; }
+    .pair-card.is-target { background: var(--accent-soft); }
+    .pair-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 18px;
     }
-    .pair-code-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-    .pair-code { font-size: 20px; font-weight: 500; letter-spacing: 0.1em; color: var(--ink); }
-    .pair-info h3 { margin: 0 0 4px; font-family: var(--font-serif); font-size: 24px; font-weight: 400; color: var(--ink); }
-    .pair-meta { font-size: 13px; color: var(--text-secondary); display: flex; gap: 16px; flex-wrap: wrap; }
+    .pair-ticket {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--accent-border);
+    }
+    .pair-ticket-lbl { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .pair-ticket-code { font-size: 21px; font-weight: 700; letter-spacing: 0.08em; color: var(--accent-bright); }
+    .pair-info h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--fg);
+      margin-bottom: 4px;
+    }
+    .target-note { font-size: 12px; font-weight: 600; color: var(--accent-bright); margin-left: 6px; }
+    .pair-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text);
+    }
     .pair-actions { display: flex; align-items: center; gap: 10px; }
 
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 8px 20px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; font-size: 12px; font-weight: 500; color: var(--text-faint); padding: 12px 12px; border-bottom: 1px solid var(--border); }
-    td { padding: 16px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 13.5px; }
-    tr:last-child td { border-bottom: 0; }
-    .dev-name { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--ink); }
-    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .dot.online { background: var(--ok-dot); box-shadow: 0 0 0 4px rgba(31, 157, 96, 0.16); }
-    .dot.offline { background: var(--text-faint); opacity: 0.5; }
-    .status-text.online { color: var(--ok); font-weight: 500; }
-    .status-text.offline { color: var(--text-muted); }
-    .sub-line { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
-    .cell-path { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+    /* Fleet Explorer Section */
+    .fleet-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .fleet-toolbar {
+      padding: 14px 20px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .toolbar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    .toolbar-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--fg);
+    }
+    .seg-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .seg-btn {
+      height: 28px;
+      padding: 0 11px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .seg-btn.active {
+      background: var(--surface);
+      color: var(--fg);
+    }
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .search-input {
+      height: 34px;
+      width: 220px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 12.5px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
 
-    .empty { padding: 48px 20px; text-align: center; }
-    .empty h3 { margin: 0 0 6px; font-family: var(--font-serif); font-size: 22px; font-weight: 400; color: var(--ink); }
-    .empty p { margin: 0 auto; max-width: 480px; font-size: 13.5px; color: var(--text-muted); }
-
-    .notice-bar {
-      padding-top: 20px; border-top: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      font-size: 12.5px; color: var(--text-faint); flex-wrap: wrap;
+    /* Node Cards Grid */
+    .node-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .node-card {
+      padding: 20px 22px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      min-width: 0;
+    }
+    .node-card:nth-child(2n) { border-right: none; }
+    .nc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .nc-id {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+    .nc-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .nc-icon.is-online {
+      border-color: var(--accent-border);
+      color: var(--accent-bright);
+    }
+    .nc-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--fg);
+    }
+    .nc-state {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .nc-state.online { color: var(--accent-bright); font-weight: 600; }
+    .nc-specs {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .nc-spec-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .nc-spec-k { color: var(--muted); flex-shrink: 0; }
+    .nc-spec-v {
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 72%;
+      text-align: right;
     }
 
+    /* Table Mode */
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      padding: 11px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      white-space: nowrap;
+    }
+    td {
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface-alt); }
+    .dev-name { font-weight: 700; color: var(--fg); font-size: 13.5px; }
+    .status-cell.online { color: var(--accent-bright); font-weight: 600; }
+    .status-cell.offline { color: var(--muted); }
+    .sub-line { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .cell-path {
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .empty {
+      padding: 44px 24px;
+      text-align: center;
+    }
+    .empty h3 { font-size: 15px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
+    .empty p { font-size: 13px; color: var(--muted); max-width: 52ch; margin: 0 auto; }
+
+    /* Multi-Platform Onboarding Workbench */
+    .onboard-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .onboard-head {
+      padding: 16px 20px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .onboard-body {
+      background: var(--surface-code);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .onboard-pre {
+      color: #e2e8f0;
+      font-size: 12.5px;
+      line-height: 1.65;
+      overflow-x: auto;
+      white-space: pre;
+      flex: 1;
+    }
+    .copy-dark-btn {
+      height: 32px;
+      padding: 0 13px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.07);
+      color: #f8fafc;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .copy-dark-btn:hover { border-color: #34d399; color: #34d399; }
+
+    /* Toast & Footer */
     .toast {
-      position: fixed; right: 24px; bottom: 24px; z-index: 50;
-      padding: 11px 18px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 13px;
-      opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 160ms ease, transform 160ms ease;
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 60;
+      padding: 10px 16px;
+      border-radius: 9px;
+      background: var(--surface-alt);
+      border: 1px solid var(--accent-border);
+      color: var(--fg);
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.err { background: var(--danger); color: #ffffff; }
-    @media (max-width: 760px) {
-      .topbar-inner, .hero, .wrap { padding-left: 16px; padding-right: 16px; }
+    .toast.is-err { border-color: var(--danger-border); color: var(--danger); }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 18px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .footer a { color: var(--text); text-decoration: none; }
+    .footer a:hover { color: var(--accent-bright); }
+
+    @media (max-width: 940px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-cell:nth-child(2) { border-right: none; }
+      .kpi-cell:nth-child(1), .kpi-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
+      .node-cards-grid { grid-template-columns: 1fr; }
+      .node-card { border-right: none; }
       .hide-sm { display: none; }
-      .hero h1 { font-size: 30px; }
+    }
+    @media (max-width: 680px) {
+      .topnav { display: none; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .kpi-cell { border-right: none; border-bottom: 1px solid var(--border); }
+      .kpi-cell:last-child { border-bottom: none; }
+      .search-input { width: 100%; }
+      .onboard-body { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="/">
-        <span class="mark" aria-hidden="true">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3L3 19h18L12 3z" />
-          </svg>
-        </span>
-        <span class="brand-name">Omni MCP Hub</span>
-        <span class="brand-sep">/</span>
-        <span class="brand-sub">设备管理</span>
-      </a>
-      <div class="top-actions">
-        <span class="user-label" id="userLabel">__OMNI_PORTAL_USER__</span>
-        <button class="btn btn-icon" id="themeBtn" title="切换深浅主题" aria-label="切换主题">
-          <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-          </svg>
-        </button>
-        <a class="btn" href="/">首页</a>
-        <button class="btn" id="logoutBtn" style="display:none;">退出</button>
-      </div>
+      <a href="/" class="brand-mark">omni-mcp · 设备管理中心</a>
+
+      <nav class="topnav" aria-label="页面导航">
+        <a href="#overview">机群态势</a>
+        <a href="#fleet">受控节点</a>
+        <a href="#onboarding">新增配对</a>
+        <a href="/">返回 Hub 首页</a>
+      </nav>
+
+      <button type="button" id="logoutBtn" class="logout-btn">退出 (__OMNI_PORTAL_USER__)</button>
     </div>
   </header>
 
-  <section class="atmosphere">
-    <div class="hero">
-      <div>
-        <h1>已接入设备与一键配对</h1>
-        <p>在任意 Windows、macOS 或 Linux 客户端填写自定义设备名并点击连接，即可在此核对验证码一键批准接入，无需 SSH 配置密钥。</p>
-      </div>
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-val" id="metricOnline">0</div>
-          <div class="metric-lbl">当前在线</div>
+  <main class="container">
+    <section id="overview">
+      <div class="head-row">
+        <div>
+          <div class="head-meta mono">
+            <span>管理员 __OMNI_PORTAL_USER__</span>
+            <span aria-hidden="true">·</span>
+            <span>版本 __OMNI_PORTAL_VERSION__</span>
+            <span aria-hidden="true">·</span>
+            <span id="pollHeartbeatText">每 2.5s 自动同步</span>
+          </div>
+          <h1 class="head-title">跨端设备配对与访问凭证指挥台</h1>
         </div>
-        <div class="metric">
-          <div class="metric-val" id="metricTotal">0</div>
-          <div class="metric-lbl">已授权设备</div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <main class="wrap">
-    <section class="section" id="pendingSection" style="display:none;">
-      <div class="section-head">
-        <div class="section-title">待审批接入请求</div>
-        <div class="section-meta">请核对客户端显示的 8 位验证码</div>
+        <div class="head-controls">
+          <button type="button" id="themeBtn" class="btn" aria-label="切换深浅色主题">
+            <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+            <span id="themeTextLabel">浅色</span>
+          </button>
+          <button type="button" id="refreshBtn" class="btn">立即刷新</button>
+        </div>
       </div>
-      <div id="pendingList"></div>
+
+      <div class="blueprint-box">
+        <div class="topo-bar mono">
+          <div>
+            <strong>Agent 节点 (Windows / macOS / Linux)</strong>
+            <span> ── 反向 WSS 长连接 ──▶ </span>
+            <span class="topo-accent" id="topoBaseUrl">__OMNI_PORTAL_BASE__/agent/ws</span>
+          </div>
+          <span>独立令牌签发 · 单点秒级吊销</span>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-cell">
+            <div class="kpi-lbl">实时在线节点</div>
+            <div id="kpiOnline" class="kpi-val mono is-emerald">0</div>
+            <div class="kpi-sub">活跃反向 WebSocket 隧道</div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-lbl">待核准配对请求</div>
+            <div id="kpiPending" class="kpi-val mono">0</div>
+            <div class="kpi-sub">一次性八位验证码核验</div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-lbl">已登记受控设备</div>
+            <div id="kpiTotal" class="kpi-val mono">0</div>
+            <div class="kpi-sub">含 Hub 配对与静态凭证节点</div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-lbl">
+              <span>Hub 接入根地址</span>
+              <button type="button" id="copyHubBaseBtn" class="text-btn">复制地址</button>
+            </div>
+            <div id="kpiBaseUrl" class="kpi-val mono" style="font-size:15px;padding-top:4px;" title="__OMNI_PORTAL_BASE__">__OMNI_PORTAL_BASE__</div>
+            <div class="kpi-sub">粘贴至桌面端或 --hub 参数</div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <div class="section-title">已授权设备</div>
-        <div class="section-meta" id="syncMeta">自动同步中</div>
+    <!-- Pending Pairing Approval Deck -->
+    <section id="pendingSection" class="pending-deck" style="display:none;" aria-label="待核准配对请求">
+      <div class="pending-head">
+        <span>收到新的设备接入申请 — 请核对终端显示的八位配对码后批准</span>
+        <span id="pendingBadgeCount" class="mono">1 项待处理</span>
       </div>
-      <div class="panel">
-        <div id="devicesContainer"></div>
-      </div>
+      <div id="pendingList" class="pending-list"></div>
     </section>
 
-    <div class="notice-bar">
-      <span>接入流程：打开客户端 → 填写 Hub 地址、自定义设备名并选定工作目录 → 点击「保存并连接」→ 在本页点击「批准接入」。</span>
-      <span class="mono">__OMNI_PORTAL_VERSION__</span>
-    </div>
+    <!-- Fleet Explorer -->
+    <section id="fleet" class="fleet-box">
+      <div class="fleet-toolbar">
+        <div class="toolbar-left">
+          <span class="toolbar-title">已纳管设备矩阵</span>
+          <div class="seg-group" role="tablist" aria-label="在线状态筛选">
+            <button type="button" class="seg-btn active" data-status-filter="all">全部</button>
+            <button type="button" class="seg-btn" data-status-filter="online">在线</button>
+            <button type="button" class="seg-btn" data-status-filter="offline">离线</button>
+          </div>
+          <span id="filteredCountMeta" class="mono" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="seg-group" role="tablist" aria-label="展示布局切换">
+            <button type="button" class="seg-btn active" data-view-mode="cards">卡片拓扑</button>
+            <button type="button" class="seg-btn" data-view-mode="table">紧凑列表</button>
+          </div>
+          <input type="search" id="deviceSearch" class="search-input" placeholder="搜索设备名、系统或路径…" aria-label="搜索设备">
+        </div>
+      </div>
+
+      <div id="devicesContainer"></div>
+    </section>
+
+    <!-- Multi-Platform Onboarding Workbench -->
+    <section id="onboarding" class="onboard-box">
+      <div class="onboard-head">
+        <div>
+          <div class="toolbar-title">接入新电脑或服务器节点</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">无需开放入站端口或配置 SSH，启动客户端后本页顶部将自动弹出批准卡片。</div>
+        </div>
+        <div class="seg-group" role="tablist" aria-label="平台启动指令">
+          <button type="button" class="seg-btn active" data-os-tab="gui">桌面图形端</button>
+          <button type="button" class="seg-btn" data-os-tab="linux">Linux / macOS</button>
+          <button type="button" class="seg-btn" data-os-tab="win">Windows PowerShell</button>
+          <button type="button" class="seg-btn" data-os-tab="systemd">后台常驻</button>
+        </div>
+      </div>
+
+      <div class="onboard-body">
+        <pre id="cliOnboardCmd" class="onboard-pre mono"></pre>
+        <button type="button" id="copyCmdBtn" class="copy-dark-btn">复制指令</button>
+      </div>
+    </section>
   </main>
 
-  <div class="toast" id="toast"></div>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>omni-mcp 设备管理中心 · CSRF 双重令牌校验与 HttpOnly 会话隔离</span>
+      <a href="/" class="mono">← 返回 Hub 控制台首页</a>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
     const CSRF_TOKEN = "__OMNI_PORTAL_CSRF__";
-    const TARGET_CODE = (new URLSearchParams(location.search).get("code") || "").toUpperCase();
-    let confirmRevokeName = "";
-    let confirmTimer = null;
+    let PORTAL_BASE = "__OMNI_PORTAL_BASE__";
+    const TARGET_CODE = (new URLSearchParams(location.search).get("code") || "").toUpperCase().trim();
+
+    if (!PORTAL_BASE || PORTAL_BASE.indexOf("__OMNI_") === 0) {
+      PORTAL_BASE = location.origin;
+    }
+
     let latestState = null;
+    let statusFilter = "all";
+    let viewMode = "cards";
+    let osTab = "gui";
+    let searchQuery = "";
+    let confirmRevokeName = null;
+    let confirmRevokeTimer = null;
 
-    function esc(str) {
-      return String(str == null ? "" : str)
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
     }
 
-    function showToast(msg, isErr) {
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.className = "toast show" + (isErr ? " err" : "");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => { el.className = "toast"; }, 3200);
+    function showToast(msg, isErr = false) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast show" + (isErr ? " is-err" : "");
+      clearTimeout(showToast._tm);
+      showToast._tm = setTimeout(() => { t.className = "toast"; }, 2400);
     }
 
-    function fmtRelTime(iso) {
-      if (!iso) return "尚未上线";
-      const d = new Date(iso);
-      if (isNaN(d.getTime())) return "—";
-      const diff = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
-      if (diff < 60) return "刚刚";
-      if (diff < 3600) return Math.floor(diff / 60) + " 分钟前";
-      if (diff < 86400) return Math.floor(diff / 3600) + " 小时前";
-      return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    }
-
-    function fmtRemain(iso) {
-      const ms = new Date(iso).getTime() - Date.now();
-      if (isNaN(ms) || ms <= 0) return "即将过期";
-      const s = Math.ceil(ms / 1000);
-      const m = Math.floor(s / 60);
-      const r = s % 60;
-      return m > 0 ? ("剩余 " + m + " 分 " + r + " 秒") : ("剩余 " + r + " 秒");
-    }
-
-    async function apiPost(path, body) {
-      const res = await fetch(path, {
+    async function apiPost(url, payload) {
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Omni-CSRF": CSRF_TOKEN },
-        body: JSON.stringify(body || {})
+        headers: {
+          "Content-Type": "application/json",
+          "X-Omni-CSRF": CSRF_TOKEN
+        },
+        body: JSON.stringify(payload || {})
       });
       const data = await res.json().catch(() => ({}));
-      if (res.status === 401) { location.reload(); return null; }
-      if (!res.ok) throw new Error(data.error || ("请求失败 (" + res.status + ")"));
+      if (!res.ok) {
+        throw new Error(data.error || ("HTTP " + res.status));
+      }
       return data;
+    }
+
+    function fmtRemain(expStr) {
+      if (!expStr) return "即将过期";
+      const diff = Math.max(0, Math.floor((new Date(expStr).getTime() - Date.now()) / 1000));
+      if (diff <= 0) return "已到期";
+      const m = Math.floor(diff / 60);
+      const s = diff % 60;
+      return "剩余 " + m + "m " + String(s).padStart(2, "0") + "s";
+    }
+
+    function fmtRelTime(isoStr) {
+      if (!isoStr) return "从未连接";
+      const t = new Date(isoStr).getTime();
+      if (!t || isNaN(t) || t < 946684800000) return "尚未上线";
+      const sec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+      if (sec < 60) return sec + " 秒前离线";
+      if (sec < 3600) return Math.floor(sec / 60) + " 分钟前离线";
+      if (sec < 86400) return Math.floor(sec / 3600) + " 小时前离线";
+      return Math.floor(sec / 86400) + " 天前离线";
+    }
+
+    function osIconSvg(osName) {
+      const lower = String(osName || "").toLowerCase();
+      if (lower.includes("win")) {
+        return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>';
+      }
+      if (lower.includes("darwin") || lower.includes("mac")) {
+        return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>';
+      }
+      return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3"/><path d="M13 15h4"/></svg>';
     }
 
     async function approvePair(code) {
       try {
-        const state = await apiPost("/agents/api/approve", { code });
-        if (state) {
-          render(state);
-          showToast("已批准接入，客户端将自动完成加密配对并上线");
-          if (TARGET_CODE && TARGET_CODE === code) history.replaceState(null, "", "/agents");
-        }
-      } catch (err) { showToast(err.message, true); }
+        const next = await apiPost("/agents/api/approve", { code });
+        showToast("已批准配对请求 " + code);
+        render(next);
+      } catch (err) {
+        showToast(err.message, true);
+      }
     }
 
     async function rejectPair(code) {
       try {
-        const state = await apiPost("/agents/api/reject", { code });
-        if (state) { render(state); showToast("已拒绝该配对请求"); }
-      } catch (err) { showToast(err.message, true); }
+        const next = await apiPost("/agents/api/reject", { code });
+        showToast("已拒绝配对请求 " + code);
+        render(next);
+      } catch (err) {
+        showToast(err.message, true);
+      }
     }
 
     async function revokeDevice(name) {
       if (confirmRevokeName !== name) {
         confirmRevokeName = name;
-        clearTimeout(confirmTimer);
-        confirmTimer = setTimeout(() => { confirmRevokeName = ""; if (latestState) render(latestState); }, 4500);
+        clearTimeout(confirmRevokeTimer);
+        confirmRevokeTimer = setTimeout(() => {
+          confirmRevokeName = null;
+          if (latestState) render(latestState);
+        }, 4000);
         if (latestState) render(latestState);
         return;
       }
-      confirmRevokeName = "";
+      confirmRevokeName = null;
+      clearTimeout(confirmRevokeTimer);
       try {
-        const state = await apiPost("/agents/api/revoke", { name });
-        if (state) { render(state); showToast("已吊销设备 " + name + " 并断开连接"); }
-      } catch (err) { showToast(err.message, true); }
+        const next = await apiPost("/agents/api/revoke", { name });
+        showToast("已吊销设备凭证: " + name);
+        render(next);
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    }
+
+    function renderOnboardCmd() {
+      const base = PORTAL_BASE || location.origin;
+      const map = {
+        gui: [
+          "# 1. 在你的电脑上启动图形桌面控制台（自动打开浏览器向导）：",
+          "omni-mcp agent-ui",
+          "",
+          "# 2. 在控制台填入以下 Hub 地址并选择授权工作目录，点击「发起一键配对」：",
+          base
+        ].join("\n"),
+        linux: [
+          "omni-mcp agent \\",
+          "  --hub " + base + " \\",
+          "  --name my-workstation \\",
+          "  --allow-dir ~/projects"
+        ].join("\n"),
+        win: [
+          ".\\omni-mcp.exe agent `",
+          "  --hub " + base + " `",
+          "  --name office-win `",
+          "  --allow-dir D:\\project"
+        ].join("\n"),
+        systemd: [
+          "# 配对批准一次后，凭证自动加密持久化，可直接通过后台常驻运行：",
+          "nohup omni-mcp agent --hub " + base + " --name dev-box --allow-dir /srv/work > /tmp/omni-agent.log 2>&1 &"
+        ].join("\n")
+      };
+      const el = document.getElementById("cliOnboardCmd");
+      if (el) el.textContent = map[osTab] || map.gui;
     }
 
     function render(state) {
-      latestState = state;
-      const pending = state.pending || [];
-      const devices = state.devices || [];
-      document.getElementById("metricOnline").textContent = String(devices.filter(d => d.online).length);
-      document.getElementById("metricTotal").textContent = String(devices.length);
-      document.getElementById("logoutBtn").style.display = state.auth_enabled ? "" : "none";
-      document.getElementById("syncMeta").textContent = "已同步 · " + new Date().toLocaleTimeString([], { hour12: false });
+      latestState = state || {};
+      const pending = Array.isArray(state.pending) ? state.pending : [];
+      const devices = Array.isArray(state.devices) ? state.devices : [];
+      const onlineCount = devices.filter(d => d.online).length;
 
+      document.getElementById("kpiOnline").textContent = String(onlineCount);
+      const pendingKpi = document.getElementById("kpiPending");
+      pendingKpi.textContent = String(pending.length);
+      pendingKpi.className = "kpi-val mono" + (pending.length > 0 ? " is-amber" : "");
+      document.getElementById("kpiTotal").textContent = String(devices.length);
+
+      const resolvedBase = (state.base_url || PORTAL_BASE || location.origin).replace(/\/+$/, "");
+      if (resolvedBase) {
+        PORTAL_BASE = resolvedBase;
+        const baseEl = document.getElementById("kpiBaseUrl");
+        if (baseEl) {
+          baseEl.textContent = resolvedBase;
+          baseEl.title = resolvedBase;
+        }
+        const topoEl = document.getElementById("topoBaseUrl");
+        if (topoEl) {
+          topoEl.textContent = resolvedBase + "/agent/ws";
+        }
+        renderOnboardCmd();
+      }
+
+      // Pending Pairings
       const pendingSec = document.getElementById("pendingSection");
       const pendingList = document.getElementById("pendingList");
+      const pendingBadge = document.getElementById("pendingBadgeCount");
       if (!pending.length) {
         pendingSec.style.display = "none";
         pendingList.innerHTML = "";
       } else {
         pendingSec.style.display = "";
+        if (pendingBadge) pendingBadge.textContent = pending.length + " 项待处理";
         const sorted = [...pending].sort((a, b) => (b.code === TARGET_CODE ? 1 : 0) - (a.code === TARGET_CODE ? 1 : 0));
-        pendingList.innerHTML = sorted.map(p => `
-          <div class="pair-card">
-            <div class="pair-left">
-              <div class="pair-code-box">
-                <div class="pair-code-lbl">配对验证码</div>
-                <div class="pair-code mono">${esc(p.code)}</div>
-              </div>
-              <div class="pair-info">
-                <h3>${esc(p.name)}</h3>
-                <div class="pair-meta">
-                  <span>系统：${esc(p.os || "unknown")}</span>
-                  <span>来源 IP：<span class="mono">${esc(p.remote_ip || "—")}</span></span>
-                  <span>${esc(fmtRemain(p.expires_at))}</span>
+        pendingList.innerHTML = sorted.map(p => {
+          const isTarget = TARGET_CODE && p.code === TARGET_CODE;
+          return `
+            <div class="pair-card${isTarget ? " is-target" : ""}">
+              <div class="pair-left">
+                <div class="pair-ticket">
+                  <div class="pair-ticket-lbl">配对验证码</div>
+                  <div class="pair-ticket-code mono">${esc(p.code)}</div>
+                </div>
+                <div class="pair-info">
+                  <h3>
+                    <span class="mono">${esc(p.name)}</span>
+                    ${isTarget ? '<span class="target-note">· 当前链接定位请求</span>' : ''}
+                  </h3>
+                  <div class="pair-meta">
+                    <span>系统 ${esc(p.os || "unknown")}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>来源 IP <span class="mono">${esc(p.remote_ip || "—")}</span></span>
+                    <span aria-hidden="true">·</span>
+                    <span class="mono">${esc(fmtRemain(p.expires_at))}</span>
+                  </div>
                 </div>
               </div>
+              <div class="pair-actions">
+                <button type="button" class="btn" data-reject="${esc(p.code)}">拒绝</button>
+                <button type="button" class="btn btn-primary" data-approve="${esc(p.code)}">批准接入</button>
+              </div>
             </div>
-            <div class="pair-actions">
-              <button class="btn btn-lg" data-reject="${esc(p.code)}">拒绝</button>
-              <button class="btn btn-lg btn-primary" data-approve="${esc(p.code)}">批准接入</button>
-            </div>
-          </div>
-        `).join("");
+          `;
+        }).join("");
         pendingList.querySelectorAll("[data-approve]").forEach(btn => btn.onclick = () => approvePair(btn.dataset.approve));
         pendingList.querySelectorAll("[data-reject]").forEach(btn => btn.onclick = () => rejectPair(btn.dataset.reject));
       }
 
+      // Devices Filtering
+      const filtered = devices.filter(d => {
+        if (statusFilter === "online" && !d.online) return false;
+        if (statusFilter === "offline" && d.online) return false;
+        if (searchQuery) {
+          const hay = ((d.name || "") + " " + (d.os || "") + " " + (d.workdir || "") + " " + (d.approved_by || "")).toLowerCase();
+          if (!hay.includes(searchQuery.toLowerCase())) return false;
+        }
+        return true;
+      });
+
+      document.getElementById("filteredCountMeta").textContent =
+        devices.length ? ("显示 " + filtered.length + " / " + devices.length + " 台") : "";
+
       const container = document.getElementById("devicesContainer");
       if (!devices.length) {
-        container.innerHTML = `<div class="empty"><h3>还没有已授权的设备</h3><p>在需要接入的电脑上启动 Omni MCP Agent，填写设备名称并点击连接，配对申请会立即出现在本页面顶部。</p></div>`;
+        container.innerHTML = `
+          <div class="empty">
+            <h3>尚未登记任何受控设备</h3>
+            <p>在需要接入的电脑上运行下方启动指令并发起一键配对，核准请求将实时显示在本页面上方。</p>
+          </div>
+        `;
         return;
       }
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>设备名称</th>
-              <th>状态</th>
-              <th class="hide-sm">平台与能力</th>
-              <th class="hide-sm">工作区</th>
-              <th class="hide-sm">授权方式</th>
-              <th style="text-align:right;">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${devices.map(d => {
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div class="empty">
+            <h3>未匹配到符合条件的节点</h3>
+            <p>请切换上方在线状态筛选或清空右侧搜索关键词。</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (viewMode === "cards") {
+        container.innerHTML = `
+          <div class="node-cards-grid">
+            ${filtered.map(d => {
               const isConfirm = confirmRevokeName === d.name;
-              const cap = d.online ? ((d.os || "—") + " · " + (d.allow_exec ? "文件 + 命令执行" : "仅文件读写")) : (d.os || "—");
-              const src = d.source === "hub" ? ("Hub 配对" + (d.approved_by ? (" · " + d.approved_by) : "")) : "静态环境变量";
+              const cap = d.online
+                ? ((d.os || "—") + " · " + (d.allow_exec ? "文件 + 终端执行" : "仅沙箱文件读写"))
+                : (d.os || "未上报系统信息");
+              const src = d.source === "hub"
+                ? ("Hub 配对签发" + (d.approved_by ? (" (" + d.approved_by + ")") : ""))
+                : "服务端静态配置 (agent.env)";
               const action = d.source === "hub"
-                ? `<button class="btn ${isConfirm ? "btn-danger-solid" : "btn-danger"}" data-revoke="${esc(d.name)}">${isConfirm ? "确认吊销？" : "吊销并断开"}</button>`
-                : `<span class="sub-line">agent.env</span>`;
+                ? `<button type="button" class="btn ${isConfirm ? "btn-danger-solid" : "btn-danger"}" data-revoke="${esc(d.name)}">${isConfirm ? "确认吊销？" : "吊销凭证"}</button>`
+                : `<span class="mono" style="font-size:11.5px;color:var(--muted)">静态只读</span>`;
               return `
-                <tr>
-                  <td><div class="dev-name"><span class="dot ${d.online ? "online" : "offline"}"></span><span class="mono">${esc(d.name)}</span></div></td>
-                  <td><div class="status-text ${d.online ? "online" : "offline"}">${d.online ? "在线" : "离线"}</div><div class="sub-line">${d.online ? "实时已连接" : esc(fmtRelTime(d.last_seen_at))}</div></td>
-                  <td class="hide-sm">${esc(cap)}</td>
-                  <td class="hide-sm"><div class="cell-path mono" title="${esc(d.workdir || "")}">${esc(d.workdir || "—")}</div></td>
-                  <td class="hide-sm">${esc(src)}</td>
-                  <td style="text-align:right;">${action}</td>
-                </tr>
+                <article class="node-card">
+                  <div class="nc-top">
+                    <div class="nc-id">
+                      <div class="nc-icon${d.online ? " is-online" : ""}">${osIconSvg(d.os)}</div>
+                      <div>
+                        <div class="nc-name mono">${esc(d.name)}</div>
+                        <div class="nc-state${d.online ? " online" : ""}">${d.online ? "在线 · 实时隧道活跃" : esc(fmtRelTime(d.last_seen_at))}</div>
+                      </div>
+                    </div>
+                    <div>${action}</div>
+                  </div>
+                  <div class="nc-specs">
+                    <div class="nc-spec-row">
+                      <span class="nc-spec-k">系统与执行能力</span>
+                      <span class="nc-spec-v">${esc(cap)}</span>
+                    </div>
+                    <div class="nc-spec-row">
+                      <span class="nc-spec-k">授权工作目录</span>
+                      <span class="nc-spec-v mono" title="${esc(d.workdir || "")}">${esc(d.workdir || "—")}</span>
+                    </div>
+                    <div class="nc-spec-row">
+                      <span class="nc-spec-k">凭证签发来源</span>
+                      <span class="nc-spec-v">${esc(src)}</span>
+                    </div>
+                  </div>
+                </article>
               `;
             }).join("")}
-          </tbody>
-        </table>
-      `;
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>节点标识</th>
+                <th>隧道状态</th>
+                <th class="hide-sm">系统与权限</th>
+                <th class="hide-sm">挂载工作区</th>
+                <th class="hide-sm">凭证来源</th>
+                <th style="text-align:right;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(d => {
+                const isConfirm = confirmRevokeName === d.name;
+                const cap = d.online
+                  ? ((d.os || "—") + " · " + (d.allow_exec ? "文件 + 终端执行" : "仅沙箱读写"))
+                  : (d.os || "—");
+                const src = d.source === "hub"
+                  ? ("Hub 配对" + (d.approved_by ? (" · " + d.approved_by) : ""))
+                  : "静态环境变量";
+                const action = d.source === "hub"
+                  ? `<button type="button" class="btn ${isConfirm ? "btn-danger-solid" : "btn-danger"}" data-revoke="${esc(d.name)}">${isConfirm ? "确认吊销？" : "吊销并断开"}</button>`
+                  : `<span class="sub-line mono">agent.env</span>`;
+                return `
+                  <tr>
+                    <td><div class="dev-name mono">${esc(d.name)}</div></td>
+                    <td>
+                      <div class="status-cell ${d.online ? "online" : "offline"}">${d.online ? "在线" : "离线"}</div>
+                      <div class="sub-line">${d.online ? "WSS 隧道活跃" : esc(fmtRelTime(d.last_seen_at))}</div>
+                    </td>
+                    <td class="hide-sm">${esc(cap)}</td>
+                    <td class="hide-sm"><div class="cell-path mono" title="${esc(d.workdir || "")}">${esc(d.workdir || "—")}</div></td>
+                    <td class="hide-sm">${esc(src)}</td>
+                    <td style="text-align:right;">${action}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
       container.querySelectorAll("[data-revoke]").forEach(btn => btn.onclick = () => revokeDevice(btn.dataset.revoke));
     }
 
@@ -442,19 +1165,77 @@
       document.getElementById("themeIcon").innerHTML = dark
         ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'
         : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+      const lbl = document.getElementById("themeTextLabel");
+      if (lbl) lbl.textContent = dark ? "浅色" : "深色";
     }
 
     document.getElementById("themeBtn").onclick = () => {
       const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
-      try { localStorage.setItem("omni-steep-theme", next); } catch (e) {}
+      try {
+        localStorage.setItem("omni-theme", next);
+        localStorage.setItem("omni-steep-theme", next);
+      } catch (e) {}
       applyThemeIcon();
     };
+
+    document.getElementById("refreshBtn").onclick = () => {
+      fetchState();
+      showToast("已同步最新机群状态");
+    };
+
     document.getElementById("logoutBtn").onclick = async () => {
       try { await apiPost("/agents/logout", {}); location.reload(); } catch (err) { showToast(err.message, true); }
     };
 
+    document.getElementById("copyHubBaseBtn").onclick = () => {
+      navigator.clipboard.writeText(PORTAL_BASE).then(() => showToast("已复制 Hub 地址")).catch(() => {});
+    };
+
+    document.querySelectorAll("[data-status-filter]").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll("[data-status-filter]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        statusFilter = btn.dataset.statusFilter;
+        if (latestState) render(latestState);
+      };
+    });
+
+    document.querySelectorAll("[data-view-mode]").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll("[data-view-mode]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        viewMode = btn.dataset.viewMode;
+        if (latestState) render(latestState);
+      };
+    });
+
+    document.querySelectorAll("[data-os-tab]").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll("[data-os-tab]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        osTab = btn.dataset.osTab;
+        renderOnboardCmd();
+      };
+    });
+
+    document.getElementById("deviceSearch").oninput = (e) => {
+      searchQuery = e.target.value.trim();
+      if (latestState) render(latestState);
+    };
+
+    document.getElementById("copyCmdBtn").onclick = async () => {
+      const cmd = document.getElementById("cliOnboardCmd").textContent || "";
+      try {
+        await navigator.clipboard.writeText(cmd);
+        showToast("已复制接入指令");
+      } catch (e) {
+        showToast("复制受限，请手动选中复制", true);
+      }
+    };
+
     applyThemeIcon();
+    renderOnboardCmd();
     fetchState();
     setInterval(fetchState, 2500);
   </script>

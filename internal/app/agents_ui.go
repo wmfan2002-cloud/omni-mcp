@@ -81,10 +81,20 @@ func (p *agentsPortal) handlePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	csrf := p.ensureCSRFCookie(w, r)
-	page := strings.Replace(agentsPortalHTML, "__OMNI_PORTAL_CSRF__", csrf, 1)
-	page = strings.Replace(page, "__OMNI_PORTAL_USER__", template.HTMLEscapeString(sub), 1)
-	page = strings.Replace(page, "__OMNI_PORTAL_VERSION__", template.HTMLEscapeString(Version), 1)
-	page = strings.Replace(page, "__OMNI_PORTAL_BASE__", template.HTMLEscapeString(p.cfg.Server.BaseURL), 1)
+	baseURL := strings.TrimRight(strings.TrimSpace(p.cfg.Server.BaseURL), "/")
+	if baseURL == "" {
+		scheme := "http"
+		if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
+			scheme = "https"
+		}
+		if r.Host != "" {
+			baseURL = scheme + "://" + r.Host
+		}
+	}
+	page := strings.ReplaceAll(agentsPortalHTML, "__OMNI_PORTAL_CSRF__", csrf)
+	page = strings.ReplaceAll(page, "__OMNI_PORTAL_USER__", template.HTMLEscapeString(sub))
+	page = strings.ReplaceAll(page, "__OMNI_PORTAL_VERSION__", template.HTMLEscapeString(Version))
+	page = strings.ReplaceAll(page, "__OMNI_PORTAL_BASE__", template.HTMLEscapeString(baseURL))
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(page))
 }
@@ -293,132 +303,407 @@ type portalLoginData struct {
 }
 
 var portalLoginTmpl = template.Must(template.New("portal_login").Parse(`<!doctype html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>登录 · Omni MCP Hub 设备管理</title>
+<title>管理员核验 · 设备管理中心 · omni-mcp</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20fill%3D%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22omni-ring%22%20x1%3D%228%22%20y1%3D%228%22%20x2%3D%2256%22%20y2%3D%2256%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%236A0085%22%20%2F%3E%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%239A24B8%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23FF78C8%22%20%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22omni-core%22%20x1%3D%2222%22%20y1%3D%2222%22%20x2%3D%2242%22%20y2%3D%2242%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230D0D0D%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%233B074C%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2256%22%20height%3D%2256%22%20rx%3D%2216%22%20fill%3D%22%230D0D0D%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2219%22%20stroke%3D%22url(%23omni-ring)%22%20stroke-width%3D%223.2%22%20stroke-linecap%3D%22round%22%20stroke-dasharray%3D%2292%2028%22%20transform%3D%22rotate(-24%2032%2032)%22%20%2F%3E%3Cpath%20d%3D%22M32%2032%20L18.5%2023.5%20M32%2032%20L45.5%2023.5%20M32%2032%20L32%2048%22%20stroke%3D%22%23FFC9FF%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.88%22%20%2F%3E%3Ccircle%20cx%3D%2218.5%22%20cy%3D%2223.5%22%20r%3D%224.2%22%20fill%3D%22%23FFFFFF%22%20%2F%3E%3Ccircle%20cx%3D%2245.5%22%20cy%3D%2223.5%22%20r%3D%224.2%22%20fill%3D%22%23FFC9FF%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2248%22%20r%3D%224.2%22%20fill%3D%22%23FFFFFF%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%227.5%22%20fill%3D%22url(%23omni-core)%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%222.6%22%20%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%222.4%22%20fill%3D%22%23FFC9FF%22%20%2F%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
-try {
-  var t = localStorage.getItem('omni-steep-theme');
-  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
-} catch (e) {}
+  (function () {
+    try {
+      var saved = localStorage.getItem('omni-theme') || localStorage.getItem('omni-steep-theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    } catch (e) {}
+  })();
 </script>
 <style>
-:root, [data-theme="light"] {
-  --bg: #ffffff; --surface: #fafafb; --input-bg: #ffffff;
-  --border: #e7e8ea; --ink: #17191c; --text: #17191c; --text-muted: #777b86;
-  --btn-bg: #17191c; --btn-fg: #ffffff; --btn-hover: #2d3036;
-  --code-bg: linear-gradient(135deg, rgba(211,227,252,0.55), rgba(251,225,209,0.45));
-  --glow: radial-gradient(65% 65% at 24% 12%, rgba(211,227,252,0.6), transparent 65%),
-          radial-gradient(55% 65% at 80% 18%, rgba(251,225,209,0.65), transparent 65%);
-  --danger: #b42318; --danger-bg: rgba(180,35,24,0.08); --danger-border: rgba(180,35,24,0.22);
-}
-[data-theme="dark"] {
-  --bg: #121212; --surface: #1a1a1a; --input-bg: #121212;
-  --border: #252525; --ink: #ffffff; --text: #e7e7e7; --text-muted: #898989;
-  --btn-bg: #ffffff; --btn-fg: #000000; --btn-hover: #e7e7e7;
-  --code-bg: linear-gradient(135deg, rgba(77,47,135,0.28), rgba(21,16,30,0.55));
-  --glow: radial-gradient(60% 60% at 50% 0%, rgba(77,47,135,0.34), rgba(21,16,30,0.4) 48%, transparent 78%);
-  --danger: #f87171; --danger-bg: rgba(248,113,113,0.1); --danger-border: rgba(248,113,113,0.26);
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: 24px; background: var(--glow), var(--bg); color: var(--text);
-  font: 14px/1.55 "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-.card {
-  width: 100%; max-width: 420px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 22px; padding: 32px;
-}
-.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
-.mark {
-  width: 28px; height: 28px; border-radius: 50%; background: var(--ink);
-  color: var(--bg); display: grid; place-items: center;
-}
-.brand-title { font-size: 14.5px; font-weight: 500; color: var(--ink); letter-spacing: -0.015em; }
-.brand-sub { font-size: 12px; color: var(--text-muted); }
-h1 {
-  margin: 0 0 6px; font-family: "Newsreader", "Songti SC", "STSong", Georgia, serif;
-  font-size: 30px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.15; color: var(--ink);
-}
-.desc { margin: 0 0 22px; font-size: 13.5px; color: var(--text-muted); }
-.code-banner {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; margin-bottom: 20px; border-radius: 14px;
-  background: var(--code-bg); border: 1px solid var(--border);
-}
-.code-label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 3px; }
-.code-val { font: 500 20px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.1em; color: var(--ink); }
-.error {
-  padding: 11px 14px; margin-bottom: 18px; border-radius: 12px; font-size: 13px;
-  background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border);
-}
-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
-.field { margin-bottom: 14px; }
-input[type=text], input[type=password] {
-  width: 100%; height: 42px; padding: 0 14px; border-radius: 12px;
-  border: 1px solid var(--border); background: var(--input-bg); color: var(--ink);
-  font: inherit; outline: none; transition: border-color 150ms ease;
-}
-input:focus { border-color: var(--ink); }
-button {
-  width: 100%; height: 44px; margin-top: 6px; border: 0; border-radius: 999px;
-  background: var(--btn-bg); color: var(--btn-fg); font: 500 14px/1 inherit; cursor: pointer;
-  transition: background-color 150ms ease;
-}
-button:hover { background: var(--btn-hover); }
-.foot { margin-top: 16px; display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
-.foot a { color: var(--text-muted); text-decoration: none; }
-.foot a:hover { color: var(--ink); }
+  :root, [data-theme="dark"] {
+    --bg: #09090b;
+    --surface: #111115;
+    --surface-alt: #18181d;
+    --input-bg: #09090c;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --fg: #fafafa;
+    --text: #a1a1aa;
+    --muted: #71717a;
+    --cta-bg: #fafafa;
+    --cta-hover: #e4e4e7;
+    --cta-fg: #09090b;
+    --accent: #c084fc;
+    --accent-bright: #d8b4fe;
+    --accent-ink: #09090b;
+    --accent-soft: rgba(192, 132, 252, 0.09);
+    --accent-border: rgba(192, 132, 252, 0.26);
+    --danger: #f87171;
+    --danger-bg: rgba(239, 68, 68, 0.10);
+    --danger-border: rgba(239, 68, 68, 0.28);
+    --glow: rgba(154, 36, 184, 0.16);
+  }
+  [data-theme="light"] {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-alt: #f4f4f5;
+    --input-bg: #f8f8fa;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --fg: #09090b;
+    --text: #3f3f46;
+    --muted: #71717a;
+    --cta-bg: #09090b;
+    --cta-hover: #27272a;
+    --cta-fg: #ffffff;
+    --accent: #9333ea;
+    --accent-bright: #7e22ce;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(147, 51, 234, 0.07);
+    --accent-border: rgba(147, 51, 234, 0.24);
+    --danger: #dc2626;
+    --danger-bg: rgba(220, 38, 38, 0.08);
+    --danger-border: rgba(220, 38, 38, 0.26);
+    --glow: rgba(154, 36, 184, 0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Segoe UI", sans-serif;
+    background-color: var(--bg);
+    background-image: radial-gradient(880px 360px at 50% -110px, var(--glow), transparent 72%);
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 18px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .gate-shell {
+    width: 100%;
+    max-width: 880px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.08fr 1fr;
+  }
+  .gate-left {
+    padding: 34px 32px;
+    background: var(--surface-alt);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .brand-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--fg);
+  }
+  .brand-link svg { width: 28px; height: 28px; flex-shrink: 0; }
+  .brand-word {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .theme-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--fg); }
+  .kicker {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .left-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    text-wrap: balance;
+  }
+  .left-desc {
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .ticket-box {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--accent-border);
+  }
+  .ticket-lbl {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .ticket-code {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--accent-bright);
+  }
+  .ticket-sub {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .arch-box {
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text);
+  }
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .arch-arrow { color: var(--accent-bright); }
+  .feature-points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text);
+  }
+  .feature-points li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .pt-num { color: var(--accent-bright); font-size: 11px; flex-shrink: 0; }
+  .gate-right {
+    padding: 34px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .form-head {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .form-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 22px;
+  }
+  .error {
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    font-size: 12.5px;
+  }
+  .field { margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    height: 42px;
+    padding: 0 13px;
+    border-radius: 9px;
+    border: 1px solid var(--border-strong);
+    background: var(--input-bg);
+    color: var(--fg);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input:focus { border-color: var(--accent); }
+  .submit-btn {
+    width: 100%;
+    height: 42px;
+    margin-top: 6px;
+    border: none;
+    border-radius: 9px;
+    background: var(--cta-bg);
+    color: var(--cta-fg);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .submit-btn:hover { opacity: 0.92; }
+  .submit-btn:active { transform: translateY(1px); }
+  .foot {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .foot a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .foot a:hover { color: var(--accent-bright); }
+  @media (max-width: 760px) {
+    .gate-shell { grid-template-columns: 1fr; }
+    .gate-left {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 24px 22px;
+    }
+    .gate-right { padding: 24px 22px; }
+  }
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">
-      <div class="mark">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 19h18L12 3z"/></svg>
+  <div class="gate-shell">
+    <section class="gate-left" aria-label="设备管理中心说明">
+      <div class="brand-bar">
+        <a href="/" class="brand-link">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"> <defs> <linearGradient id="omni-ring" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse"> <stop offset="0%" stop-color="#6A0085" /> <stop offset="55%" stop-color="#9A24B8" /> <stop offset="100%" stop-color="#FF78C8" /> </linearGradient> <linearGradient id="omni-core" x1="22" y1="22" x2="42" y2="42" gradientUnits="userSpaceOnUse"> <stop offset="0%" stop-color="#0D0D0D" /> <stop offset="100%" stop-color="#3B074C" /> </linearGradient> </defs> <rect x="4" y="4" width="56" height="56" rx="16" fill="#0D0D0D" /> <circle cx="32" cy="32" r="19" stroke="url(#omni-ring)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="92 28" transform="rotate(-24 32 32)" /> <path d="M32 32 L18.5 23.5 M32 32 L45.5 23.5 M32 32 L32 48" stroke="#FFC9FF" stroke-width="2.4" stroke-linecap="round" opacity="0.88" /> <circle cx="18.5" cy="23.5" r="4.2" fill="#FFFFFF" /> <circle cx="45.5" cy="23.5" r="4.2" fill="#FFC9FF" /> <circle cx="32" cy="48" r="4.2" fill="#FFFFFF" /> <circle cx="32" cy="32" r="7.5" fill="url(#omni-core)" stroke="#FFFFFF" stroke-width="2.6" /> <circle cx="32" cy="32" r="2.4" fill="#FFC9FF" /> </svg>
+          <span class="brand-word">omni-mcp</span>
+        </a>
+        <button type="button" class="theme-btn" id="themeBtn" aria-label="切换深浅主题" title="切换深浅主题">
+          <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+        </button>
       </div>
+
       <div>
-        <div class="brand-title">Omni MCP Hub</div>
-        <div class="brand-sub">设备配对与接入中心 · {{.Version}}</div>
+        <div class="kicker mono">设备管理中心 · {{.Version}}</div>
+        <h1 class="left-title">跨平台节点配对与机群访问控制</h1>
+        <p class="left-desc">通过反向 WebSocket 安全隧道统一纳管 Linux 服务器、macOS 与 Windows 个人电脑，无需公网 IP 或开放入站端口。</p>
       </div>
-    </div>
-    <h1>管理员登录</h1>
-    <p class="desc">请使用 Hub 配置的管理员账号登录，以批准新设备配对或管理已接入节点。</p>
-    {{if .Code}}
-    <div class="code-banner">
-      <div>
-        <div class="code-label">待核对的配对验证码</div>
-        <div class="code-val">{{.Code}}</div>
+
+      {{if .Code}}
+      <div class="ticket-box">
+        <div class="ticket-lbl">待核准的设备配对码</div>
+        <div class="ticket-code mono">{{.Code}}</div>
+        <div class="ticket-sub">登录后将直接定位至该配对请求，请核对与终端屏幕显示的八位码一致。</div>
       </div>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    </div>
-    {{end}}
-    {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
-    <form method="post" action="/agents/login">
-      <input type="hidden" name="next" value="{{.Next}}">
-      <input type="hidden" name="code" value="{{.Code}}">
-      <div class="field">
-        <label for="username">用户名</label>
-        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+      {{else}}
+      <div class="arch-box">
+        <div class="arch-flow mono">
+          <span>Desktop / CLI Agent</span>
+          <span class="arch-arrow">── WSS ──▶</span>
+          <span>Hub /agents</span>
+        </div>
+        <div style="color:var(--muted)">每台接入节点分配独立随机密钥，支持随时单点吊销并即时切断底层长连接。</div>
       </div>
-      <div class="field">
-        <label for="password">密码</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      {{end}}
+
+      <ul class="feature-points">
+        <li><span class="pt-num mono">01.</span><span>八位配对码零 SSH 免密签发，本机自动存入系统安全钥匙串</span></li>
+        <li><span class="pt-num mono">02.</span><span>实时查看机群在线心跳、挂载工作区目录与终端执行开关</span></li>
+        <li><span class="pt-num mono">03.</span><span>支持一键吊销失信设备凭证，毫秒级终止正在运行的隧道</span></li>
+      </ul>
+    </section>
+
+    <div class="gate-right">
+      <h2 class="form-head">管理员身份验证</h2>
+      <p class="form-sub">使用 Hub 管理员账号登录设备管理中心</p>
+
+      {{if .Error}}<div class="error" role="alert">{{.Error}}</div>{{end}}
+
+      <form method="post" action="/agents/login">
+        <input type="hidden" name="next" value="{{.Next}}">
+        <input type="hidden" name="code" value="{{.Code}}">
+        <div class="field">
+          <label for="username">管理员用户名</label>
+          <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">登录密码</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="submit-btn">登录并进入设备管理中心</button>
+      </form>
+
+      <div class="foot">
+        <a href="/">← 返回 Hub 首页</a>
+        <span class="mono">HttpOnly · SameSite=Strict</span>
       </div>
-      <button type="submit">登录并继续</button>
-    </form>
-    <div class="foot">
-      <a href="/">← 返回 Hub 首页</a>
-      <span>会话Cookie已启用 HttpOnly</span>
     </div>
   </div>
+  <script>
+    (function () {
+      function syncIcon() {
+        var dark = document.documentElement.getAttribute("data-theme") === "dark";
+        var el = document.getElementById("themeIcon");
+        if (!el) return;
+        el.innerHTML = dark
+          ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'
+          : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+      }
+      var btn = document.getElementById("themeBtn");
+      if (btn) {
+        btn.onclick = function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try {
+            localStorage.setItem("omni-theme", next);
+            localStorage.setItem("omni-steep-theme", next);
+          } catch (e) {}
+          syncIcon();
+        };
+      }
+      syncIcon();
+    })();
+  </script>
 </body>
 </html>`))
 

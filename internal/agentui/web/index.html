@@ -1,369 +1,209 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#09090b" />
   <title>omni-mcp Console</title>
   <link rel="icon" href="/icon-256.png" type="image/png" sizes="256x256" />
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script>
     (function () {
       try {
-        var t = localStorage.getItem('omni-console-theme');
-        if (t === 'dark' || t === 'light') {
+        var t = localStorage.getItem('omni-console-theme') || localStorage.getItem('omni-theme');
+        if (t === 'light' || t === 'dark') {
           document.documentElement.setAttribute('data-theme', t);
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
         }
       } catch (e) {}
     })();
   </script>
   <style>
-    :root {
-      --bg: #ffffff;
-      --bg-chrome: #fafafa;
-      --bg-subtle: #f4f4f6;
+    :root, [data-theme="dark"] {
+      --bg: #09090b;
+      --bg-rail: #0c0c0f;
+      --bg-topbar: rgba(9, 9, 11, 0.84);
+      --bg-card: #111115;
+      --bg-subtle: #18181d;
+      --bg-well: #09090c;
+      --bg-hover: rgba(255, 255, 255, 0.045);
+      --nav-active-bg: rgba(255, 255, 255, 0.075);
+      --nav-active-border: rgba(255, 255, 255, 0.11);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --ink: #fafafa;
+      --charcoal: #a1a1aa;
+      --muted: #71717a;
+      --cta-bg: #fafafa;
+      --cta-hover: #e4e4e7;
+      --cta-fg: #09090b;
+      --plum: #c084fc;
+      --plum-hover: #d8b4fe;
+      --plum-soft: rgba(192, 132, 252, 0.09);
+      --plum-border: rgba(192, 132, 252, 0.26);
+      --plum-ink: #d8b4fe;
+      --btn-accent-fg: #09090b;
+      --ok: #34d399;
+      --ok-soft: rgba(52, 211, 153, 0.11);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, 0.10);
+      --warn-border: rgba(251, 191, 36, 0.26);
+      --danger: #f87171;
+      --danger-soft: rgba(239, 68, 68, 0.10);
+      --danger-border: rgba(239, 68, 68, 0.28);
+      --glow: rgba(154, 36, 184, 0.14);
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --bg-rail: #f4f4f5;
+      --bg-topbar: rgba(250, 250, 250, 0.88);
       --bg-card: #ffffff;
-      --bg-hover: #f0f0f3;
-      --border: #e7e7e7;
+      --bg-subtle: #f4f4f5;
+      --bg-well: #f8f8fa;
+      --bg-hover: rgba(9, 9, 11, 0.04);
+      --nav-active-bg: #ffffff;
+      --nav-active-border: #e4e4e7;
+      --border: #e4e4e7;
       --border-strong: #d4d4d8;
-      --ink: #0d0d0d;
-      --charcoal: #3d3d3d;
-      --muted: #6b7280;
-      --plum: #6a0085;
-      --plum-hover: #530068;
-      --plum-soft: #f8eeff;
-      --plum-border: #e5c4f5;
-      --plum-ink: #6a0085;
-      --mint-bg: #e6f7ee;
-      --mint-border: #b5e9ca;
-      --mint-ink: #004232;
-      --mint-dot: #10b981;
-      --amber-bg: #fef7e6;
-      --amber-border: #f4d38c;
-      --amber-ink: #7a4100;
-      --danger-bg: #fef2f2;
-      --danger-border: #fecaca;
-      --danger-ink: #991b1b;
-      --code-bg: #0f1115;
-      --code-ink: #e5e7eb;
-      --shadow-sm: 0 1px 2px rgba(13, 13, 13, 0.04);
-      --shadow-md: 0 8px 24px rgba(13, 13, 13, 0.08);
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", sans-serif;
-      --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", "Consolas", ui-monospace, monospace;
+      --ink: #09090b;
+      --charcoal: #3f3f46;
+      --muted: #71717a;
+      --cta-bg: #09090b;
+      --cta-hover: #27272a;
+      --cta-fg: #ffffff;
+      --plum: #9333ea;
+      --plum-hover: #7e22ce;
+      --plum-soft: rgba(147, 51, 234, 0.07);
+      --plum-border: rgba(147, 51, 234, 0.24);
+      --plum-ink: #7e22ce;
+      --btn-accent-fg: #ffffff;
+      --ok: #16a34a;
+      --ok-soft: rgba(22, 163, 74, 0.10);
+      --warn: #d97706;
+      --warn-soft: rgba(217, 119, 6, 0.08);
+      --warn-border: rgba(217, 119, 6, 0.26);
+      --danger: #dc2626;
+      --danger-soft: rgba(220, 38, 38, 0.08);
+      --danger-border: rgba(220, 38, 38, 0.26);
+      --glow: rgba(154, 36, 184, 0.07);
     }
 
-    [data-theme="dark"] {
-      --bg: #111114;
-      --bg-chrome: #16161a;
-      --bg-subtle: #1e1e24;
-      --bg-card: #18181d;
-      --bg-hover: #24242b;
-      --border: #2a2a33;
-      --border-strong: #3a3a46;
-      --ink: #f5f5f7;
-      --charcoal: #d1d5db;
-      --muted: #9ca3af;
-      --plum: #a855f7;
-      --plum-hover: #9333ea;
-      --plum-soft: rgba(168, 85, 247, 0.14);
-      --plum-border: rgba(168, 85, 247, 0.36);
-      --plum-ink: #e9d5ff;
-      --mint-bg: rgba(16, 185, 129, 0.14);
-      --mint-border: rgba(16, 185, 129, 0.34);
-      --mint-ink: #6ee7b7;
-      --mint-dot: #34d399;
-      --amber-bg: rgba(245, 158, 11, 0.14);
-      --amber-border: rgba(245, 158, 11, 0.34);
-      --amber-ink: #fcd34d;
-      --danger-bg: rgba(239, 68, 68, 0.14);
-      --danger-border: rgba(239, 68, 68, 0.34);
-      --danger-ink: #fca5a5;
-      --code-bg: #0a0a0d;
-      --code-ink: #e5e7eb;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
-      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: var(--bg);
-      color: var(--ink);
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
       font-family: var(--font-sans);
-      font-size: 14px;
-      line-height: 1.5;
+      background-color: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
       -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    .mono, .input-mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
     }
 
-    button, input {
-      font: inherit;
-      color: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    button:focus-visible, input:focus-visible {
-      outline: 2px solid var(--plum);
-      outline-offset: 2px;
-    }
-
-    /* Desktop App Shell */
+    /* Native Desktop Workbench Frame: Full-Height Command Rail + Main Column */
     .app-shell {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 264px 1fr;
       height: 100vh;
-      min-height: 100vh;
+      width: 100vw;
       overflow: hidden;
     }
 
-    /* Top Chrome Bar */
-    .topbar {
-      height: 56px;
-      flex: 0 0 56px;
-      background: var(--bg-chrome);
-      border-bottom: 1px solid var(--border);
+    /* Left Command Rail */
+    .sidebar {
+      background: var(--bg-rail);
+      border-right: 1px solid var(--border);
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: space-between;
+      padding: 16px 14px;
+      overflow-y: auto;
       gap: 16px;
-      padding: 0 18px;
     }
-
-    .brand-group {
+    .rail-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 11px;
+      padding: 4px 6px 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
       min-width: 0;
     }
-
-    .brand-logo {
-      width: 28px;
-      height: 28px;
-      flex: 0 0 28px;
-      display: block;
+    .rail-brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+      flex: 1;
     }
-
+    .rail-logo { width: 30px; height: 30px; flex-shrink: 0; }
     .brand-title {
-      font-weight: 600;
-      font-size: 14px;
-      letter-spacing: -0.01em;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
       white-space: nowrap;
+      line-height: 1.25;
     }
-
     .brand-meta {
       font-family: var(--font-mono);
       font-size: 11px;
       color: var(--muted);
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      padding: 2px 7px;
-      border-radius: 6px;
-      white-space: nowrap;
-    }
-
-    .route-bar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--muted);
-      min-width: 0;
-      overflow: hidden;
-      max-width: 480px;
-    }
-
-    .route-node {
-      color: var(--ink);
-      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .route-mono {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-    }
-
-    .topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 0 0 auto;
-    }
-
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 11px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
-      flex: 0 0 7px;
-    }
-
-    .status-chip.is-connected {
-      background: var(--mint-bg);
-      border-color: var(--mint-border);
-      color: var(--mint-ink);
-    }
-    .status-chip.is-connected .status-dot { background: var(--mint-dot); }
-
-    .status-chip.is-pairing,
-    .status-chip.is-connecting,
-    .status-chip.is-reconnecting {
-      background: var(--amber-bg);
-      border-color: var(--amber-border);
-      color: var(--amber-ink);
-    }
-    .status-chip.is-pairing .status-dot,
-    .status-chip.is-connecting .status-dot,
-    .status-chip.is-reconnecting .status-dot {
-      background: #f59e0b;
-      animation: pulse 1.3s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.85); }
-    }
-
-    .icon-btn {
-      height: 32px;
-      min-width: 32px;
-      padding: 0 9px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--charcoal);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      font-size: 12px;
-      font-weight: 500;
-      transition: background 0.14s ease, border-color 0.14s ease;
-    }
-
-    .icon-btn:hover {
-      background: var(--bg-hover);
-      border-color: var(--border-strong);
-    }
-
-    .btn {
-      height: 34px;
-      padding: 0 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      white-space: nowrap;
-      transition: background 0.14s ease, border-color 0.14s ease, opacity 0.14s ease;
-    }
-
-    .btn:hover:not(:disabled) {
-      background: var(--bg-hover);
-      border-color: var(--border-strong);
-    }
-
-    .btn:disabled {
-      opacity: 0.52;
-      cursor: not-allowed;
-    }
-
-    .btn-primary {
-      background: var(--ink);
-      border-color: var(--ink);
-      color: var(--bg);
-    }
-    .btn-primary:hover:not(:disabled) {
-      opacity: 0.88;
-      background: var(--ink);
-      border-color: var(--ink);
-    }
-
-    .btn-plum {
-      background: var(--plum);
-      border-color: var(--plum);
-      color: #ffffff;
-    }
-    .btn-plum:hover:not(:disabled) {
-      background: var(--plum-hover);
-      border-color: var(--plum-hover);
-    }
-
-    .btn-danger {
-      background: var(--danger-bg);
-      border-color: var(--danger-border);
-      color: var(--danger-ink);
-    }
-    .btn-danger:hover:not(:disabled) {
-      opacity: 0.9;
-    }
-
-    .btn-sm {
-      height: 29px;
-      padding: 0 10px;
-      font-size: 12px;
-    }
-
-    /* Main Workspace Grid */
-    .workspace {
-      flex: 1 1 auto;
-      display: grid;
-      grid-template-columns: 236px 1fr;
-      min-height: 0;
-    }
-
-    /* CC-Switch style Left Sidebar */
-    .sidebar {
-      background: var(--bg-chrome);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 14px 12px;
-      gap: 14px;
-      overflow-y: auto;
-    }
-
     .nav-section-label {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
       color: var(--muted);
-      padding: 4px 10px 6px;
+      padding: 0 6px;
+      margin-bottom: 8px;
+    }
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      padding: 3px;
+      background: var(--bg-well);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      margin-bottom: 14px;
+    }
+    .mode-btn {
+      height: 30px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .mode-btn:hover { color: var(--ink); }
+    .mode-btn.active {
+      background: var(--bg-subtle);
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    }
+    [data-theme="light"] .mode-btn.active {
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     }
 
     .nav-list {
@@ -371,1051 +211,950 @@
       flex-direction: column;
       gap: 3px;
     }
-
     .nav-item {
       width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 10px;
-      border-radius: 9px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
       border: 1px solid transparent;
       background: transparent;
       color: var(--charcoal);
-      font-size: 13.5px;
+      font-family: inherit;
+      font-size: 13px;
       font-weight: 500;
-      text-align: left;
-      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
-    }
-
-    .nav-item-left {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+    }
+    .nav-item.is-hidden { display: none; }
+    .nav-item:hover { background: var(--bg-hover); color: var(--ink); }
+    .nav-item.active {
+      background: var(--nav-active-bg);
+      border-color: var(--nav-active-border);
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .nav-item-left {
+      display: inline-flex;
       align-items: center;
       gap: 9px;
       min-width: 0;
     }
-
-    .nav-item svg {
-      width: 16px;
-      height: 16px;
-      flex: 0 0 16px;
-      opacity: 0.72;
-    }
-
-    .nav-item:hover {
-      background: var(--bg-hover);
-      color: var(--ink);
-    }
-
-    .nav-item.active {
-      background: var(--bg-card);
-      border-color: var(--border);
-      color: var(--ink);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .nav-item.active svg {
-      color: var(--plum-ink);
-      opacity: 1;
-    }
-
+    .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--muted); }
+    .nav-item.active svg { color: var(--plum-ink); }
     .nav-badge {
       font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
       font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 6px;
-      background: var(--bg-subtle);
       color: var(--muted);
     }
-
-    .nav-item.active .nav-badge {
-      background: var(--plum-soft);
-      color: var(--plum-ink);
-    }
+    .nav-item.active .nav-badge { color: var(--plum-ink); }
 
     .sidebar-device-card {
-      margin-top: 14px;
-      padding: 11px 12px;
-      border-radius: 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 7px;
+      padding-left: 6px;
+      padding-right: 6px;
     }
-
     .device-card-row {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      gap: 8px;
-      font-size: 12px;
+      gap: 10px;
+      font-size: 11.5px;
     }
-
-    .device-card-label {
-      color: var(--muted);
-      white-space: nowrap;
-      flex: 0 0 auto;
-    }
+    .device-card-label { color: var(--muted); flex-shrink: 0; }
     .device-card-val {
       font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--ink);
+      color: var(--charcoal);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       text-align: right;
-      min-width: 0;
     }
 
     .sidebar-footer {
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
-
     .dirty-banner {
       display: none;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 7px 10px;
+      padding: 8px 10px;
       border-radius: 8px;
-      background: var(--plum-soft);
-      border: 1px solid var(--plum-border);
-      color: var(--plum-ink);
+      background: var(--warn-soft);
+      border: 1px solid var(--warn-border);
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
+      color: var(--warn);
     }
-
     .dirty-banner.show { display: flex; }
 
-    /* Main Content Canvas */
-    .main-canvas {
-      overflow-y: auto;
-      padding: 22px 26px 32px;
-      background: var(--bg);
-    }
-
-    .view-container {
-      max-width: 960px;
-      margin: 0 auto;
+    /* Right Workspace Column */
+    .workspace-col {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      height: 100vh;
+      min-width: 0;
+      background-image: radial-gradient(880px 340px at 50% -110px, var(--glow), transparent 72%);
     }
 
-    .view-pane { display: none; flex-direction: column; gap: 16px; }
-    .view-pane.active { display: flex; }
-
-    /* Page Header inside View */
-    .view-head {
+    /* Pipeline Telemetry Topbar */
+    .topbar {
+      height: 56px;
+      padding: 0 28px;
+      background: var(--bg-topbar);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 16px;
-      flex-wrap: wrap;
+      flex-shrink: 0;
     }
-
-    .view-title {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 0;
-    }
-
-    .view-sub {
-      margin: 3px 0 0;
-      font-size: 13px;
+    .route-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
       color: var(--muted);
+      min-width: 0;
+      overflow: hidden;
+    }
+    .route-node {
+      color: var(--ink);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .route-mono {
+      font-family: var(--font-mono);
+      color: var(--plum-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 260px;
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+      padding-right: 4px;
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .status-chip.is-connected,
+    .status-chip.is-running { color: var(--ok); }
+    .status-chip.is-connected .status-dot,
+    .status-chip.is-running .status-dot { background: var(--ok); }
+    .status-chip.is-pairing,
+    .status-chip.is-connecting,
+    .status-chip.is-reconnecting,
+    .status-chip.is-starting { color: var(--warn); }
+    .status-chip.is-pairing .status-dot,
+    .status-chip.is-connecting .status-dot,
+    .status-chip.is-reconnecting .status-dot,
+    .status-chip.is-starting .status-dot { background: var(--warn); }
+    .status-chip.is-error { color: var(--danger); }
+    .status-chip.is-error .status-dot { background: var(--danger); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 35px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.14s ease, background-color 0.14s ease, opacity 0.14s ease;
+    }
+    .btn:hover { border-color: var(--border-strong); background: var(--bg-subtle); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { height: 29px; padding: 0 10px; font-size: 12px; border-radius: 7px; }
+    .btn-primary,
+    .btn-plum {
+      background: var(--cta-bg);
+      border-color: var(--cta-bg);
+      color: var(--cta-fg);
+      font-weight: 600;
+    }
+    .btn-primary:hover,
+    .btn-plum:hover {
+      background: var(--cta-hover);
+      border-color: var(--cta-hover);
+    }
+    .btn-danger {
+      background: var(--danger-soft);
+      border-color: var(--danger-border);
+      color: var(--danger);
+    }
+    .icon-btn {
+      height: 34px;
+      min-width: 34px;
+      padding: 0 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--charcoal);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.14s ease, color 0.14s ease;
+    }
+    .icon-btn:hover { border-color: var(--border-strong); background: var(--bg-subtle); color: var(--ink); }
+
+    /* Main Scrollable Canvas */
+    .main-canvas {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 28px 44px;
+    }
+    .view-container {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+    .view-pane { display: none; }
+    .view-pane.active {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    /* Alerts */
+    /* Banners */
     .alert {
       display: none;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 12px 14px;
-      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      background: var(--danger-soft);
       border: 1px solid var(--danger-border);
-      background: var(--danger-bg);
-      color: var(--danger-ink);
+      color: var(--danger);
       font-size: 13px;
     }
     .alert.show { display: flex; }
     .alert.is-pairing-banner {
-      border-color: var(--plum-border);
       background: var(--plum-soft);
-      color: var(--plum-ink);
+      border-color: var(--plum-border);
+      color: var(--ink);
     }
 
-    /* Cards */
-    .card {
+    /* View Header */
+    .view-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .view-title {
+      font-size: 23px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+    }
+    .view-sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-top: 3px;
+      max-width: 66ch;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 4-Cell Blueprint Telemetry Strip (Single-Elevation) */
+    .stats-grid {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 18px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .card-title {
-      margin: 0;
-      font-size: 14.5px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    .card-hint {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* Overview KPI Strip */
-    .stats-grid {
+      border-radius: 12px;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(4, 1fr);
+      overflow: hidden;
     }
-
     .stat-card {
-      background: var(--bg-chrome);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 13px 14px;
+      padding: 16px 18px;
+      border-right: 1px solid var(--border);
+      min-width: 0;
     }
-
+    .stat-card:last-child { border-right: none; }
     .stat-label {
       font-size: 11.5px;
       color: var(--muted);
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
-
     .stat-value {
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: 700;
       color: var(--ink);
-      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .stat-value.mono {
-      font-family: var(--font-mono);
-      font-size: 13.5px;
+    /* Asymmetric 2-Column Workspace Grids */
+    .split-workspace {
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      gap: 18px;
+      align-items: stretch;
     }
 
-    /* Forms */
+    /* Cards (Single-Elevation, Zero Nested Card Borders) */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .card-hint {
+      font-size: 11.5px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 280px;
+    }
+
+    /* Form Controls */
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr 1fr;
       gap: 14px;
     }
-
     .field {
       display: flex;
       flex-direction: column;
       gap: 6px;
+      min-width: 0;
     }
-
     .field label {
       font-size: 12.5px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--charcoal);
     }
-
-    .input {
-      height: 36px;
-      padding: 0 11px;
-      border-radius: 8px;
-      border: 1px solid var(--border-strong);
-      background: var(--bg);
-      color: var(--ink);
-      font-size: 13.5px;
-      width: 100%;
-      transition: border-color 0.14s ease, box-shadow 0.14s ease;
-    }
-
-    .input:focus {
-      outline: none;
-      border-color: var(--plum);
-      box-shadow: 0 0 0 3px var(--plum-soft);
-    }
-
-    .input-mono {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-    }
-
     .field-help {
       font-size: 11.5px;
       color: var(--muted);
+      line-height: 1.45;
     }
-
     .input-row {
       display: flex;
-      gap: 8px;
       align-items: center;
+      gap: 8px;
     }
+    .input {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-well);
+      color: var(--ink);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.14s ease;
+    }
+    .input:focus { border-color: var(--plum); }
 
-    .input-row .input { flex: 1 1 auto; }
-
-    /* Switch Row */
+    /* Clean Hairline-Separated Switch Rows (No Nested Card Borders) */
+    .toggle-stack {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
     .toggle-card {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 13px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-chrome);
     }
-
-    .toggle-card.is-armed {
-      background: var(--amber-bg);
-      border-color: var(--amber-border);
-    }
-
+    .toggle-card:last-child { border-bottom: none; padding-bottom: 0; }
     .toggle-title {
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--ink);
+      margin-bottom: 2px;
     }
-
     .toggle-desc {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .toggle-card.is-armed .toggle-desc {
-      color: var(--amber-ink);
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 42px;
-      height: 24px;
-      flex: 0 0 42px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      background: var(--border-strong);
-      border-radius: 999px;
-      transition: background 0.18s ease;
-      cursor: pointer;
-    }
-
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      left: 3px;
-      top: 3px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      transition: transform 0.18s ease;
-    }
-
-    .switch input:checked + .slider {
-      background: var(--plum);
-    }
-
-    .switch input:checked + .slider::before {
-      transform: translateX(18px);
-    }
-
-    /* Guardrail confirmation box for --allow-exec */
-    .exec-guard {
-      display: none;
-      margin-top: 10px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      background: var(--amber-bg);
-      border: 1px solid var(--amber-border);
-      color: var(--amber-ink);
-      font-size: 12.5px;
-      line-height: 1.55;
-    }
-    .exec-guard.show { display: block; }
-
-    /* Folder list */
-    .dir-list {
-      list-style: none;
-      margin: 12px 0 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .dir-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      background: var(--bg-chrome);
-    }
-
-    .dir-path {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      word-break: break-all;
-      color: var(--ink);
-    }
-
-    .empty-box {
-      padding: 20px 14px;
-      border-radius: 10px;
-      border: 1px dashed var(--border-strong);
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    /* One-Click Pairing Stepper (matches showcase omni-mcp Console) */
-    .stepper-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .step-card {
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-chrome);
-      transition: border-color 0.16s ease, background 0.16s ease;
-    }
-
-    .step-card.is-active {
-      background: var(--plum-soft);
-      border-color: var(--plum-border);
-    }
-
-    .step-card.is-done {
-      background: var(--mint-bg);
-      border-color: var(--mint-border);
-    }
-
-    .step-kicker {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--plum-ink);
-      margin-bottom: 5px;
-    }
-
-    .step-card.is-done .step-kicker { color: var(--mint-ink); }
-
-    .step-card h4 {
-      margin: 0 0 4px;
-      font-size: 13.5px;
-      font-weight: 600;
-    }
-
-    .step-card p {
-      margin: 0;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .pair-live-box {
-      display: none;
-      margin-top: 14px;
-      padding: 16px;
-      border-radius: 12px;
-      background: var(--plum-soft);
-      border: 1px solid var(--plum-border);
-    }
-    .pair-live-box.show { display: block; }
-
-    .pair-code-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 10px 0 12px;
-    }
-
-    .pair-code {
-      font-family: var(--font-mono);
-      font-size: 24px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      color: var(--plum-ink);
-      background: var(--bg-card);
-      border: 1px solid var(--plum-border);
-      padding: 6px 14px;
-      border-radius: 9px;
-    }
-
-    /* Audit Stream */
-    .audit-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .seg-group {
-      display: inline-flex;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2px;
-      gap: 2px;
-    }
-
-    .seg-btn {
-      border: none;
-      background: transparent;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-    }
-
-    .seg-btn.active {
-      background: var(--bg-card);
-      color: var(--ink);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .audit-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .audit-row {
-      display: grid;
-      grid-template-columns: 74px 86px 1fr auto;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 11px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      background: var(--bg-chrome);
-      font-size: 12.5px;
-    }
-
-    .audit-time {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--muted);
-    }
-
-    .audit-tag {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 7px;
-      border-radius: 6px;
-      text-align: center;
-      background: var(--bg-subtle);
-      color: var(--charcoal);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .audit-tag.is-op { background: var(--plum-soft); color: var(--plum-ink); }
-    .audit-tag.is-ok { background: var(--mint-bg); color: var(--mint-ink); }
-    .audit-tag.is-err { background: var(--danger-bg); color: var(--danger-ink); }
-
-    .audit-summary {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: var(--ink);
-    }
-
-    .audit-dur {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    /* CLI Preview */
-    .cli-box {
-      margin: 0;
-      padding: 12px 14px;
-      border-radius: 10px;
-      background: var(--code-bg);
-      color: var(--code-ink);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      line-height: 1.6;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    /* Action Row */
-    .action-row {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      z-index: 60;
-      max-width: 380px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      background: var(--ink);
-      color: var(--bg);
-      font-size: 13px;
-      box-shadow: var(--shadow-md);
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .toast.is-error {
-      background: #991b1b;
-      color: #ffffff;
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 80;
-      background: rgba(13, 13, 13, 0.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-backdrop.show { display: flex; }
-
-    .modal-card {
-      width: 100%;
-      max-width: 400px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: var(--shadow-md);
-    }
-
-    .modal-card h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-
-    .modal-card p {
-      margin: 0 0 18px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    /* Local Gateway Mode styles */
-    .mode-switch {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px;
-      padding: 4px;
-      border-radius: 10px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      margin-bottom: 14px;
-    }
-    .mode-btn {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 7px 6px;
-      border-radius: 7px;
-      cursor: pointer;
-      transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
-      white-space: nowrap;
-      text-align: center;
-    }
-    .mode-btn:hover { color: var(--ink); }
-    .mode-btn.active {
-      background: var(--bg-card);
-      color: var(--plum);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    }
-    .nav-item.is-hidden { display: none; }
-
-    .tunnel-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .tunnel-card {
-      text-align: left;
-      padding: 12px 14px;
-      border-radius: 11px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      cursor: pointer;
-      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .tunnel-card:hover { border-color: var(--border-strong); background: var(--bg-subtle); }
-    .tunnel-card.active {
-      border-color: var(--plum);
-      background: var(--plum-soft);
-      box-shadow: 0 0 0 1px var(--plum);
-    }
-    .tunnel-card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .tunnel-card-name {
-      font-size: 13px;
-      font-weight: 650;
-      color: var(--ink);
-    }
-    .tunnel-tag {
-      font-size: 10.5px;
-      font-weight: 600;
-      padding: 2px 6px;
-      border-radius: 5px;
-      background: var(--bg-subtle);
-      color: var(--muted);
-      border: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .tunnel-card.active .tunnel-tag {
-      background: var(--bg-card);
-      color: var(--plum);
-      border-color: var(--plum-border);
-    }
-    .tunnel-card-desc {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .gw-provider-panel {
-      display: none;
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 10px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-    }
-    .gw-provider-panel.show { display: block; }
-
-    .gw-live-card {
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 16px 18px;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .gw-live-card.show { display: block; }
-    .gw-live-card.is-running {
-      border-color: #16a34a55;
-      box-shadow: 0 2px 10px rgba(22, 163, 74, 0.06);
-    }
-    .gw-endpoint-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 9px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      margin: 10px 0 12px;
-      flex-wrap: wrap;
-    }
-    .gw-endpoint-url {
-      flex: 1;
-      min-width: 180px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--ink);
-      word-break: break-all;
-    }
-    .cred-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .cred-box {
-      padding: 10px 12px;
-      border-radius: 9px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .cred-label {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--muted);
-    }
-    .cred-val-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .cred-val {
-      flex: 1;
-      min-width: 110px;
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      color: var(--ink);
-      word-break: break-all;
-    }
-    .gw-note {
-      margin-top: 10px;
       font-size: 12px;
       color: var(--muted);
       line-height: 1.5;
     }
-    .status-chip.is-running {
-      color: #15803d;
-      background: #f0fdf4;
-      border-color: #bbf7d0;
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
     }
-    .status-chip.is-running .status-dot { background: #16a34a; }
-    .status-chip.is-starting, .status-chip.is-downloading {
-      color: #92400e;
-      background: #fffbeb;
-      border-color: #fde68a;
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-strong);
+      border-radius: 22px;
+      transition: background-color 0.16s ease, border-color 0.16s ease;
     }
-    .status-chip.is-starting .status-dot, .status-chip.is-downloading .status-dot { background: #f59e0b; }
-    .status-chip.is-error {
-      color: #b91c1c;
-      background: #fef2f2;
-      border-color: #fecaca;
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      top: 2px;
+      background-color: var(--ink);
+      border-radius: 50%;
+      transition: transform 0.16s ease;
     }
-    .status-chip.is-error .status-dot { background: #dc2626; }
-    [data-theme="dark"] .status-chip.is-running { background: rgba(22, 163, 74, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #86efac; }
-    [data-theme="dark"] .status-chip.is-starting, [data-theme="dark"] .status-chip.is-downloading { background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.35); color: #fcd34d; }
-    [data-theme="dark"] .status-chip.is-error { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); color: #fca5a5; }
+    .switch input:checked + .slider {
+      background-color: var(--cta-bg);
+      border-color: var(--cta-bg);
+    }
+    .switch input:checked + .slider::before {
+      transform: translateX(18px);
+      background-color: var(--cta-fg);
+    }
 
-    @media (max-width: 900px) {
-      .route-bar { display: none; }
-      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .stepper-grid { grid-template-columns: 1fr; }
-      .tunnel-grid, .cred-grid { grid-template-columns: 1fr; }
+    .exec-guard {
+      display: none;
+      margin: 8px 0;
+      padding: 11px 14px;
+      border-radius: 8px;
+      background: var(--warn-soft);
+      border: 1px solid var(--warn-border);
+      color: var(--warn);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .exec-guard.show { display: block; }
+
+    /* Gateway Live Console & Tunnel Selector */
+    .gw-live-card {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--plum-border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .gw-live-card.show { display: flex; }
+    .gw-endpoint-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 9px;
+      background: var(--bg-well);
+      border: 1px solid var(--border);
+    }
+    .gw-endpoint-url {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--plum-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cred-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .cred-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .cred-label { font-size: 11.5px; color: var(--muted); }
+    .cred-val-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cred-val {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .gw-note { font-size: 12px; color: var(--muted); }
+
+    .tunnel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tunnel-card {
+      text-align: left;
+      padding: 13px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--bg-subtle);
+      color: var(--ink);
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.14s ease, background-color 0.14s ease;
+    }
+    .tunnel-card:hover { border-color: var(--border-strong); }
+    .tunnel-card.active {
+      border-color: var(--plum);
+      background: var(--plum-soft);
+    }
+    .tunnel-card-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    .tunnel-card-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .tunnel-tag { font-size: 11px; color: var(--plum-ink); font-family: var(--font-mono); white-space: nowrap; }
+    .tunnel-card-desc { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    .gw-provider-panel {
+      display: none;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .gw-provider-panel.show { display: block; }
+
+    /* Pairing 3-Stage Stepper & Live Hardware Code Box */
+    .stepper-grid {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      overflow: hidden;
+    }
+    .step-card {
+      padding: 18px 20px;
+      border-right: 1px solid var(--border);
+    }
+    .step-card:last-child { border-right: none; }
+    .step-card.is-active { background: var(--plum-soft); }
+    .step-card.is-done .step-kicker { color: var(--ok); }
+    .step-kicker {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--plum-ink);
+      margin-bottom: 6px;
+    }
+    .step-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .step-card p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+    .pair-live-box {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--plum-border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .pair-live-box.show { display: flex; }
+    .pair-code-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: var(--bg-well);
+      border: 1px solid var(--plum-border);
+    }
+    .pair-code {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      color: var(--plum-ink);
     }
 
-    @media (max-width: 740px) {
-      .app-shell { height: auto; min-height: 100vh; overflow: visible; }
-      .workspace { grid-template-columns: 1fr; }
-      .sidebar {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 10px 12px;
-      }
-      .nav-section-label, .sidebar-device-card { display: none; }
-      .nav-list {
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 6px;
-      }
-      .nav-item {
-        width: auto;
-        white-space: nowrap;
-        padding: 7px 10px;
-      }
-      .sidebar-footer {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        padding-top: 8px;
-      }
-      .main-canvas { padding: 16px 14px 28px; }
-      .form-grid { grid-template-columns: 1fr; }
-      .audit-row { grid-template-columns: 62px 76px 1fr; }
-      .audit-dur { display: none; }
+    /* Authorized Folders & CLI Preview */
+    .dir-list {
+      list-style: none;
+      margin-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .dir-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .dir-path {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cli-box {
+      flex: 1;
+      padding: 16px;
+      border-radius: 9px;
+      background: #09090c;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 160px;
+    }
+
+    /* Live SSE Audit Console */
+    .audit-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .seg-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 8px;
+      background: var(--bg-well);
+      border: 1px solid var(--border);
+    }
+    .seg-btn {
+      height: 27px;
+      padding: 0 11px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .seg-btn.active {
+      background: var(--bg-card);
+      color: var(--ink);
+    }
+    .audit-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      max-height: 460px;
+      overflow-y: auto;
+    }
+    .audit-row {
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 72px auto 1fr auto;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .audit-row:last-child { border-bottom: none; }
+    .audit-time {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
+    .audit-tag {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--plum-ink);
+      white-space: nowrap;
+    }
+    .audit-tag.is-err { color: var(--danger); }
+    .audit-tag.is-conn { color: var(--charcoal); }
+    .audit-summary {
+      color: var(--charcoal);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .audit-dur {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-size: 11.5px;
+      white-space: nowrap;
+    }
+    .empty-box {
+      padding: 28px 16px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Modal & Toast */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-card h3 { font-size: 16px; font-weight: 700; color: var(--ink); }
+    .modal-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .modal-card .action-row { justify-content: flex-end; margin-top: 6px; }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 90;
+      padding: 10px 16px;
+      border-radius: 9px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--plum-border);
+      color: var(--ink);
+      font-size: 12.5px;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.is-error { border-color: var(--danger-border); color: var(--danger); }
+
+    @media (max-width: 1040px) {
+      .split-workspace { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-card:nth-child(2) { border-right: none; }
+      .stat-card:nth-child(1), .stat-card:nth-child(2) { border-bottom: 1px solid var(--border); }
+    }
+    @media (max-width: 820px) {
+      body { overflow: auto; }
+      .app-shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      .workspace-col { height: auto; }
+      .form-grid, .tunnel-grid, .cred-grid, .stepper-grid { grid-template-columns: 1fr; }
+      .step-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .step-card:last-child { border-bottom: none; }
     }
   </style>
 </head>
 <body>
   <div class="app-shell">
-    <!-- Top Desktop Window Bar -->
-    <header class="topbar">
-      <div class="brand-group">
-        <svg class="brand-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="omni-ring" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#6A0085" />
-              <stop offset="55%" stop-color="#9A24B8" />
-              <stop offset="100%" stop-color="#FF78C8" />
-            </linearGradient>
-            <linearGradient id="omni-core" x1="22" y1="22" x2="42" y2="42" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#0D0D0D" />
-              <stop offset="100%" stop-color="#3B074C" />
-            </linearGradient>
-          </defs>
-          <rect x="4" y="4" width="56" height="56" rx="16" fill="#0D0D0D" />
-          <circle cx="32" cy="32" r="19" stroke="url(#omni-ring)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="92 28" transform="rotate(-24 32 32)" />
-          <path d="M32 32 L18.5 23.5 M32 32 L45.5 23.5 M32 32 L32 48" stroke="#FFC9FF" stroke-width="2.4" stroke-linecap="round" opacity="0.88" />
-          <circle cx="18.5" cy="23.5" r="4.2" fill="#FFFFFF" />
-          <circle cx="45.5" cy="23.5" r="4.2" fill="#FFC9FF" />
-          <circle cx="32" cy="48" r="4.2" fill="#FFFFFF" />
-          <circle cx="32" cy="32" r="7.5" fill="url(#omni-core)" stroke="#FFFFFF" stroke-width="2.6" />
-          <circle cx="32" cy="32" r="2.4" fill="#FFC9FF" />
-        </svg>
-        <span class="brand-title">omni-mcp Console</span>
-        <span id="osVersionChip" class="brand-meta">Desktop</span>
-      </div>
-
-      <div class="route-bar" aria-label="连接拓扑">
-        <span class="route-node" data-i18n="routeWebAi">网页 AI</span>
-        <span aria-hidden="true">→</span>
-        <span id="routeHub" class="route-mono">Hub /mcp</span>
-        <span aria-hidden="true">⇄</span>
-        <span id="routeDevice" class="route-node">—</span>
-        <span aria-hidden="true">·</span>
-        <span id="routeDirs" class="route-mono">0 dirs</span>
-      </div>
-
-      <div class="topbar-actions">
-        <div id="statusChip" class="status-chip">
-          <span class="status-dot"></span>
-          <span id="statusText">未连接</span>
-        </div>
-        <button type="button" id="toggleConnBtn" class="btn btn-primary">连接 Hub</button>
-        <button type="button" id="langToggle" class="icon-btn" aria-label="Switch language">EN</button>
-        <button type="button" id="themeToggle" class="icon-btn" aria-label="切换深浅主题">
-          <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
-        </button>
-      </div>
-    </header>
-
-    <div class="workspace">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div>
-          <div class="nav-section-label" data-i18n="navTitle">桌面控制台</div>
-          <div class="mode-switch" role="tablist" aria-label="运行模式">
-            <button type="button" id="modeRemoteBtn" class="mode-btn active" role="tab" data-i18n="modeRemote">连接远程 Hub</button>
-            <button type="button" id="modeGatewayBtn" class="mode-btn" role="tab" data-i18n="modeGateway">本机独立网关</button>
-          </div>
-          <nav class="nav-list" aria-label="控制台导航">
-            <button type="button" class="nav-item active" data-view="overview" data-mode="remote">
-              <span class="nav-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-                <span data-i18n="navOverview">连接总览</span>
-              </span>
-            </button>
-            <button type="button" class="nav-item" data-view="pairing" data-mode="remote">
-              <span class="nav-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                <span data-i18n="navPairing">一键配对</span>
-              </span>
-              <span id="pairNavBadge" class="nav-badge">—</span>
-            </button>
-            <button type="button" class="nav-item is-hidden" data-view="gateway" data-mode="gateway">
-              <span class="nav-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></svg>
-                <span data-i18n="navGateway">本机网关</span>
-              </span>
-              <span id="gwNavBadge" class="nav-badge">—</span>
-            </button>
-            <button type="button" class="nav-item" data-view="folders">
-              <span class="nav-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
-                <span data-i18n="navFolders">目录与权限</span>
-              </span>
-              <span id="dirsNavBadge" class="nav-badge">0</span>
-            </button>
-            <button type="button" class="nav-item" data-view="audit">
-              <span class="nav-item-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                <span data-i18n="navAudit">实时审计</span>
-              </span>
-              <span id="eventsNavBadge" class="nav-badge">0</span>
-            </button>
-          </nav>
-
-          <div class="sidebar-device-card">
-            <div class="device-card-row">
-              <span class="device-card-label" data-i18n="sideSystem">系统</span>
-              <span id="sideOsVal" class="device-card-val">—</span>
-            </div>
-            <div class="device-card-row">
-              <span class="device-card-label" data-i18n="sideShell">终端</span>
-              <span id="sideShellVal" class="device-card-val">—</span>
-            </div>
-            <div class="device-card-row">
-              <span class="device-card-label" data-i18n="sideVault">凭证存储</span>
-              <span id="sideVaultVal" class="device-card-val">—</span>
-            </div>
+    <!-- Left Full-Height Command Rail -->
+    <aside class="sidebar">
+      <div>
+        <div class="rail-brand">
+          <svg class="rail-logo" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"> <defs> <linearGradient id="omni-ring" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse"> <stop offset="0%" stop-color="#6A0085" /> <stop offset="55%" stop-color="#9A24B8" /> <stop offset="100%" stop-color="#FF78C8" /> </linearGradient> <linearGradient id="omni-core" x1="22" y1="22" x2="42" y2="42" gradientUnits="userSpaceOnUse"> <stop offset="0%" stop-color="#0D0D0D" /> <stop offset="100%" stop-color="#3B074C" /> </linearGradient> </defs> <rect x="4" y="4" width="56" height="56" rx="16" fill="#0D0D0D" /> <circle cx="32" cy="32" r="19" stroke="url(#omni-ring)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="92 28" transform="rotate(-24 32 32)" /> <path d="M32 32 L18.5 23.5 M32 32 L45.5 23.5 M32 32 L32 48" stroke="#FFC9FF" stroke-width="2.4" stroke-linecap="round" opacity="0.88" /> <circle cx="18.5" cy="23.5" r="4.2" fill="#FFFFFF" /> <circle cx="45.5" cy="23.5" r="4.2" fill="#FFC9FF" /> <circle cx="32" cy="48" r="4.2" fill="#FFFFFF" /> <circle cx="32" cy="32" r="7.5" fill="url(#omni-core)" stroke="#FFFFFF" stroke-width="2.6" /> <circle cx="32" cy="32" r="2.4" fill="#FFC9FF" /> </svg>
+          <div class="rail-brand-text">
+            <span class="brand-title">omni-mcp Console</span>
+            <span id="osVersionChip" class="brand-meta">Desktop</span>
           </div>
         </div>
 
-        <div class="sidebar-footer">
-          <div id="dirtyBanner" class="dirty-banner">
-            <span data-i18n="unsavedHint">配置有未保存修改</span>
-            <button type="button" id="quickSaveBtn" class="btn btn-plum btn-sm" data-i18n="saveBtn">保存</button>
-          </div>
-          <button type="button" id="quitBtn" class="btn" style="width:100%" data-i18n="quitApp">退出桌面控制台</button>
+        <div class="nav-section-label" data-i18n="navTitle">桌面控制台</div>
+        <div class="mode-switch" role="tablist" aria-label="运行模式">
+          <button type="button" id="modeRemoteBtn" class="mode-btn active" role="tab" data-i18n="modeRemote">连接远程 Hub</button>
+          <button type="button" id="modeGatewayBtn" class="mode-btn" role="tab" data-i18n="modeGateway">本机独立网关</button>
         </div>
-      </aside>
 
-      <!-- Main Views -->
+        <nav class="nav-list" aria-label="控制台导航">
+          <button type="button" class="nav-item active" data-view="overview" data-mode="remote">
+            <span class="nav-item-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              <span data-i18n="navOverview">连接总览</span>
+            </span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="pairing" data-mode="remote">
+            <span class="nav-item-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span data-i18n="navPairing">一键配对</span>
+            </span>
+            <span id="pairNavBadge" class="nav-badge">—</span>
+          </button>
+
+          <button type="button" class="nav-item is-hidden" data-view="gateway" data-mode="gateway">
+            <span class="nav-item-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></svg>
+              <span data-i18n="navGateway">本机网关</span>
+            </span>
+            <span id="gwNavBadge" class="nav-badge">—</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="folders">
+            <span class="nav-item-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <span data-i18n="navFolders">目录与权限</span>
+            </span>
+            <span id="dirsNavBadge" class="nav-badge">0</span>
+          </button>
+
+          <button type="button" class="nav-item" data-view="audit">
+            <span class="nav-item-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span data-i18n="navAudit">实时审计</span>
+            </span>
+            <span id="eventsNavBadge" class="nav-badge">0</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-device-card">
+          <div class="device-card-row">
+            <span class="device-card-label" data-i18n="sideSystem">系统</span>
+            <span id="sideOsVal" class="device-card-val">—</span>
+          </div>
+          <div class="device-card-row">
+            <span class="device-card-label" data-i18n="sideShell">终端</span>
+            <span id="sideShellVal" class="device-card-val">—</span>
+          </div>
+          <div class="device-card-row">
+            <span class="device-card-label" data-i18n="sideVault">凭证存储</span>
+            <span id="sideVaultVal" class="device-card-val">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div id="dirtyBanner" class="dirty-banner">
+          <span data-i18n="unsavedHint">配置有未保存修改</span>
+          <button type="button" id="quickSaveBtn" class="btn btn-plum btn-sm" data-i18n="saveBtn">保存</button>
+        </div>
+        <button type="button" id="quitBtn" class="btn" style="width:100%" data-i18n="quitApp">退出桌面控制台</button>
+      </div>
+    </aside>
+
+    <!-- Right Workspace Column -->
+    <div class="workspace-col">
+      <header class="topbar">
+        <div class="route-bar" aria-label="连接拓扑">
+          <span class="route-node" data-i18n="routeWebAi">网页 AI</span>
+          <span aria-hidden="true">──▶</span>
+          <span id="routeHub" class="route-mono">Hub /mcp</span>
+          <span aria-hidden="true">⇄</span>
+          <span id="routeDevice" class="route-node">—</span>
+          <span aria-hidden="true">·</span>
+          <span id="routeDirs" class="route-mono">0 dirs</span>
+        </div>
+
+        <div class="topbar-actions">
+          <div id="statusChip" class="status-chip">
+            <span class="status-dot"></span>
+            <span id="statusText">未连接</span>
+          </div>
+          <button type="button" id="toggleConnBtn" class="btn btn-primary">连接 Hub</button>
+          <button type="button" id="langToggle" class="icon-btn" aria-label="Switch language">EN</button>
+          <button type="button" id="themeToggle" class="icon-btn" aria-label="切换深浅主题">
+            <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+          </button>
+        </div>
+      </header>
+
       <main class="main-canvas">
         <div class="view-container">
           <!-- Global Connection Error Banner -->
@@ -1435,7 +1174,7 @@
             </div>
           </div>
 
-          <!-- VIEW 1: Overview & Connection -->
+          <!-- VIEW 1: Overview & Connection (Asymmetric 7:5 Bento Workspace) -->
           <section id="view-overview" class="view-pane active">
             <div class="view-head">
               <div>
@@ -1467,61 +1206,64 @@
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-head">
-                <h2 class="card-title" data-i18n="connCardTitle">Hub 与设备配置</h2>
-                <span id="configPathHint" class="card-hint" style="font-family:var(--font-mono)"></span>
-              </div>
-              <div class="form-grid">
-                <div class="field">
-                  <label for="hubInput" data-i18n="hubLabel">Hub 公网 HTTPS 地址</label>
-                  <input id="hubInput" class="input input-mono" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
-                  <span class="field-help" data-i18n="hubHelp">填你的 VPS Hub 域名（无需加 /mcp，系统自动处理）</span>
+            <div class="split-workspace">
+              <div class="card">
+                <div class="card-head">
+                  <h2 class="card-title" data-i18n="connCardTitle">Hub 与设备配置</h2>
+                  <span id="configPathHint" class="card-hint mono"></span>
                 </div>
-                <div class="field">
-                  <label for="nameInput" data-i18n="nameLabel">本机设备名称</label>
-                  <input id="nameInput" class="input input-mono" type="text" placeholder="my-macbook" autocomplete="off" />
-                  <span id="envHint" class="field-help">小写字母、数字和连字符，例如 office-win 或 my-mac</span>
-                </div>
-              </div>
 
-              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-                <div id="execToggleCard" class="toggle-card">
-                  <div>
-                    <div class="toggle-title" data-i18n="execToggleTitle">允许 AI 执行终端命令（--allow-exec）</div>
-                    <div id="execDesc" class="toggle-desc">默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。</div>
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="hubInput" data-i18n="hubLabel">Hub 公网 HTTPS 地址</label>
+                    <input id="hubInput" class="input input-mono" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
+                    <span class="field-help" data-i18n="hubHelp">填你的 VPS Hub 域名（无需加 /mcp，系统自动处理）</span>
                   </div>
-                  <label class="switch" aria-label="允许执行终端命令">
-                    <input id="allowExecToggle" type="checkbox" />
-                    <span class="slider"></span>
-                  </label>
-                </div>
-
-                <div id="execGuardNotice" class="exec-guard">
-                  <strong data-i18n="execGuardTitle">安全提醒：已勾选开启命令执行</strong>
-                  <div data-i18n="execGuardBody">开启后，授权连接的网页 AI 可以以当前系统用户身份运行构建、测试等终端命令（仍受 Hub 策略护栏保护）。保存配置后生效，不需要时可随时关闭。</div>
-                </div>
-
-                <div class="toggle-card">
-                  <div>
-                    <div class="toggle-title" data-i18n="autoConnTitle">启动控制台时自动连接 Hub</div>
-                    <div class="toggle-desc" data-i18n="autoConnDesc">下次双击打开桌面应用时自动恢复在线，无需手动点击连接。</div>
+                  <div class="field">
+                    <label for="nameInput" data-i18n="nameLabel">本机设备名称</label>
+                    <input id="nameInput" class="input input-mono" type="text" placeholder="my-macbook" autocomplete="off" />
+                    <span id="envHint" class="field-help">小写字母、数字和连字符，例如 office-win 或 my-mac</span>
                   </div>
-                  <label class="switch" aria-label="启动时自动连接">
-                    <input id="autoConnectToggle" type="checkbox" />
-                    <span class="slider"></span>
-                  </label>
+                </div>
+
+                <div class="toggle-stack">
+                  <div id="execToggleCard" class="toggle-card">
+                    <div>
+                      <div class="toggle-title" data-i18n="execToggleTitle">允许 AI 执行终端命令（--allow-exec）</div>
+                      <div id="execDesc" class="toggle-desc">默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。</div>
+                    </div>
+                    <label class="switch" aria-label="允许执行终端命令">
+                      <input id="allowExecToggle" type="checkbox" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div id="execGuardNotice" class="exec-guard">
+                    <strong data-i18n="execGuardTitle">安全提醒：已勾选开启命令执行</strong>
+                    <div data-i18n="execGuardBody">开启后，授权连接的网页 AI 可以以当前系统用户身份运行构建、测试等终端命令（仍受 Hub 策略护栏保护）。保存配置后生效，不需要时可随时关闭。</div>
+                  </div>
+
+                  <div class="toggle-card">
+                    <div>
+                      <div class="toggle-title" data-i18n="autoConnTitle">启动控制台时自动连接 Hub</div>
+                      <div class="toggle-desc" data-i18n="autoConnDesc">下次双击打开桌面应用时自动恢复在线，无需手动点击连接。</div>
+                    </div>
+                    <label class="switch" aria-label="启动时自动连接">
+                      <input id="autoConnectToggle" type="checkbox" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="card">
-              <div class="card-head">
-                <h2 class="card-title" data-i18n="recentAuditTitle">最近本机操作审计</h2>
-                <button type="button" id="jumpAuditBtn" class="btn btn-sm" data-i18n="viewAllAudit">查看全部记录 →</button>
+              <div class="card">
+                <div class="card-head">
+                  <h2 class="card-title" data-i18n="recentAuditTitle">最近本机操作审计</h2>
+                  <button type="button" id="jumpAuditBtn" class="btn btn-sm" data-i18n="viewAllAudit">查看全部记录 →</button>
+                </div>
+                <ul id="miniAuditList" class="audit-list"></ul>
+                <div id="miniAuditEmpty" class="empty-box" data-i18n="auditEmpty">暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。</div>
               </div>
-              <ul id="miniAuditList" class="audit-list"></ul>
-              <div id="miniAuditEmpty" class="empty-box" data-i18n="auditEmpty">暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。</div>
             </div>
           </section>
 
@@ -1559,7 +1301,7 @@
 
             <!-- Live Endpoint & Credentials Card -->
             <div id="gwLiveCard" class="gw-live-card">
-              <div class="card-head" style="margin-bottom:4px">
+              <div class="card-head" style="margin-bottom:0">
                 <h2 class="card-title" data-i18n="gwLiveTitle">MCP 接入地址与认证凭证</h2>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button type="button" id="gwCopyJsonBtn" class="btn btn-sm" data-i18n="gwCopyJson">复制客户端 JSON</button>
@@ -1591,125 +1333,136 @@
               <div id="gwTunnelTip" class="gw-note"></div>
             </div>
 
-            <!-- Tunnel Provider & Gateway Settings -->
-            <div class="card">
-              <div class="card-head">
-                <h2 class="card-title" data-i18n="gwTunnelCardTitle">选择公网出口与网关参数</h2>
-                <button type="button" id="gwJumpDirsBtn" class="btn btn-sm" data-i18n="gwManageDirs">管理授权文件夹 →</button>
-              </div>
-
-              <div class="tunnel-grid" role="radiogroup" aria-label="隧道方式">
-                <button type="button" class="tunnel-card active" data-tunnel="cloudflare_quick">
-                  <div class="tunnel-card-top">
-                    <span class="tunnel-card-name" data-i18n="tunCfQuickName">Cloudflare 快速隧道</span>
-                    <span class="tunnel-tag" data-i18n="tunCfQuickTag">零注册秒开</span>
-                  </div>
-                  <div class="tunnel-card-desc" data-i18n="tunCfQuickDesc">免费免账号，自动下载官方 cloudflared，3 秒获得临时 HTTPS 地址。</div>
-                </button>
-                <button type="button" class="tunnel-card" data-tunnel="ngrok">
-                  <div class="tunnel-card-top">
-                    <span class="tunnel-card-name" data-i18n="tunNgrokName">ngrok 固定域名</span>
-                    <span class="tunnel-tag" data-i18n="tunNgrokTag">内置 SDK · 免费固定</span>
-                  </div>
-                  <div class="tunnel-card-desc" data-i18n="tunNgrokDesc">原生内置 Go SDK 免安装，免费账号送 1 个永久 HTTPS 静态域名。</div>
-                </button>
-                <button type="button" class="tunnel-card" data-tunnel="cloudflare_named">
-                  <div class="tunnel-card-top">
-                    <span class="tunnel-card-name" data-i18n="tunCfNamedName">Cloudflare Named Tunnel</span>
-                    <span class="tunnel-tag" data-i18n="tunCfNamedTag">自有固定域名</span>
-                  </div>
-                  <div class="tunnel-card-desc" data-i18n="tunCfNamedDesc">填入 Cloudflare Zero Trust Tunnel Token，绑定你自己的长期域名。</div>
-                </button>
-                <button type="button" class="tunnel-card" data-tunnel="local">
-                  <div class="tunnel-card-top">
-                    <span class="tunnel-card-name" data-i18n="tunLocalName">仅本机直连</span>
-                    <span class="tunnel-tag" data-i18n="tunLocalTag">零公网暴露</span>
-                  </div>
-                  <div class="tunnel-card-desc" data-i18n="tunLocalDesc">仅监听 127.0.0.1，专为 Cursor、Claude Desktop、Windsurf 等本地 AI 客户端设计。</div>
-                </button>
-              </div>
-
-              <div class="form-grid">
-                <div class="field">
-                  <label for="gwNameInput" data-i18n="nameLabel">本机设备名称</label>
-                  <input id="gwNameInput" class="input input-mono" type="text" placeholder="my-pc" autocomplete="off" />
-                  <span class="field-help" data-i18n="gwNameHelp">留空将自动使用主机名（小写字母、数字和连字符）</span>
+            <!-- Asymmetric 7:5 Split: Tunnel Selector Left, Port & Security Right -->
+            <div class="split-workspace">
+              <div class="card">
+                <div class="card-head">
+                  <h2 class="card-title" data-i18n="gwTunnelCardTitle">选择公网出口与隧道引擎</h2>
+                  <button type="button" id="gwJumpDirsBtn" class="btn btn-sm" data-i18n="gwManageDirs">管理授权文件夹 →</button>
                 </div>
-                <div class="field">
-                  <label for="gwPortInput" data-i18n="gwPortLabel">本机监听端口（127.0.0.1）</label>
-                  <input id="gwPortInput" class="input input-mono" type="number" min="0" max="65535" value="8485" />
-                  <span class="field-help" data-i18n="gwPortHelp">默认 8485；填 0 自动分配可用端口</span>
-                </div>
-              </div>
 
-              <!-- Provider-specific panels -->
-              <div id="panel-cloudflare_quick" class="gw-provider-panel show">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-                  <span style="font-size:12.5px;color:var(--charcoal)" data-i18n="cfQuickPanelInfo">启动时将自动检测本机 cloudflared，未安装时从 GitHub 官方发布页自动下载至用户缓存目录。</span>
-                  <span id="cfBinaryBadge" class="brand-meta">检测中…</span>
-                </div>
-              </div>
-
-              <div id="panel-ngrok" class="gw-provider-panel">
-                <div class="form-grid">
-                  <div class="field">
-                    <label for="gwNgrokTokenInput" data-i18n="ngrokTokenLabel">ngrok Authtoken（保存在本机凭据存储）</label>
-                    <div style="display:flex;gap:8px">
-                      <input id="gwNgrokTokenInput" class="input input-mono" type="password" placeholder="粘贴 ngrok Authtoken…" autocomplete="off" />
-                      <button type="button" id="gwClearNgrokBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
+                <div class="tunnel-grid" role="radiogroup" aria-label="隧道方式">
+                  <button type="button" class="tunnel-card active" data-tunnel="cloudflare_quick">
+                    <div class="tunnel-card-top">
+                      <span class="tunnel-card-name" data-i18n="tunCfQuickName">Cloudflare 快速隧道</span>
+                      <span class="tunnel-tag" data-i18n="tunCfQuickTag">零注册秒开</span>
                     </div>
-                    <span id="gwNgrokTokenHint" class="field-help">免费注册 dashboard.ngrok.com → Your Authtoken 获取。</span>
-                  </div>
-                  <div class="field">
-                    <label for="gwNgrokDomainInput" data-i18n="ngrokDomainLabel">ngrok 固定域名（可选，推荐填写免费静态域名）</label>
-                    <input id="gwNgrokDomainInput" class="input input-mono" type="text" placeholder="my-pc.ngrok-free.app" autocomplete="off" />
-                    <span class="field-help" data-i18n="ngrokDomainHelp">留空则由 ngrok 每次分配随机域名；在 ngrok 后台 Domains 可免费领取 1 个永久域名。</span>
-                  </div>
-                </div>
-              </div>
+                    <div class="tunnel-card-desc" data-i18n="tunCfQuickDesc">免费免账号，自动下载官方 cloudflared，3 秒获得临时 HTTPS 地址。</div>
+                  </button>
 
-              <div id="panel-cloudflare_named" class="gw-provider-panel">
-                <div class="form-grid">
-                  <div class="field">
-                    <label for="gwCfUrlInput" data-i18n="cfNamedUrlLabel">公网 HTTPS 根地址</label>
-                    <input id="gwCfUrlInput" class="input input-mono" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
-                    <span class="field-help" data-i18n="cfNamedUrlHelp">在 Cloudflare Zero Trust → Tunnels 里将此域名指向本机端口（如 http://127.0.0.1:8485）</span>
-                  </div>
-                  <div class="field">
-                    <label for="gwCfTokenInput" data-i18n="cfNamedTokenLabel">Cloudflare Tunnel Token（保存在本机凭据存储）</label>
-                    <div style="display:flex;gap:8px">
-                      <input id="gwCfTokenInput" class="input input-mono" type="password" placeholder="粘贴 eyJ... Tunnel Token" autocomplete="off" />
-                      <button type="button" id="gwClearCfBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
+                  <button type="button" class="tunnel-card" data-tunnel="ngrok">
+                    <div class="tunnel-card-top">
+                      <span class="tunnel-card-name" data-i18n="tunNgrokName">ngrok 固定域名</span>
+                      <span class="tunnel-tag" data-i18n="tunNgrokTag">内置 SDK · 免费固定</span>
                     </div>
-                    <span id="gwCfTokenHint" class="field-help">仅通过环境变量传给 cloudflared 子进程，不暴露在命令行参数中。</span>
+                    <div class="tunnel-card-desc" data-i18n="tunNgrokDesc">原生内置 Go SDK 免安装，免费账号送 1 个永久 HTTPS 静态域名。</div>
+                  </button>
+
+                  <button type="button" class="tunnel-card" data-tunnel="cloudflare_named">
+                    <div class="tunnel-card-top">
+                      <span class="tunnel-card-name" data-i18n="tunCfNamedName">Cloudflare Named Tunnel</span>
+                      <span class="tunnel-tag" data-i18n="tunCfNamedTag">自有固定域名</span>
+                    </div>
+                    <div class="tunnel-card-desc" data-i18n="tunCfNamedDesc">填入 Cloudflare Zero Trust Tunnel Token，绑定你自己的长期域名。</div>
+                  </button>
+
+                  <button type="button" class="tunnel-card" data-tunnel="local">
+                    <div class="tunnel-card-top">
+                      <span class="tunnel-card-name" data-i18n="tunLocalName">仅本机直连</span>
+                      <span class="tunnel-tag" data-i18n="tunLocalTag">零公网暴露</span>
+                    </div>
+                    <div class="tunnel-card-desc" data-i18n="tunLocalDesc">仅监听 127.0.0.1，专为 Cursor、Claude Desktop、Windsurf 等本地 AI 客户端设计。</div>
+                  </button>
+                </div>
+
+                <div id="panel-cloudflare_quick" class="gw-provider-panel show">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                    <span style="font-size:12.5px;color:var(--charcoal)" data-i18n="cfQuickPanelInfo">启动时将自动检测本机 cloudflared，未安装时从 GitHub 官方发布页自动下载至用户缓存目录。</span>
+                    <span id="cfBinaryBadge" class="brand-meta">检测中…</span>
                   </div>
+                </div>
+
+                <div id="panel-ngrok" class="gw-provider-panel">
+                  <div class="form-grid">
+                    <div class="field">
+                      <label for="gwNgrokTokenInput" data-i18n="ngrokTokenLabel">ngrok Authtoken（保存在本机凭据存储）</label>
+                      <div style="display:flex;gap:8px">
+                        <input id="gwNgrokTokenInput" class="input input-mono" type="password" placeholder="粘贴 ngrok Authtoken…" autocomplete="off" />
+                        <button type="button" id="gwClearNgrokBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
+                      </div>
+                      <span id="gwNgrokTokenHint" class="field-help">免费注册 dashboard.ngrok.com → Your Authtoken 获取。</span>
+                    </div>
+                    <div class="field">
+                      <label for="gwNgrokDomainInput" data-i18n="ngrokDomainLabel">ngrok 固定域名（可选，推荐填写免费静态域名）</label>
+                      <input id="gwNgrokDomainInput" class="input input-mono" type="text" placeholder="my-pc.ngrok-free.app" autocomplete="off" />
+                      <span class="field-help" data-i18n="ngrokDomainHelp">留空则由 ngrok 每次分配随机域名；在 ngrok 后台 Domains 可免费领取 1 个永久域名。</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="panel-cloudflare_named" class="gw-provider-panel">
+                  <div class="form-grid">
+                    <div class="field">
+                      <label for="gwCfUrlInput" data-i18n="cfNamedUrlLabel">公网 HTTPS 根地址</label>
+                      <input id="gwCfUrlInput" class="input input-mono" type="url" placeholder="https://mcp.example.com" autocomplete="off" />
+                      <span class="field-help" data-i18n="cfNamedUrlHelp">在 Cloudflare Zero Trust → Tunnels 里将此域名指向本机端口（如 http://127.0.0.1:8485）</span>
+                    </div>
+                    <div class="field">
+                      <label for="gwCfTokenInput" data-i18n="cfNamedTokenLabel">Cloudflare Tunnel Token（保存在本机凭据存储）</label>
+                      <div style="display:flex;gap:8px">
+                        <input id="gwCfTokenInput" class="input input-mono" type="password" placeholder="粘贴 eyJ... Tunnel Token" autocomplete="off" />
+                        <button type="button" id="gwClearCfBtn" class="btn btn-sm" data-i18n="clearBtn">清除</button>
+                      </div>
+                      <span id="gwCfTokenHint" class="field-help">仅通过环境变量传给 cloudflared 子进程，不暴露在命令行参数中。</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="panel-local" class="gw-provider-panel">
+                  <span style="font-size:12.5px;color:var(--charcoal)" data-i18n="localPanelInfo">仅在本机回环地址监听，不会连接任何外部隧道，适合本机运行的 Cursor、Claude Desktop、Windsurf 或自建本地代理。</span>
                 </div>
               </div>
 
-              <div id="panel-local" class="gw-provider-panel">
-                <span style="font-size:12.5px;color:var(--charcoal)" data-i18n="localPanelInfo">仅在本机回环地址监听，不会连接任何外部隧道，适合本机运行的 Cursor、Claude Desktop、Windsurf 或自建本地代理。</span>
-              </div>
-
-              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-                <div id="gwExecToggleCard" class="toggle-card">
-                  <div>
-                    <div class="toggle-title" data-i18n="execToggleTitle">允许 AI 执行终端命令（--allow-exec）</div>
-                    <div id="gwExecDesc" class="toggle-desc">默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。</div>
-                  </div>
-                  <label class="switch">
-                    <input id="gwAllowExecToggle" type="checkbox" />
-                    <span class="slider"></span>
-                  </label>
+              <div class="card">
+                <div class="card-head">
+                  <h2 class="card-title">监听端口与安全护栏</h2>
                 </div>
-                <div class="toggle-card">
-                  <div>
-                    <div class="toggle-title" data-i18n="gwAutoStartTitle">启动控制台时自动开启本机网关</div>
-                    <div class="toggle-desc" data-i18n="gwAutoStartDesc">下次打开桌面控制台时自动恢复本机网关与隧道在线。</div>
+
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div class="field">
+                    <label for="gwNameInput" data-i18n="nameLabel">本机设备名称</label>
+                    <input id="gwNameInput" class="input input-mono" type="text" placeholder="my-pc" autocomplete="off" />
+                    <span class="field-help" data-i18n="gwNameHelp">留空将自动使用主机名（小写字母、数字和连字符）</span>
                   </div>
-                  <label class="switch">
-                    <input id="gwAutoConnectToggle" type="checkbox" />
-                    <span class="slider"></span>
-                  </label>
+                  <div class="field">
+                    <label for="gwPortInput" data-i18n="gwPortLabel">本机监听端口（127.0.0.1）</label>
+                    <input id="gwPortInput" class="input input-mono" type="number" min="0" max="65535" value="8485" />
+                    <span class="field-help" data-i18n="gwPortHelp">默认 8485；填 0 自动分配可用端口</span>
+                  </div>
+                </div>
+
+                <div class="toggle-stack">
+                  <div id="gwExecToggleCard" class="toggle-card">
+                    <div>
+                      <div class="toggle-title" data-i18n="execToggleTitle">允许 AI 执行终端命令（--allow-exec）</div>
+                      <div id="gwExecDesc" class="toggle-desc">默认关闭：AI 仅可读取和修改你授权的文件夹，无法运行本机命令。</div>
+                    </div>
+                    <label class="switch">
+                      <input id="gwAllowExecToggle" type="checkbox" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="toggle-card">
+                    <div>
+                      <div class="toggle-title" data-i18n="gwAutoStartTitle">启动控制台时自动开启本机网关</div>
+                      <div class="toggle-desc" data-i18n="gwAutoStartDesc">下次打开桌面控制台时自动恢复本机网关与隧道在线。</div>
+                    </div>
+                    <label class="switch">
+                      <input id="gwAutoConnectToggle" type="checkbox" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1730,17 +1483,17 @@
 
             <div class="stepper-grid">
               <div id="stepCard1" class="step-card">
-                <div class="step-kicker">STEP 01</div>
+                <div class="step-kicker">01 · 配置目标</div>
                 <h4 data-i18n="pStep1Title">填写 Hub 地址并选择目录</h4>
                 <p data-i18n="pStep1Desc">设置设备名称与至少一个授权工作区文件夹。</p>
               </div>
               <div id="stepCard2" class="step-card">
-                <div class="step-kicker">STEP 02</div>
+                <div class="step-kicker">02 · 浏览器批准</div>
                 <h4 data-i18n="pStep2Title">前往 Hub /agents 一键批准</h4>
                 <p data-i18n="pStep2Desc">核对配对码并在你的 Hub 管理页点击批准接入。</p>
               </div>
               <div id="stepCard3" class="step-card">
-                <div class="step-kicker">STEP 03</div>
+                <div class="step-kicker">03 · 钥匙串持久化</div>
                 <h4 data-i18n="pStep3Title">系统加密保存并秒连上线</h4>
                 <p data-i18n="pStep3Desc">令牌自动存入本机安全存储区（Keychain / DPAPI），立即上线。</p>
               </div>
@@ -1750,7 +1503,7 @@
             <div id="pairLiveBox" class="pair-live-box">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
                 <strong data-i18n="pairWaitHead">等待 Hub 批准中 — 请在浏览器核对以下配对码：</strong>
-                <span id="pairCountdown" style="font-family:var(--font-mono);font-size:12px"></span>
+                <span id="pairCountdown" class="mono" style="font-size:12px;color:var(--muted)"></span>
               </div>
               <div class="pair-code-row">
                 <div id="pairCodeDisplay" class="pair-code">------</div>
@@ -1759,7 +1512,7 @@
                   <button type="button" id="cancelPairBtn" class="btn" data-i18n="cancelPair">取消配对</button>
                 </div>
               </div>
-              <div id="pairApproveUrlText" style="font-family:var(--font-mono);font-size:11.5px;word-break:break-all;opacity:0.85"></div>
+              <div id="pairApproveUrlText" class="mono" style="font-size:11.5px;word-break:break-all;color:var(--muted)"></div>
             </div>
 
             <div class="card">
@@ -1768,8 +1521,7 @@
                 <span id="tokenStorageBadge" class="brand-meta">—</span>
               </div>
               <div id="tokenStatusLine" style="font-size:13px;color:var(--charcoal);margin-bottom:14px"></div>
-
-              <div class="toggle-card" style="margin-bottom:14px">
+              <div class="toggle-card" style="padding-top:0;margin-bottom:16px">
                 <div>
                   <div class="toggle-title" data-i18n="saveTokenTitle">在本机安全保存配对令牌</div>
                   <div class="toggle-desc" data-i18n="saveTokenDesc">关闭后令牌仅保存在本次内存会话中，重启应用需重新配对。</div>
@@ -1779,7 +1531,6 @@
                   <span class="slider"></span>
                 </label>
               </div>
-
               <div class="field">
                 <label for="tokenInput" data-i18n="manualTokenLabel">手动粘贴 Hub 配对令牌（一般无需填写，推荐直接点上方「发起一键配对」）</label>
                 <div class="input-row">
@@ -1790,7 +1541,7 @@
             </div>
           </section>
 
-          <!-- VIEW 3: Folders & Permissions -->
+          <!-- VIEW 3: Folders & Permissions (Asymmetric 7:5 Split) -->
           <section id="view-folders" class="view-pane">
             <div class="view-head">
               <div>
@@ -1803,27 +1554,29 @@
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-head">
-                <h2 class="card-title" data-i18n="allowedDirsHead">已授权工作目录</h2>
-                <span id="dirCountHint" class="card-hint">0 个目录</span>
+            <div class="split-workspace">
+              <div class="card">
+                <div class="card-head">
+                  <h2 class="card-title" data-i18n="allowedDirsHead">已授权工作目录</h2>
+                  <span id="dirCountHint" class="card-hint mono">0 个目录</span>
+                </div>
+                <div class="input-row">
+                  <input id="dirInput" class="input input-mono" type="text" placeholder="输入目录路径后按回车，或点击上方「选择本地文件夹…」" autocomplete="off" />
+                  <button type="button" id="addDirBtn" class="btn" data-i18n="addDirBtn">添加路径</button>
+                </div>
+                <ul id="dirList" class="dir-list"></ul>
+                <div id="dirEmptyBox" class="empty-box" data-i18n="dirEmpty">
+                  尚未添加任何工作目录。点击「选择本地文件夹…」授权你希望 AI 协助的项目目录。
+                </div>
               </div>
-              <div class="input-row">
-                <input id="dirInput" class="input input-mono" type="text" placeholder="输入目录路径后按回车，或点击上方「选择本地文件夹…」" autocomplete="off" />
-                <button type="button" id="addDirBtn" class="btn" data-i18n="addDirBtn">添加路径</button>
-              </div>
-              <ul id="dirList" class="dir-list"></ul>
-              <div id="dirEmptyBox" class="empty-box" style="margin-top:12px" data-i18n="dirEmpty">
-                尚未添加任何工作目录。点击「选择本地文件夹…」授权你希望 AI 协助的项目目录。
-              </div>
-            </div>
 
-            <div class="card">
-              <div class="card-head">
-                <h2 class="card-title" data-i18n="cliCardTitle">等效命令行启动参数</h2>
-                <button type="button" id="copyCliBtn" class="btn btn-sm" data-i18n="copyCliBtn">复制命令</button>
+              <div class="card">
+                <div class="card-head">
+                  <h2 class="card-title" data-i18n="cliCardTitle">等效命令行启动参数</h2>
+                  <button type="button" id="copyCliBtn" class="btn btn-sm" data-i18n="copyCliBtn">复制命令</button>
+                </div>
+                <pre id="cliPreview" class="cli-box"></pre>
               </div>
-              <pre id="cliPreview" class="cli-box"></pre>
             </div>
           </section>
 
@@ -1847,6 +1600,7 @@
                 </div>
                 <input id="auditSearch" class="input" style="max-width:260px;height:32px;font-size:12.5px" type="search" placeholder="筛选方法名或路径关键词…" />
               </div>
+
               <ul id="auditList" class="audit-list"></ul>
               <div id="auditEmptyBox" class="empty-box" data-i18n="auditEmpty">暂无操作记录。连接 Hub 后，AI 对本机的每一次文件读写或命令调用都会实时显示在这里。</div>
             </div>
@@ -1869,7 +1623,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
   <script>
     const CSRF_TOKEN = '__OMNI_CSRF_TOKEN__';
     const $ = (id) => document.getElementById(id);
@@ -2772,7 +2525,7 @@
     $('themeToggle').onclick = () => {
       const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('omni-console-theme', next); } catch {}
+      try { localStorage.setItem('omni-console-theme', next); localStorage.setItem('omni-theme', next); } catch {}
       syncThemeIcon();
     };
     syncThemeIcon();
